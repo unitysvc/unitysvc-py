@@ -1,0 +1,90 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unitysvc-py"
+version = "0.0.1"
+description = "Customer-facing Python SDK and `usvc` CLI for UnitySVC"
+readme = "README.md"
+authors = [{ name = "Bo Peng", email = "bo.peng@unitysvc.com" }]
+maintainers = [{ name = "Bo Peng", email = "bo.peng@unitysvc.com" }]
+license = "MIT"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Operating System :: OS Independent",
+  "Typing :: Typed",
+]
+dependencies = [
+  "typer",
+  "rich",
+  "httpx>=0.24",
+  "attrs>=23.0",
+  "python-dateutil>=2.8",
+]
+requires-python = ">= 3.11"
+
+[project.optional-dependencies]
+test = [
+  "coverage",
+  "pytest",
+  "pytest-asyncio",
+  "ruff",
+  "mypy",
+  "respx",
+]
+dev = [
+  "coverage",
+  "pytest",
+  "ruff",
+  "ipdb",
+]
+docs = [
+  "mkdocs",
+  "mkdocs-material",
+  "mkdocs-autorefs",
+  "pymdown-extensions",
+]
+
+[project.urls]
+bugs = "https://github.com/unitysvc/unitysvc-py/issues"
+homepage = "https://github.com/unitysvc/unitysvc-py"
+
+[project.scripts]
+usvc = "unitysvc_py.cli:app"
+
+[tool.ruff]
+line-length = 120
+# openapi-python-client produces its own idiosyncratic formatting.
+# Excluding keeps regenerations byte-stable — no post-processing
+# step, no drift between the spec and the committed client.
+extend-exclude = ["src/unitysvc_py/_generated"]
+
+[tool.ruff.lint]
+select = [
+  "E",  # pycodestyle errors
+  "W",  # pycodestyle warnings
+  "F",  # Pyflakes
+  "I",  # isort
+  "B",  # flake8-bugbear
+  "UP", # pyupgrade
+]
+ignore = [
+  "B008", # Typer pattern uses function calls in argument defaults
+  "B904",
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+warn_unused_ignores = false
+disable_error_code = ["import-untyped"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+unitysvc_py = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
