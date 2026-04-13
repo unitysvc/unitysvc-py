@@ -1,14 +1,14 @@
 # SDK Reference
 
 `unitysvc-py` ships sync and async facades over an auto-generated
-low-level client (`unitysvc_py._generated`). Callers should prefer
+low-level client (`unitysvc._generated`). Callers should prefer
 `Client` / `AsyncClient`; the generated layer is an implementation
 detail.
 
 ## `Client`
 
 ```python
-from unitysvc_py import Client
+from unitysvc import Client
 
 client = Client(
     api_key="svcpass_...",
@@ -46,7 +46,7 @@ with Client.from_env() as client:
 
 ```python
 import asyncio
-from unitysvc_py import AsyncClient
+from unitysvc import AsyncClient
 
 async def main():
     async with AsyncClient.from_env() as client:
@@ -108,7 +108,7 @@ client.recurrent_requests.delete(request_id)
 
 ## Errors
 
-All errors are subclasses of `unitysvc_py.UnitysvcSDKError`:
+All errors are subclasses of `unitysvc.UnitysvcSDKError`:
 
 | Exception             | HTTP status  | Meaning                           |
 |-----------------------|--------------|-----------------------------------|

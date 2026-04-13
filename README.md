@@ -1,17 +1,20 @@
 # unitysvc-py
 
-Customer-facing Python SDK and `usvc` CLI for [UnitySVC](https://unitysvc.com/).
+Python SDK and CLI for the [UnitySVC](https://unitysvc.com/) customer
+API (`https://api.unitysvc.com/v1`). This package provides:
 
-This package is a thin, typed facade over the UnitySVC customer API.
-It exposes:
+1. **`unitysvc`** — a typed Python package (sync `Client` + async
+   `AsyncClient`) that wraps the upstream REST API into importable,
+   type-checked method calls.
+2. **`usvc`** — a CLI built on top of the SDK for day-to-day customer
+   operations (secrets, aliases, recurrent requests) without writing
+   code.
 
-- A sync [`Client`](#programmatic-usage) and async `AsyncClient` for
-  the customer-tagged backend endpoints.
-- The `usvc` CLI for managing the same resources from the terminal.
-
-> **Status:** early scaffolding. The customer API currently exposes
-> only a handful of endpoints (aliases, recurrent requests, secrets);
-> the SDK tracks those today and will grow as the backend adds more.
+| | Documentation |
+|-|---------------|
+| **Upstream API** | [Swagger UI](https://api.unitysvc.com/docs) · [ReDoc](https://api.unitysvc.com/redoc) |
+| **Python SDK** | [SDK Reference](https://unitysvc-py.readthedocs.io/en/latest/sdk-reference/) · [API Reference (auto-generated)](https://unitysvc-py.readthedocs.io/en/latest/api-reference/) |
+| **CLI** | [CLI Reference](https://unitysvc-py.readthedocs.io/en/latest/cli-reference/) |
 
 ## Install
 
@@ -22,7 +25,7 @@ pip install unitysvc-py
 ## Programmatic usage
 
 ```python
-from unitysvc_py import Client
+from unitysvc import Client
 
 client = Client(api_key="svcpass_...")  # or Client.from_env()
 
@@ -43,7 +46,7 @@ default.
 | Variable                 | Purpose                                     | Default                                      |
 |--------------------------|---------------------------------------------|----------------------------------------------|
 | `UNITYSVC_API_KEY`       | Customer API key (`svcpass_...`)            | (required)                                   |
-| `UNITYSVC_API_URL`       | Control-plane API base URL                  | `https://api.staging.unitysvc.com/v1`   |
+| `UNITYSVC_API_URL`       | Control-plane API base URL                  | `https://api.unitysvc.com/v1`   |
 | `UNITYSVC_API_BASE_URL`  | HTTP API gateway base URL (inference)       | (unset)                                      |
 | `UNITYSVC_S3_BASE_URL`   | S3-compatible gateway base URL              | (unset)                                      |
 | `UNITYSVC_SMTP_BASE_URL` | SMTP gateway base URL                       | (unset)                                      |
@@ -61,7 +64,7 @@ itself doesn't talk to them directly.
 
 ```python
 import asyncio
-from unitysvc_py import AsyncClient
+from unitysvc import AsyncClient
 
 async def main():
     async with AsyncClient(api_key="svcpass_...") as client:
@@ -74,10 +77,10 @@ asyncio.run(main())
 
 ### Errors
 
-All errors are subclasses of `unitysvc_py.UnitysvcSDKError`:
+All errors are subclasses of `unitysvc.UnitysvcSDKError`:
 
 ```python
-from unitysvc_py import (
+from unitysvc import (
     UnitysvcSDKError,
     AuthenticationError,   # 401
     PermissionError,       # 403
@@ -120,7 +123,7 @@ Every command accepts `--api-key` and `--base-url` overrides.
 ## Layout
 
 ```
-src/unitysvc_py/
+src/unitysvc/
 ├── client.py          # Client (sync) facade
 ├── aclient.py         # AsyncClient (async) facade
 ├── exceptions.py      # UnitysvcSDKError + status-code subclasses
@@ -141,7 +144,7 @@ src/unitysvc_py/
 
 ## Regenerating the API client
 
-The low-level client under `src/unitysvc_py/_generated/` is produced
+The low-level client under `src/unitysvc/_generated/` is produced
 by [openapi-python-client] from a copy of the backend OpenAPI spec at
 `openapi.json`. To regenerate after a backend change:
 

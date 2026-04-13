@@ -48,8 +48,10 @@ fi
 if ! command -v openapi-python-client >/dev/null 2>&1; then
     if [ ! -x "${REPO_ROOT}/.tool-venv/bin/openapi-python-client" ]; then
         echo "==> Bootstrapping openapi-python-client into .tool-venv"
-        python3 -m venv "${REPO_ROOT}/.tool-venv"
-        "${REPO_ROOT}/.tool-venv/bin/pip" install --quiet openapi-python-client
+        # Requires Python 3.10+; prefer a recent version if available.
+        PYTHON=$(command -v python3.13 || command -v python3.12 || command -v python3.11 || command -v python3.10 || command -v python3)
+        "${PYTHON}" -m venv "${REPO_ROOT}/.tool-venv"
+        "${REPO_ROOT}/.tool-venv/bin/pip" install --quiet "openapi-python-client @ git+https://github.com/openapi-generators/openapi-python-client@v0.28.3"
     fi
     OAPI_CLIENT="${REPO_ROOT}/.tool-venv/bin/openapi-python-client"
 else
@@ -67,14 +69,14 @@ echo "    Copied to:  openapi.json (tracked)"
 # ---------------------------------------------------------------------------
 # Regenerate client
 # ---------------------------------------------------------------------------
-echo "==> Regenerating src/unitysvc_py/_generated/"
+echo "==> Regenerating src/unitysvc/_generated/"
 cd "${REPO_ROOT}"
-rm -rf src/unitysvc_py/_generated
+rm -rf src/unitysvc/_generated
 "${OAPI_CLIENT}" generate \
     --path openapi.json \
     --config scripts/openapi-python-client.yml \
     --meta none \
-    --output-path src/unitysvc_py/_generated \
+    --output-path src/unitysvc/_generated \
     --overwrite
 
 echo
