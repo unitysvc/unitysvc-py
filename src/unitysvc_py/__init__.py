@@ -16,8 +16,8 @@ Quick start::
 
 The customer context is encoded entirely in the API key, so no
 separate ``customer_id`` is required. The default base URL points at
-the staging environment; override with the ``base_url`` constructor
-argument or the ``UNITYSVC_API_URL`` env var.
+production (``https://api.unitysvc.com``); override with the
+``base_url`` constructor argument or the ``UNITYSVC_API_URL`` env var.
 """
 
 from .aclient import AsyncClient

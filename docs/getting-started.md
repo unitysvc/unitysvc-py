@@ -17,7 +17,7 @@ All configuration comes from environment variables. Only
 | Variable                 | Purpose                                     | Default                                      |
 |--------------------------|---------------------------------------------|----------------------------------------------|
 | `UNITYSVC_API_KEY`       | Customer API key (`svcpass_...`)            | (required)                                   |
-| `UNITYSVC_API_URL`       | Control-plane API base URL                  | `https://api.staging.unitysvc.com/v1`   |
+| `UNITYSVC_API_URL`       | Control-plane API base URL                  | `https://api.unitysvc.com/v1`   |
 | `UNITYSVC_API_BASE_URL`  | HTTP API gateway base URL (inference)       | (unset)                                      |
 | `UNITYSVC_S3_BASE_URL`   | S3-compatible gateway base URL              | (unset)                                      |
 | `UNITYSVC_SMTP_BASE_URL` | SMTP gateway base URL                       | (unset)                                      |

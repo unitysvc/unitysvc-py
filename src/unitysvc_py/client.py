@@ -19,9 +19,9 @@ Example::
 
 The customer context is encoded entirely in the API key, so no
 explicit ``customer_id`` is required. The default base URL points at
-the customer-scoped staging subdomain::
+the production API::
 
-    https://api.staging.unitysvc.com/v1
+    https://api.unitysvc.com/v1
 
 Override via the ``base_url`` constructor argument or the
 ``UNITYSVC_API_URL`` environment variable.
@@ -54,7 +54,7 @@ if TYPE_CHECKING:
     from .resources.recurrent_requests import RecurrentRequestsResource
     from .resources.secrets import SecretsResource
 
-DEFAULT_API_URL = "https://api.staging.unitysvc.com/v1"
+DEFAULT_API_URL = "https://api.unitysvc.com/v1"
 
 ENV_API_KEY = "UNITYSVC_API_KEY"
 ENV_API_URL = "UNITYSVC_API_URL"

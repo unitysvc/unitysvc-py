@@ -24,7 +24,7 @@ def test_client_requires_api_key() -> None:
         Client(api_key="")
 
 
-def test_client_defaults_to_staging() -> None:
+def test_client_defaults_to_production() -> None:
     with Client(api_key="svcpass_test") as client:
         assert client._base_url == DEFAULT_API_URL
 
@@ -70,7 +70,7 @@ def test_client_resources_are_lazy_and_cached() -> None:
         assert client.recurrent_requests is not None
 
 
-def test_async_client_defaults_to_staging() -> None:
+def test_async_client_defaults_to_production() -> None:
     client = AsyncClient(api_key="svcpass_test")
     assert client._base_url == DEFAULT_API_URL
     # Resource lookups should work synchronously (only the actual HTTP
