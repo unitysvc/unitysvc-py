@@ -42,7 +42,7 @@ customer SDK itself never talks to them directly.
 ## First SDK call
 
 ```python
-from unitysvc_py import Client
+from unitysvc import Client
 
 with Client.from_env() as client:
     secrets = client.secrets.list()

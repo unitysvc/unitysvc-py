@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typer.testing import CliRunner
 
-from unitysvc_py.cli import app
+from unitysvc.cli import app
 
 runner = CliRunner()
 

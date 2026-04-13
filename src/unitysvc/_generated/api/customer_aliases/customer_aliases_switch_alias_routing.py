@@ -1,0 +1,289 @@
+from http import HTTPStatus
+from typing import Any, Optional, Union, cast
+
+import httpx
+
+from ...client import AuthenticatedClient, Client
+from ...types import Response, UNSET
+from ... import errors
+
+from ...models.http_validation_error import HTTPValidationError
+from ...models.switch_routing_response import SwitchRoutingResponse
+from ...types import UNSET, Unset
+from typing import cast
+from typing import cast, Union
+from typing import Union
+from uuid import UUID
+
+
+
+def _get_kwargs(
+    alias_id: UUID,
+    *,
+    on: Union[Unset, bool] = True,
+    authorization: Union[None, Unset, str] = UNSET,
+    x_role_id: Union[None, Unset, str] = UNSET,
+
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
+    if not isinstance(authorization, Unset):
+        headers["authorization"] = authorization
+
+    if not isinstance(x_role_id, Unset):
+        headers["x-role-id"] = x_role_id
+
+
+
+    
+
+    params: dict[str, Any] = {}
+
+    params["on"] = on
+
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
+
+    _kwargs: dict[str, Any] = {
+        "method": "post",
+        "url": "/aliases/{alias_id}/switch".format(alias_id=alias_id,),
+        "params": params,
+    }
+
+
+    _kwargs["headers"] = headers
+    return _kwargs
+
+
+
+def _parse_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Optional[Union[HTTPValidationError, SwitchRoutingResponse]]:
+    if response.status_code == 200:
+        response_200 = SwitchRoutingResponse.from_dict(response.json())
+
+
+
+        return response_200
+
+    if response.status_code == 422:
+        response_422 = HTTPValidationError.from_dict(response.json())
+
+
+
+        return response_422
+
+    if client.raise_on_unexpected_status:
+        raise errors.UnexpectedStatus(response.status_code, response.content)
+    else:
+        return None
+
+
+def _build_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Response[Union[HTTPValidationError, SwitchRoutingResponse]]:
+    return Response(
+        status_code=HTTPStatus(response.status_code),
+        content=response.content,
+        headers=response.headers,
+        parsed=_parse_response(client=client, response=response),
+    )
+
+
+def sync_detailed(
+    alias_id: UUID,
+    *,
+    client: Union[AuthenticatedClient, Client],
+    on: Union[Unset, bool] = True,
+    authorization: Union[None, Unset, str] = UNSET,
+    x_role_id: Union[None, Unset, str] = UNSET,
+
+) -> Response[Union[HTTPValidationError, SwitchRoutingResponse]]:
+    """ Switch Alias Routing
+
+     Switch routing on or off for this alias.
+
+    When ``on=True``, any sibling alias currently routing the same
+    (name, routing_key) combo is atomically demoted. The response
+    includes ``demoted_alias_id`` so the caller knows what changed.
+
+    When ``on=False``, the alias stops routing. No sibling is
+    auto-promoted — the combo will have no routing alias until one
+    is explicitly switched on.
+
+    Billing is unaffected — all non-deactivated aliases accrue duration
+    regardless of routing state.
+
+    Args:
+        alias_id (UUID):
+        on (Union[Unset, bool]):  Default: True.
+        authorization (Union[None, Unset, str]):
+        x_role_id (Union[None, Unset, str]):
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        Response[Union[HTTPValidationError, SwitchRoutingResponse]]
+     """
+
+
+    kwargs = _get_kwargs(
+        alias_id=alias_id,
+on=on,
+authorization=authorization,
+x_role_id=x_role_id,
+
+    )
+
+    response = client.get_httpx_client().request(
+        **kwargs,
+    )
+
+    return _build_response(client=client, response=response)
+
+def sync(
+    alias_id: UUID,
+    *,
+    client: Union[AuthenticatedClient, Client],
+    on: Union[Unset, bool] = True,
+    authorization: Union[None, Unset, str] = UNSET,
+    x_role_id: Union[None, Unset, str] = UNSET,
+
+) -> Optional[Union[HTTPValidationError, SwitchRoutingResponse]]:
+    """ Switch Alias Routing
+
+     Switch routing on or off for this alias.
+
+    When ``on=True``, any sibling alias currently routing the same
+    (name, routing_key) combo is atomically demoted. The response
+    includes ``demoted_alias_id`` so the caller knows what changed.
+
+    When ``on=False``, the alias stops routing. No sibling is
+    auto-promoted — the combo will have no routing alias until one
+    is explicitly switched on.
+
+    Billing is unaffected — all non-deactivated aliases accrue duration
+    regardless of routing state.
+
+    Args:
+        alias_id (UUID):
+        on (Union[Unset, bool]):  Default: True.
+        authorization (Union[None, Unset, str]):
+        x_role_id (Union[None, Unset, str]):
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        Union[HTTPValidationError, SwitchRoutingResponse]
+     """
+
+
+    return sync_detailed(
+        alias_id=alias_id,
+client=client,
+on=on,
+authorization=authorization,
+x_role_id=x_role_id,
+
+    ).parsed
+
+async def asyncio_detailed(
+    alias_id: UUID,
+    *,
+    client: Union[AuthenticatedClient, Client],
+    on: Union[Unset, bool] = True,
+    authorization: Union[None, Unset, str] = UNSET,
+    x_role_id: Union[None, Unset, str] = UNSET,
+
+) -> Response[Union[HTTPValidationError, SwitchRoutingResponse]]:
+    """ Switch Alias Routing
+
+     Switch routing on or off for this alias.
+
+    When ``on=True``, any sibling alias currently routing the same
+    (name, routing_key) combo is atomically demoted. The response
+    includes ``demoted_alias_id`` so the caller knows what changed.
+
+    When ``on=False``, the alias stops routing. No sibling is
+    auto-promoted — the combo will have no routing alias until one
+    is explicitly switched on.
+
+    Billing is unaffected — all non-deactivated aliases accrue duration
+    regardless of routing state.
+
+    Args:
+        alias_id (UUID):
+        on (Union[Unset, bool]):  Default: True.
+        authorization (Union[None, Unset, str]):
+        x_role_id (Union[None, Unset, str]):
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        Response[Union[HTTPValidationError, SwitchRoutingResponse]]
+     """
+
+
+    kwargs = _get_kwargs(
+        alias_id=alias_id,
+on=on,
+authorization=authorization,
+x_role_id=x_role_id,
+
+    )
+
+    response = await client.get_async_httpx_client().request(
+        **kwargs
+    )
+
+    return _build_response(client=client, response=response)
+
+async def asyncio(
+    alias_id: UUID,
+    *,
+    client: Union[AuthenticatedClient, Client],
+    on: Union[Unset, bool] = True,
+    authorization: Union[None, Unset, str] = UNSET,
+    x_role_id: Union[None, Unset, str] = UNSET,
+
+) -> Optional[Union[HTTPValidationError, SwitchRoutingResponse]]:
+    """ Switch Alias Routing
+
+     Switch routing on or off for this alias.
+
+    When ``on=True``, any sibling alias currently routing the same
+    (name, routing_key) combo is atomically demoted. The response
+    includes ``demoted_alias_id`` so the caller knows what changed.
+
+    When ``on=False``, the alias stops routing. No sibling is
+    auto-promoted — the combo will have no routing alias until one
+    is explicitly switched on.
+
+    Billing is unaffected — all non-deactivated aliases accrue duration
+    regardless of routing state.
+
+    Args:
+        alias_id (UUID):
+        on (Union[Unset, bool]):  Default: True.
+        authorization (Union[None, Unset, str]):
+        x_role_id (Union[None, Unset, str]):
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        Union[HTTPValidationError, SwitchRoutingResponse]
+     """
+
+
+    return (await asyncio_detailed(
+        alias_id=alias_id,
+client=client,
+on=on,
+authorization=authorization,
+x_role_id=x_role_id,
+
+    )).parsed

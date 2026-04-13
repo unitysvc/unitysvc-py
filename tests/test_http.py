@@ -1,16 +1,16 @@
-"""Unit tests for :mod:`unitysvc_py._http` (response unwrapping)."""
+"""Unit tests for :mod:`unitysvc._http` (response unwrapping)."""
 
 from __future__ import annotations
 
 import pytest
 
-from unitysvc_py import (
+from unitysvc import (
     APIError,
     AuthenticationError,
     NotFoundError,
     ValidationError,
 )
-from unitysvc_py._http import unwrap
+from unitysvc._http import unwrap
 
 
 class _FakeResponse:

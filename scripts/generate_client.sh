@@ -69,14 +69,14 @@ echo "    Copied to:  openapi.json (tracked)"
 # ---------------------------------------------------------------------------
 # Regenerate client
 # ---------------------------------------------------------------------------
-echo "==> Regenerating src/unitysvc_py/_generated/"
+echo "==> Regenerating src/unitysvc/_generated/"
 cd "${REPO_ROOT}"
-rm -rf src/unitysvc_py/_generated
+rm -rf src/unitysvc/_generated
 "${OAPI_CLIENT}" generate \
     --path openapi.json \
     --config scripts/openapi-python-client.yml \
     --meta none \
-    --output-path src/unitysvc_py/_generated \
+    --output-path src/unitysvc/_generated \
     --overwrite
 
 echo

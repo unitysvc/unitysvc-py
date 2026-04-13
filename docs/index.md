@@ -22,7 +22,7 @@ It wraps the customer-tagged backend API with a typed sync
 ## At a glance
 
 ```python
-from unitysvc_py import Client
+from unitysvc import Client
 
 client = Client.from_env()  # reads UNITYSVC_API_KEY + UNITYSVC_API_URL
 secrets = client.secrets.list()

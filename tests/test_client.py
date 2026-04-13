@@ -1,4 +1,4 @@
-"""Smoke tests for the public :class:`unitysvc_py.Client` facade.
+"""Smoke tests for the public :class:`unitysvc.Client` facade.
 
 These exercise construction, env-var resolution, and resource lookup
 without hitting the network. HTTP calls are covered by mocked tests
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from unitysvc_py import (
+from unitysvc import (
     DEFAULT_API_URL,
     AsyncClient,
     AuthenticationError,

@@ -11,7 +11,7 @@
           "customer-aliases"
         ],
         "summary": "Create Alias",
-        "description": "Create a new URL alias for the current customer.\n\nIf ``is_routing`` is True (the default) and another alias is already\nrouting the same (name, request_routing_key), this one is created as\nnon-routing instead. Users can later switch routing via the\n``/aliases/{id}/route`` endpoint.",
+        "description": "Create a new URL alias for the current customer.\n\nIf ``is_routing`` is True (the default) and another alias is already\nrouting the same (name, request_routing_key), this one is created as\nnon-routing instead. Users can later switch routing via the\n``/aliases/{id}/switch`` endpoint.",
         "operationId": "customer-aliases-create_alias",
         "parameters": [
           {
@@ -425,14 +425,14 @@
         }
       }
     },
-    "/aliases/{alias_id}/route": {
+    "/aliases/{alias_id}/switch": {
       "post": {
         "tags": [
           "customer-aliases"
         ],
-        "summary": "Set Alias Routing",
-        "description": "Make this alias the routing alias for its (name, routing_key) combo.\n\nAny alias currently routing the same combo is automatically demoted\nto non-routing. Use this for A/B switching between alternatives.\nBilling is unaffected \u2014 all non-deactivated aliases accrue duration\nregardless of routing state.",
-        "operationId": "customer-aliases-set_alias_routing",
+        "summary": "Switch Alias Routing",
+        "description": "Switch routing on or off for this alias.\n\nWhen ``on=True``, any sibling alias currently routing the same\n(name, routing_key) combo is atomically demoted. The response\nincludes ``demoted_alias_id`` so the caller knows what changed.\n\nWhen ``on=False``, the alias stops routing. No sibling is\nauto-promoted \u2014 the combo will have no routing alias until one\nis explicitly switched on.\n\nBilling is unaffected \u2014 all non-deactivated aliases accrue duration\nregardless of routing state.",
+        "operationId": "customer-aliases-switch_alias_routing",
         "parameters": [
           {
             "name": "alias_id",
@@ -442,6 +442,16 @@
               "type": "string",
               "format": "uuid",
               "title": "Alias Id"
+            }
+          },
+          {
+            "name": "on",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "On"
             }
           },
           {
@@ -483,7 +493,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ServiceAliasPublic"
+                  "$ref": "#/components/schemas/SwitchRoutingResponse"
                 }
               }
             }
@@ -1177,14 +1187,14 @@
         }
       }
     },
-    "/secrets/check/{name}": {
+    "/secrets/{name}": {
       "get": {
         "tags": [
           "customer-secrets"
         ],
-        "summary": "Check Secret Exists",
-        "description": "Check whether a secret with the given name exists for the current customer.\n\nUseful for validating secret references before creating\nenrollments that depend on them.",
-        "operationId": "customer-secrets-check_secret_exists",
+        "summary": "Get Secret",
+        "description": "Get metadata for one of the current customer's secrets by name.\n\nReturns metadata only \u2014 the value is never returned.",
+        "operationId": "customer-secrets-get_secret",
         "parameters": [
           {
             "name": "name",
@@ -1193,82 +1203,6 @@
             "schema": {
               "type": "string",
               "title": "Name"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-role-id",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Role-Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SecretExistsResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/secrets/{secret_id}": {
-      "get": {
-        "tags": [
-          "customer-secrets"
-        ],
-        "summary": "Get Secret",
-        "description": "Get metadata for one of the current customer's secrets.\n\nReturns metadata only \u2014 the value is never returned.",
-        "operationId": "customer-secrets-get_secret",
-        "parameters": [
-          {
-            "name": "secret_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Secret Id"
             }
           },
           {
@@ -1336,13 +1270,12 @@
         "operationId": "customer-secrets-update_secret",
         "parameters": [
           {
-            "name": "secret_id",
+            "name": "name",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Secret Id"
+              "title": "Name"
             }
           },
           {
@@ -1416,17 +1349,16 @@
           "customer-secrets"
         ],
         "summary": "Delete Secret",
-        "description": "Delete a customer secret.\n\n**Warning:** this action cannot be undone. Any active enrollments\nthat reference this secret will stop working immediately. The\ncustomer's routing cache is invalidated.",
+        "description": "Delete a customer secret by name.\n\n**Warning:** this action cannot be undone. Any active enrollments\nthat reference this secret will stop working immediately. The\ncustomer's routing cache is invalidated.",
         "operationId": "customer-secrets-delete_secret",
         "parameters": [
           {
-            "name": "secret_id",
+            "name": "name",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Secret Id"
+              "title": "Name"
             }
           },
           {
@@ -1854,25 +1786,6 @@
         "title": "SecretCreate",
         "description": "Schema for creating a secret."
       },
-      "SecretExistsResponse": {
-        "properties": {
-          "exists": {
-            "type": "boolean",
-            "title": "Exists"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          }
-        },
-        "type": "object",
-        "required": [
-          "exists",
-          "name"
-        ],
-        "title": "SecretExistsResponse",
-        "description": "Response payload for ``GET /secrets/check/{name}``."
-      },
       "SecretOwnerTypeEnum": {
         "type": "string",
         "enum": [
@@ -2008,8 +1921,15 @@
             "title": "Description"
           },
           "request_routing_key": {
-            "additionalProperties": true,
-            "type": "object",
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Request Routing Key"
           },
           "is_routing": {
@@ -2073,10 +1993,16 @@
             "title": "Description"
           },
           "request_routing_key": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Request Routing Key",
-            "default": {}
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Routing Key"
           },
           "target_path": {
             "type": "string",
@@ -2189,23 +2115,11 @@
               }
             ],
             "title": "Routing Key Override"
-          },
-          "is_routing": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Routing",
-            "description": "Flip the routing state. Setting this to True will automatically demote any other alias currently routing the same (name, routing_key) combo."
           }
         },
         "type": "object",
         "title": "ServiceAliasUpdate",
-        "description": "Schema for updating a ServiceAlias.\n\nThe alias name cannot be changed (it's the URL path segment).\nAll other fields \u2014 including request_routing_key \u2014 are updatable.\nA unique constraint check runs at save time; conflicts return 409."
+        "description": "Schema for updating a ServiceAlias.\n\nThe alias name cannot be changed (it's the URL path segment).\nAll other fields \u2014 including request_routing_key \u2014 are updatable.\nA unique constraint check runs at save time; conflicts return 409.\n\nRouting state is managed via the dedicated ``POST /switch`` endpoint,\nnot through this schema."
       },
       "ServiceAliasesPublic": {
         "properties": {
@@ -2228,6 +2142,32 @@
         ],
         "title": "ServiceAliasesPublic",
         "description": "List response for ServiceAliases."
+      },
+      "SwitchRoutingResponse": {
+        "properties": {
+          "alias": {
+            "$ref": "#/components/schemas/ServiceAliasPublic"
+          },
+          "demoted_alias_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Demoted Alias Id",
+            "description": "ID of the sibling alias that was demoted when switching on. Null when switching off or when no sibling was routing."
+          }
+        },
+        "type": "object",
+        "required": [
+          "alias"
+        ],
+        "title": "SwitchRoutingResponse",
+        "description": "Response from ``POST /aliases/{id}/switch``."
       },
       "ValidationError": {
         "properties": {

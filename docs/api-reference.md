@@ -6,7 +6,7 @@ documentation with examples, see [SDK Reference](sdk-reference.md).
 
 ## Client
 
-::: unitysvc_py.Client
+::: unitysvc.Client
     options:
       members:
         - from_env
@@ -16,7 +16,7 @@ documentation with examples, see [SDK Reference](sdk-reference.md).
 
 ## AsyncClient
 
-::: unitysvc_py.AsyncClient
+::: unitysvc.AsyncClient
     options:
       members:
         - from_env
@@ -28,25 +28,25 @@ documentation with examples, see [SDK Reference](sdk-reference.md).
 
 ### SecretsResource
 
-::: unitysvc_py.resources.secrets.SecretsResource
+::: unitysvc.resources.secrets.SecretsResource
     options:
       show_root_heading: true
 
 ### AliasesResource
 
-::: unitysvc_py.resources.aliases.AliasesResource
+::: unitysvc.resources.aliases.AliasesResource
     options:
       show_root_heading: true
 
 ### RecurrentRequestsResource
 
-::: unitysvc_py.resources.recurrent_requests.RecurrentRequestsResource
+::: unitysvc.resources.recurrent_requests.RecurrentRequestsResource
     options:
       show_root_heading: true
 
 ## Exceptions
 
-::: unitysvc_py.exceptions
+::: unitysvc.exceptions
     options:
       members:
         - UnitysvcSDKError
