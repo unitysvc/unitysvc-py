@@ -1,22 +1,22 @@
-"""Async mirror of :mod:`unitysvc.resources.recurrent_requests`."""
+"""Async mirror of :mod:`unitysvc.recurrent_requests`."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from .._http import unwrap
+from ._http import unwrap
 
 if TYPE_CHECKING:
-    from .._generated.client import AuthenticatedClient
-    from .._generated.models.recurrent_request_create import RecurrentRequestCreate
-    from .._generated.models.recurrent_request_public import RecurrentRequestPublic
-    from .._generated.models.recurrent_request_status_enum import RecurrentRequestStatusEnum
-    from .._generated.models.recurrent_request_update import RecurrentRequestUpdate
-    from .._generated.models.recurrent_requests_public import RecurrentRequestsPublic
+    from ._generated.client import AuthenticatedClient
+    from ._generated.models.recurrent_request_create import RecurrentRequestCreate
+    from ._generated.models.recurrent_request_public import RecurrentRequestPublic
+    from ._generated.models.recurrent_request_status_enum import RecurrentRequestStatusEnum
+    from ._generated.models.recurrent_request_update import RecurrentRequestUpdate
+    from ._generated.models.recurrent_requests_public import RecurrentRequestsPublic
 
 
-class AsyncRecurrentRequestsResource:
+class AsyncRecurrentRequests:
     """Async operations on the customer's recurrent requests."""
 
     def __init__(self, client: AuthenticatedClient) -> None:
@@ -31,10 +31,10 @@ class AsyncRecurrentRequestsResource:
         skip: int = 0,
         limit: int = 100,
     ) -> RecurrentRequestsPublic:
-        from .._generated.api.customer_recurrent_requests import (
+        from ._generated.api.customer_recurrent_requests import (
             customer_recurrent_requests_list_recurrent_requests,
         )
-        from .._generated.types import UNSET
+        from ._generated.types import UNSET
 
         return unwrap(
             await customer_recurrent_requests_list_recurrent_requests.asyncio_detailed(
@@ -58,7 +58,7 @@ class AsyncRecurrentRequestsResource:
         )
 
     async def get(self, request_id: str | UUID) -> RecurrentRequestPublic:
-        from .._generated.api.customer_recurrent_requests import (
+        from ._generated.api.customer_recurrent_requests import (
             customer_recurrent_requests_get_recurrent_request_detail,
         )
 
@@ -70,10 +70,10 @@ class AsyncRecurrentRequestsResource:
         )
 
     async def create(self, body: RecurrentRequestCreate | dict[str, Any]) -> RecurrentRequestPublic:
-        from .._generated.api.customer_recurrent_requests import (
+        from ._generated.api.customer_recurrent_requests import (
             customer_recurrent_requests_create_recurrent_request,
         )
-        from .._generated.models.recurrent_request_create import RecurrentRequestCreate
+        from ._generated.models.recurrent_request_create import RecurrentRequestCreate
 
         if isinstance(body, dict):
             body = RecurrentRequestCreate.from_dict(body)
@@ -90,10 +90,10 @@ class AsyncRecurrentRequestsResource:
         request_id: str | UUID,
         body: RecurrentRequestUpdate | dict[str, Any],
     ) -> RecurrentRequestPublic:
-        from .._generated.api.customer_recurrent_requests import (
+        from ._generated.api.customer_recurrent_requests import (
             customer_recurrent_requests_update_recurrent_request,
         )
-        from .._generated.models.recurrent_request_update import RecurrentRequestUpdate
+        from ._generated.models.recurrent_request_update import RecurrentRequestUpdate
 
         if isinstance(body, dict):
             body = RecurrentRequestUpdate.from_dict(body)
@@ -107,7 +107,7 @@ class AsyncRecurrentRequestsResource:
         )
 
     async def trigger(self, request_id: str | UUID) -> Any:
-        from .._generated.api.customer_recurrent_requests import (
+        from ._generated.api.customer_recurrent_requests import (
             customer_recurrent_requests_trigger_recurrent_request,
         )
 
@@ -119,7 +119,7 @@ class AsyncRecurrentRequestsResource:
         )
 
     async def delete(self, request_id: str | UUID) -> Any:
-        from .._generated.api.customer_recurrent_requests import (
+        from ._generated.api.customer_recurrent_requests import (
             customer_recurrent_requests_remove_recurrent_request,
         )
 

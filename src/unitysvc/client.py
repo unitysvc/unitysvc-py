@@ -50,9 +50,9 @@ import httpx
 from ._generated.client import AuthenticatedClient as _LowLevelClient
 
 if TYPE_CHECKING:
-    from .resources.aliases import AliasesResource
-    from .resources.recurrent_requests import RecurrentRequestsResource
-    from .resources.secrets import SecretsResource
+    from .aliases import Aliases
+    from .recurrent_requests import RecurrentRequests
+    from .secrets import Secrets
 
 DEFAULT_API_URL = "https://api.unitysvc.com/v1"
 
@@ -119,9 +119,9 @@ class Client:
         self.smtp_base_url = smtp_base_url or os.environ.get(ENV_SMTP_BASE_URL)
 
         # Lazy resource initialization.
-        self._aliases: AliasesResource | None = None
-        self._recurrent_requests: RecurrentRequestsResource | None = None
-        self._secrets: SecretsResource | None = None
+        self._aliases: Aliases | None = None
+        self._recurrent_requests: RecurrentRequests | None = None
+        self._secrets: Secrets | None = None
 
     # ------------------------------------------------------------------
     # Construction helpers
@@ -146,27 +146,27 @@ class Client:
     # Resource namespaces (lazy)
     # ------------------------------------------------------------------
     @property
-    def aliases(self) -> AliasesResource:
+    def aliases(self) -> Aliases:
         if self._aliases is None:
-            from .resources.aliases import AliasesResource
+            from .aliases import Aliases
 
-            self._aliases = AliasesResource(self._client)
+            self._aliases = Aliases(self._client)
         return self._aliases
 
     @property
-    def recurrent_requests(self) -> RecurrentRequestsResource:
+    def recurrent_requests(self) -> RecurrentRequests:
         if self._recurrent_requests is None:
-            from .resources.recurrent_requests import RecurrentRequestsResource
+            from .recurrent_requests import RecurrentRequests
 
-            self._recurrent_requests = RecurrentRequestsResource(self._client)
+            self._recurrent_requests = RecurrentRequests(self._client)
         return self._recurrent_requests
 
     @property
-    def secrets(self) -> SecretsResource:
+    def secrets(self) -> Secrets:
         if self._secrets is None:
-            from .resources.secrets import SecretsResource
+            from .secrets import Secrets
 
-            self._secrets = SecretsResource(self._client)
+            self._secrets = Secrets(self._client)
         return self._secrets
 
     # ------------------------------------------------------------------

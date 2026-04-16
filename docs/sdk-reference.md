@@ -26,21 +26,21 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
 
 ## Resources
 
-### SecretsResource
+### Secrets
 
-::: unitysvc.resources.secrets.SecretsResource
+::: unitysvc.secrets.Secrets
     options:
       show_root_heading: true
 
-### AliasesResource
+### Aliases
 
-::: unitysvc.resources.aliases.AliasesResource
+::: unitysvc.aliases.Aliases
     options:
       show_root_heading: true
 
-### RecurrentRequestsResource
+### RecurrentRequests
 
-::: unitysvc.resources.recurrent_requests.RecurrentRequestsResource
+::: unitysvc.recurrent_requests.RecurrentRequests
     options:
       show_root_heading: true
 

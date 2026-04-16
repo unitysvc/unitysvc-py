@@ -1,19 +1,19 @@
-"""Async mirror of :mod:`unitysvc.resources.aliases`."""
+"""Async mirror of :mod:`unitysvc.aliases`."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from .._http import unwrap
+from ._http import unwrap
 
 if TYPE_CHECKING:
-    from .._generated.client import AuthenticatedClient
-    from .._generated.models.service_alias_create import ServiceAliasCreate
-    from .._generated.models.service_alias_update import ServiceAliasUpdate
+    from ._generated.client import AuthenticatedClient
+    from ._generated.models.service_alias_create import ServiceAliasCreate
+    from ._generated.models.service_alias_update import ServiceAliasUpdate
 
 
-class AsyncAliasesResource:
+class AsyncAliases:
     """Async operations on the customer's service aliases."""
 
     def __init__(self, client: AuthenticatedClient) -> None:
@@ -27,8 +27,8 @@ class AsyncAliasesResource:
         name: str | None = None,
         include_deactivated: bool = False,
     ) -> Any:
-        from .._generated.api.customer_aliases import customer_aliases_list_aliases
-        from .._generated.types import UNSET
+        from ._generated.api.customer_aliases import customer_aliases_list_aliases
+        from ._generated.types import UNSET
 
         return unwrap(
             await customer_aliases_list_aliases.asyncio_detailed(
@@ -41,7 +41,7 @@ class AsyncAliasesResource:
         )
 
     async def get(self, alias_id: str | UUID) -> Any:
-        from .._generated.api.customer_aliases import customer_aliases_get_alias
+        from ._generated.api.customer_aliases import customer_aliases_get_alias
 
         return unwrap(
             await customer_aliases_get_alias.asyncio_detailed(
@@ -51,8 +51,8 @@ class AsyncAliasesResource:
         )
 
     async def create(self, body: ServiceAliasCreate | dict[str, Any]) -> Any:
-        from .._generated.api.customer_aliases import customer_aliases_create_alias
-        from .._generated.models.service_alias_create import ServiceAliasCreate
+        from ._generated.api.customer_aliases import customer_aliases_create_alias
+        from ._generated.models.service_alias_create import ServiceAliasCreate
 
         if isinstance(body, dict):
             body = ServiceAliasCreate.from_dict(body)
@@ -69,8 +69,8 @@ class AsyncAliasesResource:
         alias_id: str | UUID,
         body: ServiceAliasUpdate | dict[str, Any],
     ) -> Any:
-        from .._generated.api.customer_aliases import customer_aliases_update_alias
-        from .._generated.models.service_alias_update import ServiceAliasUpdate
+        from ._generated.api.customer_aliases import customer_aliases_update_alias
+        from ._generated.models.service_alias_update import ServiceAliasUpdate
 
         if isinstance(body, dict):
             body = ServiceAliasUpdate.from_dict(body)
@@ -84,7 +84,7 @@ class AsyncAliasesResource:
         )
 
     async def switch_routing(self, alias_id: str | UUID, *, on: bool = True) -> Any:
-        from .._generated.api.customer_aliases import customer_aliases_switch_alias_routing
+        from ._generated.api.customer_aliases import customer_aliases_switch_alias_routing
 
         return unwrap(
             await customer_aliases_switch_alias_routing.asyncio_detailed(
@@ -95,7 +95,7 @@ class AsyncAliasesResource:
         )
 
     async def delete(self, alias_id: str | UUID) -> Any:
-        from .._generated.api.customer_aliases import customer_aliases_delete_alias
+        from ._generated.api.customer_aliases import customer_aliases_delete_alias
 
         return unwrap(
             await customer_aliases_delete_alias.asyncio_detailed(
