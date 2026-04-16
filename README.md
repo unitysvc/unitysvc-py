@@ -10,11 +10,11 @@ API (`https://api.unitysvc.com/v1`). This package provides:
    operations (secrets, aliases, recurrent requests) without writing
    code.
 
-| | Documentation |
-|-|---------------|
-| **Upstream API** | [Swagger UI](https://api.unitysvc.com/docs) · [ReDoc](https://api.unitysvc.com/redoc) |
-| **Python SDK** | [SDK Reference](https://unitysvc-py.readthedocs.io/en/latest/sdk-reference/) · [API Reference (auto-generated)](https://unitysvc-py.readthedocs.io/en/latest/api-reference/) |
-| **CLI** | [CLI Reference](https://unitysvc-py.readthedocs.io/en/latest/cli-reference/) |
+| | Guide | Reference |
+|-|-------|-----------|
+| **Upstream API** | | [Swagger UI](https://api.unitysvc.com/docs) · [ReDoc](https://api.unitysvc.com/redoc) |
+| **Python SDK** | [SDK Guide](https://unitysvc-py.readthedocs.io/en/latest/sdk-guide/) | [SDK Reference](https://unitysvc-py.readthedocs.io/en/latest/sdk-reference/) (auto-generated from docstrings) |
+| **CLI** | | [CLI Reference](https://unitysvc-py.readthedocs.io/en/latest/cli-reference/) (auto-generated from `typer`) |
 
 ## Install
 

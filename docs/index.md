@@ -17,7 +17,8 @@ It wraps the customer-tagged backend API with a typed sync
 
 - [Getting Started](getting-started.md) — install, configure, first request
 - [CLI Reference](cli-reference.md) — every `usvc` subcommand
-- [SDK Reference](sdk-reference.md) — every resource and method
+- [SDK Guide](sdk-guide.md) — usage patterns and code examples
+- [SDK Reference](sdk-reference.md) — auto-generated class and method docs
 
 ## At a glance
 
