@@ -8,9 +8,8 @@ customers manage secrets, aliases, and recurrent requests via
 
 | Path | Purpose |
 |------|---------|
-| `src/unitysvc/` | Package root — client, resources, CLI, utilities |
+| `src/unitysvc/` | Package root — client, resource facades, CLI, utilities |
 | `src/unitysvc/_generated/` | Auto-generated HTTP client from OpenAPI spec. **Do not edit by hand.** |
-| `src/unitysvc/resources/` | Hand-written resource facades (secrets, aliases, recurrent_requests) |
 | `src/unitysvc/commands/` | CLI command implementations (typer) |
 | `scripts/` | Code-generation and doc-generation scripts |
 | `docs/` | mkdocs site — tutorials (guides) and references |

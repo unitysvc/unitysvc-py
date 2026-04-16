@@ -37,9 +37,9 @@ from .client import (
 )
 
 if TYPE_CHECKING:
-    from .resources.aaliases import AsyncAliasesResource
-    from .resources.arecurrent_requests import AsyncRecurrentRequestsResource
-    from .resources.asecrets import AsyncSecretsResource
+    from .aaliases import AsyncAliases
+    from .arecurrent_requests import AsyncRecurrentRequests
+    from .asecrets import AsyncSecrets
 
 
 class AsyncClient:
@@ -90,9 +90,9 @@ class AsyncClient:
         self.s3_base_url = s3_base_url or os.environ.get(ENV_S3_BASE_URL)
         self.smtp_base_url = smtp_base_url or os.environ.get(ENV_SMTP_BASE_URL)
 
-        self._aliases: AsyncAliasesResource | None = None
-        self._recurrent_requests: AsyncRecurrentRequestsResource | None = None
-        self._secrets: AsyncSecretsResource | None = None
+        self._aliases: AsyncAliases | None = None
+        self._recurrent_requests: AsyncRecurrentRequests | None = None
+        self._secrets: AsyncSecrets | None = None
 
     # ------------------------------------------------------------------
     # Construction helpers
@@ -112,27 +112,27 @@ class AsyncClient:
     # Resource namespaces (lazy)
     # ------------------------------------------------------------------
     @property
-    def aliases(self) -> AsyncAliasesResource:
+    def aliases(self) -> AsyncAliases:
         if self._aliases is None:
-            from .resources.aaliases import AsyncAliasesResource
+            from .aaliases import AsyncAliases
 
-            self._aliases = AsyncAliasesResource(self._client)
+            self._aliases = AsyncAliases(self._client)
         return self._aliases
 
     @property
-    def recurrent_requests(self) -> AsyncRecurrentRequestsResource:
+    def recurrent_requests(self) -> AsyncRecurrentRequests:
         if self._recurrent_requests is None:
-            from .resources.arecurrent_requests import AsyncRecurrentRequestsResource
+            from .arecurrent_requests import AsyncRecurrentRequests
 
-            self._recurrent_requests = AsyncRecurrentRequestsResource(self._client)
+            self._recurrent_requests = AsyncRecurrentRequests(self._client)
         return self._recurrent_requests
 
     @property
-    def secrets(self) -> AsyncSecretsResource:
+    def secrets(self) -> AsyncSecrets:
         if self._secrets is None:
-            from .resources.asecrets import AsyncSecretsResource
+            from .asecrets import AsyncSecrets
 
-            self._secrets = AsyncSecretsResource(self._client)
+            self._secrets = AsyncSecrets(self._client)
         return self._secrets
 
     # ------------------------------------------------------------------

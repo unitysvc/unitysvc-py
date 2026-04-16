@@ -11,18 +11,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from .._http import unwrap
+from ._http import unwrap
 
 if TYPE_CHECKING:
-    from .._generated.client import AuthenticatedClient
-    from .._generated.models.recurrent_request_create import RecurrentRequestCreate
-    from .._generated.models.recurrent_request_public import RecurrentRequestPublic
-    from .._generated.models.recurrent_request_status_enum import RecurrentRequestStatusEnum
-    from .._generated.models.recurrent_request_update import RecurrentRequestUpdate
-    from .._generated.models.recurrent_requests_public import RecurrentRequestsPublic
+    from ._generated.client import AuthenticatedClient
+    from ._generated.models.recurrent_request_create import RecurrentRequestCreate
+    from ._generated.models.recurrent_request_public import RecurrentRequestPublic
+    from ._generated.models.recurrent_request_status_enum import RecurrentRequestStatusEnum
+    from ._generated.models.recurrent_request_update import RecurrentRequestUpdate
+    from ._generated.models.recurrent_requests_public import RecurrentRequestsPublic
 
 
-class RecurrentRequestsResource:
+class RecurrentRequests:
     """Operations on the customer's recurrent requests
     (``/v1/customer/recurrent-requests``)."""
 
@@ -42,10 +42,10 @@ class RecurrentRequestsResource:
         limit: int = 100,
     ) -> RecurrentRequestsPublic:
         """List recurrent requests owned by the authenticated customer."""
-        from .._generated.api.customer_recurrent_requests import (
+        from ._generated.api.customer_recurrent_requests import (
             customer_recurrent_requests_list_recurrent_requests,
         )
-        from .._generated.types import UNSET
+        from ._generated.types import UNSET
 
         return unwrap(
             customer_recurrent_requests_list_recurrent_requests.sync_detailed(
@@ -70,7 +70,7 @@ class RecurrentRequestsResource:
 
     def get(self, request_id: str | UUID) -> RecurrentRequestPublic:
         """Get a single recurrent request by id."""
-        from .._generated.api.customer_recurrent_requests import (
+        from ._generated.api.customer_recurrent_requests import (
             customer_recurrent_requests_get_recurrent_request_detail,
         )
 
@@ -86,10 +86,10 @@ class RecurrentRequestsResource:
     # ------------------------------------------------------------------
     def create(self, body: RecurrentRequestCreate | dict[str, Any]) -> RecurrentRequestPublic:
         """Create a new recurrent request."""
-        from .._generated.api.customer_recurrent_requests import (
+        from ._generated.api.customer_recurrent_requests import (
             customer_recurrent_requests_create_recurrent_request,
         )
-        from .._generated.models.recurrent_request_create import RecurrentRequestCreate
+        from ._generated.models.recurrent_request_create import RecurrentRequestCreate
 
         if isinstance(body, dict):
             body = RecurrentRequestCreate.from_dict(body)
@@ -107,10 +107,10 @@ class RecurrentRequestsResource:
         body: RecurrentRequestUpdate | dict[str, Any],
     ) -> RecurrentRequestPublic:
         """Update an existing recurrent request."""
-        from .._generated.api.customer_recurrent_requests import (
+        from ._generated.api.customer_recurrent_requests import (
             customer_recurrent_requests_update_recurrent_request,
         )
-        from .._generated.models.recurrent_request_update import RecurrentRequestUpdate
+        from ._generated.models.recurrent_request_update import RecurrentRequestUpdate
 
         if isinstance(body, dict):
             body = RecurrentRequestUpdate.from_dict(body)
@@ -125,7 +125,7 @@ class RecurrentRequestsResource:
 
     def trigger(self, request_id: str | UUID) -> Any:
         """Force an immediate run of a recurrent request."""
-        from .._generated.api.customer_recurrent_requests import (
+        from ._generated.api.customer_recurrent_requests import (
             customer_recurrent_requests_trigger_recurrent_request,
         )
 
@@ -138,7 +138,7 @@ class RecurrentRequestsResource:
 
     def delete(self, request_id: str | UUID) -> Any:
         """Delete a recurrent request by id."""
-        from .._generated.api.customer_recurrent_requests import (
+        from ._generated.api.customer_recurrent_requests import (
             customer_recurrent_requests_remove_recurrent_request,
         )
 

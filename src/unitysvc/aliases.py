@@ -17,15 +17,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from .._http import unwrap
+from ._http import unwrap
 
 if TYPE_CHECKING:
-    from .._generated.client import AuthenticatedClient
-    from .._generated.models.service_alias_create import ServiceAliasCreate
-    from .._generated.models.service_alias_update import ServiceAliasUpdate
+    from ._generated.client import AuthenticatedClient
+    from ._generated.models.service_alias_create import ServiceAliasCreate
+    from ._generated.models.service_alias_update import ServiceAliasUpdate
 
 
-class AliasesResource:
+class Aliases:
     """Operations on the customer's service aliases (``/v1/customer/aliases``)."""
 
     def __init__(self, client: AuthenticatedClient) -> None:
@@ -43,8 +43,8 @@ class AliasesResource:
         include_deactivated: bool = False,
     ) -> Any:
         """List aliases owned by the authenticated customer."""
-        from .._generated.api.customer_aliases import customer_aliases_list_aliases
-        from .._generated.types import UNSET
+        from ._generated.api.customer_aliases import customer_aliases_list_aliases
+        from ._generated.types import UNSET
 
         return unwrap(
             customer_aliases_list_aliases.sync_detailed(
@@ -58,7 +58,7 @@ class AliasesResource:
 
     def get(self, alias_id: str | UUID) -> Any:
         """Get a single alias by id."""
-        from .._generated.api.customer_aliases import customer_aliases_get_alias
+        from ._generated.api.customer_aliases import customer_aliases_get_alias
 
         return unwrap(
             customer_aliases_get_alias.sync_detailed(
@@ -72,8 +72,8 @@ class AliasesResource:
     # ------------------------------------------------------------------
     def create(self, body: ServiceAliasCreate | dict[str, Any]) -> Any:
         """Create a new alias."""
-        from .._generated.api.customer_aliases import customer_aliases_create_alias
-        from .._generated.models.service_alias_create import ServiceAliasCreate
+        from ._generated.api.customer_aliases import customer_aliases_create_alias
+        from ._generated.models.service_alias_create import ServiceAliasCreate
 
         if isinstance(body, dict):
             body = ServiceAliasCreate.from_dict(body)
@@ -91,8 +91,8 @@ class AliasesResource:
         body: ServiceAliasUpdate | dict[str, Any],
     ) -> Any:
         """Update an existing alias."""
-        from .._generated.api.customer_aliases import customer_aliases_update_alias
-        from .._generated.models.service_alias_update import ServiceAliasUpdate
+        from ._generated.api.customer_aliases import customer_aliases_update_alias
+        from ._generated.models.service_alias_update import ServiceAliasUpdate
 
         if isinstance(body, dict):
             body = ServiceAliasUpdate.from_dict(body)
@@ -112,7 +112,7 @@ class AliasesResource:
         (name, routing_key) combo is atomically demoted.  When False the
         alias simply stops routing.
         """
-        from .._generated.api.customer_aliases import customer_aliases_switch_alias_routing
+        from ._generated.api.customer_aliases import customer_aliases_switch_alias_routing
 
         return unwrap(
             customer_aliases_switch_alias_routing.sync_detailed(
@@ -124,7 +124,7 @@ class AliasesResource:
 
     def delete(self, alias_id: str | UUID) -> Any:
         """Delete an alias by id."""
-        from .._generated.api.customer_aliases import customer_aliases_delete_alias
+        from ._generated.api.customer_aliases import customer_aliases_delete_alias
 
         return unwrap(
             customer_aliases_delete_alias.sync_detailed(

@@ -1,21 +1,21 @@
-"""Async mirror of :mod:`unitysvc.resources.secrets`."""
+"""Async mirror of :mod:`unitysvc.secrets`."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from .._http import unwrap
+from ._http import unwrap
 
 if TYPE_CHECKING:
-    from .._generated.client import AuthenticatedClient
-    from .._generated.models.message import Message
-    from .._generated.models.secret_create import SecretCreate
-    from .._generated.models.secret_public import SecretPublic
-    from .._generated.models.secret_update import SecretUpdate
-    from .._generated.models.secrets_public import SecretsPublic
+    from ._generated.client import AuthenticatedClient
+    from ._generated.models.message import Message
+    from ._generated.models.secret_create import SecretCreate
+    from ._generated.models.secret_public import SecretPublic
+    from ._generated.models.secret_update import SecretUpdate
+    from ._generated.models.secrets_public import SecretsPublic
 
 
-class AsyncSecretsResource:
+class AsyncSecrets:
     """Async operations on the customer's secret store."""
 
     def __init__(self, client: AuthenticatedClient) -> None:
@@ -27,7 +27,7 @@ class AsyncSecretsResource:
         skip: int = 0,
         limit: int = 100,
     ) -> SecretsPublic:
-        from .._generated.api.customer_secrets import customer_secrets_list_secrets
+        from ._generated.api.customer_secrets import customer_secrets_list_secrets
 
         return unwrap(
             await customer_secrets_list_secrets.asyncio_detailed(
@@ -38,7 +38,7 @@ class AsyncSecretsResource:
         )
 
     async def get(self, name: str) -> SecretPublic:
-        from .._generated.api.customer_secrets import customer_secrets_get_secret
+        from ._generated.api.customer_secrets import customer_secrets_get_secret
 
         return unwrap(
             await customer_secrets_get_secret.asyncio_detailed(
@@ -48,8 +48,8 @@ class AsyncSecretsResource:
         )
 
     async def create(self, body: SecretCreate | dict[str, Any]) -> SecretPublic:
-        from .._generated.api.customer_secrets import customer_secrets_create_secret
-        from .._generated.models.secret_create import SecretCreate
+        from ._generated.api.customer_secrets import customer_secrets_create_secret
+        from ._generated.models.secret_create import SecretCreate
 
         if isinstance(body, dict):
             body = SecretCreate.from_dict(body)
@@ -66,8 +66,8 @@ class AsyncSecretsResource:
         name: str,
         body: SecretUpdate | dict[str, Any],
     ) -> SecretPublic:
-        from .._generated.api.customer_secrets import customer_secrets_update_secret
-        from .._generated.models.secret_update import SecretUpdate
+        from ._generated.api.customer_secrets import customer_secrets_update_secret
+        from ._generated.models.secret_update import SecretUpdate
 
         if isinstance(body, dict):
             body = SecretUpdate.from_dict(body)
@@ -81,7 +81,7 @@ class AsyncSecretsResource:
         )
 
     async def delete(self, name: str) -> Message:
-        from .._generated.api.customer_secrets import customer_secrets_delete_secret
+        from ._generated.api.customer_secrets import customer_secrets_delete_secret
 
         return unwrap(
             await customer_secrets_delete_secret.asyncio_detailed(
