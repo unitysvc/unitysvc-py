@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unitysvc-py"
-version = "0.1.0"
+version = "0.1.1"
 description = "Customer-facing Python SDK and `usvc` CLI for UnitySVC"
 readme = "README.md"
 authors = [{ name = "Bo Peng", email = "bo.peng@unitysvc.com" }]
