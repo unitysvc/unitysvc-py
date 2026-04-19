@@ -5,20 +5,28 @@ the generated low-level client. Each method calls ``sync_detailed``
 and passes the result through :func:`unitysvc._http.unwrap`, so
 callers always get a populated typed model or a
 :class:`~unitysvc.exceptions.UnitysvcSDKError`.
+
+API shape mirrors GitHub's secrets API (see unitysvc#798):
+
+* :meth:`list`   — ``GET /``
+* :meth:`get`    — ``GET /{name}``      (metadata only)
+* :meth:`set`    — ``PUT /{name}``      (idempotent create-or-replace)
+* :meth:`delete` — ``DELETE /{name}``
+
+There is no separate ``create`` method — :meth:`set` does both create
+and rotate in one idempotent call.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ._http import unwrap
 
 if TYPE_CHECKING:
     from ._generated.client import AuthenticatedClient
     from ._generated.models.message import Message
-    from ._generated.models.secret_create import SecretCreate
     from ._generated.models.secret_public import SecretPublic
-    from ._generated.models.secret_update import SecretUpdate
     from ._generated.models.secrets_public import SecretsPublic
 
 
@@ -49,7 +57,7 @@ class Secrets:
         )
 
     def get(self, name: str) -> SecretPublic:
-        """Get a single secret by name."""
+        """Get a single secret by name (metadata only — value is never returned)."""
         from ._generated.api.customer_secrets import customer_secrets_get_secret
 
         return unwrap(
@@ -62,43 +70,33 @@ class Secrets:
     # ------------------------------------------------------------------
     # Write
     # ------------------------------------------------------------------
-    def create(self, body: SecretCreate | dict[str, Any]) -> SecretPublic:
-        """Create a new secret."""
-        from ._generated.api.customer_secrets import customer_secrets_create_secret
-        from ._generated.models.secret_create import SecretCreate
+    def set(self, name: str, value: str) -> SecretPublic:
+        """Set ``name`` to ``value`` (idempotent — creates or replaces).
 
-        if isinstance(body, dict):
-            body = SecretCreate.from_dict(body)
+        Maps to ``PUT /v1/customer/secrets/{name}``. Returns the secret's
+        public metadata; the value itself is never echoed back. The
+        encryption is handled server-side.
 
-        return unwrap(
-            customer_secrets_create_secret.sync_detailed(
-                client=self._client,
-                body=body,
-            )
-        )
+        Args:
+            name: Secret name (must match ``^[A-Z_][A-Z0-9_]*$``).
+            value: Secret value. May be empty.
 
-    def update(
-        self,
-        name: str,
-        body: SecretUpdate | dict[str, Any],
-    ) -> SecretPublic:
-        """Update an existing secret by name."""
-        from ._generated.api.customer_secrets import customer_secrets_update_secret
+        Returns:
+            ``SecretPublic`` metadata for the stored secret.
+        """
+        from ._generated.api.customer_secrets import customer_secrets_set_secret
         from ._generated.models.secret_update import SecretUpdate
 
-        if isinstance(body, dict):
-            body = SecretUpdate.from_dict(body)
-
         return unwrap(
-            customer_secrets_update_secret.sync_detailed(
+            customer_secrets_set_secret.sync_detailed(
                 name=name,
                 client=self._client,
-                body=body,
+                body=SecretUpdate(value=value),
             )
         )
 
     def delete(self, name: str) -> Message:
-        """Delete a secret by name."""
+        """Delete a secret by name. This action cannot be undone."""
         from ._generated.api.customer_secrets import customer_secrets_delete_secret
 
         return unwrap(

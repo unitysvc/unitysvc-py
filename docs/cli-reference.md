@@ -58,7 +58,7 @@ $ usvc secrets [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `list`: List secrets owned by the authenticated...
-* `set`: Create or update a secret by name.
+* `set`: Set a secret by name (idempotent — creates...
 * `delete`: Delete a secret by name.
 
 ### `usvc secrets list`
@@ -82,12 +82,12 @@ $ usvc secrets list [OPTIONS]
 
 ### `usvc secrets set`
 
-Create or update a secret by name.
+Set a secret by name (idempotent — creates or rotates).
 
-Looks up the secret by name; if it exists, updates its value. If
-not, creates a new secret. Use ``--value`` or ``--from-file`` to
-supply the value non-interactively; otherwise the CLI prompts with
-hidden input.
+Maps to ``PUT /v1/customer/secrets/{name}``. Use ``--value`` or
+``--from-file`` to supply the value non-interactively; otherwise
+the CLI prompts with hidden input. The value is encrypted server-side
+and cannot be retrieved later.
 
 **Usage**:
 

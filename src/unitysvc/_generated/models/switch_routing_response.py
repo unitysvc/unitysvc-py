@@ -1,50 +1,38 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, TypeVar, Optional, BinaryIO, TextIO, TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-from ..types import UNSET, Unset
-from typing import cast
-from typing import cast, Union
-from typing import Union
-from uuid import UUID
-
 if TYPE_CHECKING:
-  from ..models.service_alias_public import ServiceAliasPublic
-
-
-
+    from ..models.service_alias_public import ServiceAliasPublic
 
 
 T = TypeVar("T", bound="SwitchRoutingResponse")
 
 
-
 @_attrs_define
 class SwitchRoutingResponse:
-    """ Response from ``POST /aliases/{id}/switch``.
+    """Response from ``POST /aliases/{id}/switch``."""
 
-     """
-
-    alias: 'ServiceAliasPublic'
+    alias: ServiceAliasPublic
     """ Public response model for ServiceAlias. """
-    demoted_alias_id: Union[None, UUID, Unset] = UNSET
+    demoted_alias_id: None | Unset | UUID = UNSET
     """ ID of the sibling alias that was demoted when switching on. Null when switching off or when no sibling was
     routing. """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-
-
-
-
     def to_dict(self) -> dict[str, Any]:
         from ..models.service_alias_public import ServiceAliasPublic
+
         alias = self.alias.to_dict()
 
-        demoted_alias_id: Union[None, Unset, str]
+        demoted_alias_id: None | str | Unset
         if isinstance(self.demoted_alias_id, Unset):
             demoted_alias_id = UNSET
         elif isinstance(self.demoted_alias_id, UUID):
@@ -52,29 +40,26 @@ class SwitchRoutingResponse:
         else:
             demoted_alias_id = self.demoted_alias_id
 
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({
-            "alias": alias,
-        })
+        field_dict.update(
+            {
+                "alias": alias,
+            }
+        )
         if demoted_alias_id is not UNSET:
             field_dict["demoted_alias_id"] = demoted_alias_id
 
         return field_dict
 
-
-
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.service_alias_public import ServiceAliasPublic
+
         d = dict(src_dict)
         alias = ServiceAliasPublic.from_dict(d.pop("alias"))
 
-
-
-
-        def _parse_demoted_alias_id(data: object) -> Union[None, UUID, Unset]:
+        def _parse_demoted_alias_id(data: object) -> None | Unset | UUID:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -84,21 +69,17 @@ class SwitchRoutingResponse:
                     raise TypeError()
                 demoted_alias_id_type_0 = UUID(data)
 
-
-
                 return demoted_alias_id_type_0
-            except: # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, UUID, Unset], data)
+            return cast(None | Unset | UUID, data)
 
         demoted_alias_id = _parse_demoted_alias_id(d.pop("demoted_alias_id", UNSET))
-
 
         switch_routing_response = cls(
             alias=alias,
             demoted_alias_id=demoted_alias_id,
         )
-
 
         switch_routing_response.additional_properties = d
         return switch_routing_response

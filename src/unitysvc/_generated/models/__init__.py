@@ -1,4 +1,4 @@
-""" Contains all the data models used in inputs/outputs """
+"""Contains all the data models used in inputs/outputs"""
 
 from .http_validation_error import HTTPValidationError
 from .message import Message
@@ -7,6 +7,7 @@ from .recurrent_request_create_body_template_type_0 import RecurrentRequestCreat
 from .recurrent_request_create_request_headers_type_0 import RecurrentRequestCreateRequestHeadersType0
 from .recurrent_request_public import RecurrentRequestPublic
 from .recurrent_request_public_body_template_type_0 import RecurrentRequestPublicBodyTemplateType0
+from .recurrent_request_public_request_headers_type_0 import RecurrentRequestPublicRequestHeadersType0
 from .recurrent_request_public_schedule_type_0 import RecurrentRequestPublicScheduleType0
 from .recurrent_request_public_state_type_0 import RecurrentRequestPublicStateType0
 from .recurrent_request_status_enum import RecurrentRequestStatusEnum
@@ -15,7 +16,6 @@ from .recurrent_request_update_body_template_type_0 import RecurrentRequestUpdat
 from .recurrent_request_update_request_headers_type_0 import RecurrentRequestUpdateRequestHeadersType0
 from .recurrent_request_update_schedule_type_0 import RecurrentRequestUpdateScheduleType0
 from .recurrent_requests_public import RecurrentRequestsPublic
-from .secret_create import SecretCreate
 from .secret_owner_type_enum import SecretOwnerTypeEnum
 from .secret_public import SecretPublic
 from .secret_update import SecretUpdate
@@ -41,6 +41,7 @@ __all__ = (
     "RecurrentRequestCreateRequestHeadersType0",
     "RecurrentRequestPublic",
     "RecurrentRequestPublicBodyTemplateType0",
+    "RecurrentRequestPublicRequestHeadersType0",
     "RecurrentRequestPublicScheduleType0",
     "RecurrentRequestPublicStateType0",
     "RecurrentRequestsPublic",
@@ -49,7 +50,6 @@ __all__ = (
     "RecurrentRequestUpdateBodyTemplateType0",
     "RecurrentRequestUpdateRequestHeadersType0",
     "RecurrentRequestUpdateScheduleType0",
-    "SecretCreate",
     "SecretOwnerTypeEnum",
     "SecretPublic",
     "SecretsPublic",

@@ -1,27 +1,21 @@
 from http import HTTPStatus
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
+from urllib.parse import quote
 
 import httpx
 
-from ...client import AuthenticatedClient, Client
-from ...types import Response, UNSET
 from ... import errors
-
+from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
 from ...models.message import Message
-from ...types import UNSET, Unset
-from typing import cast
-from typing import cast, Union
-from typing import Union
-
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     name: str,
     *,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     if not isinstance(authorization, Unset):
@@ -30,35 +24,27 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
-
-
-    
-
-    
-
     _kwargs: dict[str, Any] = {
         "method": "delete",
-        "url": "/secrets/{name}".format(name=name,),
+        "url": "/secrets/{name}".format(
+            name=quote(str(name), safe=""),
+        ),
     }
-
 
     _kwargs["headers"] = headers
     return _kwargs
 
 
-
-def _parse_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Optional[Union[HTTPValidationError, Message]]:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> HTTPValidationError | Message | None:
     if response.status_code == 200:
         response_200 = Message.from_dict(response.json())
-
-
 
         return response_200
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
-
-
 
         return response_422
 
@@ -68,7 +54,9 @@ def _parse_response(*, client: Union[AuthenticatedClient, Client], response: htt
         return None
 
 
-def _build_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Response[Union[HTTPValidationError, Message]]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[HTTPValidationError | Message]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -80,12 +68,11 @@ def _build_response(*, client: Union[AuthenticatedClient, Client], response: htt
 def sync_detailed(
     name: str,
     *,
-    client: Union[AuthenticatedClient, Client],
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Response[Union[HTTPValidationError, Message]]:
-    """ Delete Secret
+    client: AuthenticatedClient | Client,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | Message]:
+    """Delete Secret
 
      Delete a customer secret by name.
 
@@ -95,23 +82,21 @@ def sync_detailed(
 
     Args:
         name (str):
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, Message]]
-     """
-
+        Response[HTTPValidationError | Message]
+    """
 
     kwargs = _get_kwargs(
         name=name,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        authorization=authorization,
+        x_role_id=x_role_id,
     )
 
     response = client.get_httpx_client().request(
@@ -120,15 +105,15 @@ x_role_id=x_role_id,
 
     return _build_response(client=client, response=response)
 
+
 def sync(
     name: str,
     *,
-    client: Union[AuthenticatedClient, Client],
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Optional[Union[HTTPValidationError, Message]]:
-    """ Delete Secret
+    client: AuthenticatedClient | Client,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> HTTPValidationError | Message | None:
+    """Delete Secret
 
      Delete a customer secret by name.
 
@@ -138,35 +123,33 @@ def sync(
 
     Args:
         name (str):
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, Message]
-     """
-
+        HTTPValidationError | Message
+    """
 
     return sync_detailed(
         name=name,
-client=client,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        client=client,
+        authorization=authorization,
+        x_role_id=x_role_id,
     ).parsed
+
 
 async def asyncio_detailed(
     name: str,
     *,
-    client: Union[AuthenticatedClient, Client],
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Response[Union[HTTPValidationError, Message]]:
-    """ Delete Secret
+    client: AuthenticatedClient | Client,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | Message]:
+    """Delete Secret
 
      Delete a customer secret by name.
 
@@ -176,40 +159,36 @@ async def asyncio_detailed(
 
     Args:
         name (str):
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, Message]]
-     """
-
+        Response[HTTPValidationError | Message]
+    """
 
     kwargs = _get_kwargs(
         name=name,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        authorization=authorization,
+        x_role_id=x_role_id,
     )
 
-    response = await client.get_async_httpx_client().request(
-        **kwargs
-    )
+    response = await client.get_async_httpx_client().request(**kwargs)
 
     return _build_response(client=client, response=response)
+
 
 async def asyncio(
     name: str,
     *,
-    client: Union[AuthenticatedClient, Client],
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Optional[Union[HTTPValidationError, Message]]:
-    """ Delete Secret
+    client: AuthenticatedClient | Client,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> HTTPValidationError | Message | None:
+    """Delete Secret
 
      Delete a customer secret by name.
 
@@ -219,22 +198,22 @@ async def asyncio(
 
     Args:
         name (str):
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, Message]
-     """
+        HTTPValidationError | Message
+    """
 
-
-    return (await asyncio_detailed(
-        name=name,
-client=client,
-authorization=authorization,
-x_role_id=x_role_id,
-
-    )).parsed
+    return (
+        await asyncio_detailed(
+            name=name,
+            client=client,
+            authorization=authorization,
+            x_role_id=x_role_id,
+        )
+    ).parsed

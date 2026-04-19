@@ -1,34 +1,27 @@
 from http import HTTPStatus
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
+from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
-from ...client import AuthenticatedClient, Client
-from ...types import Response, UNSET
 from ... import errors
-
+from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.recurrent_request_status_enum import check_recurrent_request_status_enum
-from ...models.recurrent_request_status_enum import RecurrentRequestStatusEnum
+from ...models.recurrent_request_status_enum import RecurrentRequestStatusEnum, check_recurrent_request_status_enum
 from ...models.recurrent_requests_public import RecurrentRequestsPublic
-from ...types import UNSET, Unset
-from typing import cast
-from typing import cast, Union
-from typing import Union
-from uuid import UUID
-
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    service_id: Union[None, UUID, Unset] = UNSET,
-    enrollment_id: Union[None, UUID, Unset] = UNSET,
-    status: Union[None, RecurrentRequestStatusEnum, Unset] = UNSET,
-    skip: Union[Unset, int] = 0,
-    limit: Union[Unset, int] = 100,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
+    service_id: None | Unset | UUID = UNSET,
+    enrollment_id: None | Unset | UUID = UNSET,
+    status: None | RecurrentRequestStatusEnum | Unset = UNSET,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     if not isinstance(authorization, Unset):
@@ -37,13 +30,9 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
-
-
-    
-
     params: dict[str, Any] = {}
 
-    json_service_id: Union[None, Unset, str]
+    json_service_id: None | str | Unset
     if isinstance(service_id, Unset):
         json_service_id = UNSET
     elif isinstance(service_id, UUID):
@@ -52,7 +41,7 @@ def _get_kwargs(
         json_service_id = service_id
     params["service_id"] = json_service_id
 
-    json_enrollment_id: Union[None, Unset, str]
+    json_enrollment_id: None | str | Unset
     if isinstance(enrollment_id, Unset):
         json_enrollment_id = UNSET
     elif isinstance(enrollment_id, UUID):
@@ -61,7 +50,7 @@ def _get_kwargs(
         json_enrollment_id = enrollment_id
     params["enrollment_id"] = json_enrollment_id
 
-    json_status: Union[None, Unset, str]
+    json_status: None | str | Unset
     if isinstance(status, Unset):
         json_status = UNSET
     elif isinstance(status, str):
@@ -74,9 +63,7 @@ def _get_kwargs(
 
     params["limit"] = limit
 
-
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
-
 
     _kwargs: dict[str, Any] = {
         "method": "get",
@@ -84,24 +71,20 @@ def _get_kwargs(
         "params": params,
     }
 
-
     _kwargs["headers"] = headers
     return _kwargs
 
 
-
-def _parse_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Optional[Union[HTTPValidationError, RecurrentRequestsPublic]]:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> HTTPValidationError | RecurrentRequestsPublic | None:
     if response.status_code == 200:
         response_200 = RecurrentRequestsPublic.from_dict(response.json())
-
-
 
         return response_200
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
-
-
 
         return response_422
 
@@ -111,7 +94,9 @@ def _parse_response(*, client: Union[AuthenticatedClient, Client], response: htt
         return None
 
 
-def _build_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Response[Union[HTTPValidationError, RecurrentRequestsPublic]]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[HTTPValidationError | RecurrentRequestsPublic]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -122,47 +107,44 @@ def _build_response(*, client: Union[AuthenticatedClient, Client], response: htt
 
 def sync_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    service_id: Union[None, UUID, Unset] = UNSET,
-    enrollment_id: Union[None, UUID, Unset] = UNSET,
-    status: Union[None, RecurrentRequestStatusEnum, Unset] = UNSET,
-    skip: Union[Unset, int] = 0,
-    limit: Union[Unset, int] = 100,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Response[Union[HTTPValidationError, RecurrentRequestsPublic]]:
-    """ List Recurrent Requests
+    client: AuthenticatedClient | Client,
+    service_id: None | Unset | UUID = UNSET,
+    enrollment_id: None | Unset | UUID = UNSET,
+    status: None | RecurrentRequestStatusEnum | Unset = UNSET,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | RecurrentRequestsPublic]:
+    """List Recurrent Requests
 
      List recurrent requests for the current customer.
 
     Args:
-        service_id (Union[None, UUID, Unset]):
-        enrollment_id (Union[None, UUID, Unset]):
-        status (Union[None, RecurrentRequestStatusEnum, Unset]):
-        skip (Union[Unset, int]):  Default: 0.
-        limit (Union[Unset, int]):  Default: 100.
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        service_id (None | Unset | UUID):
+        enrollment_id (None | Unset | UUID):
+        status (None | RecurrentRequestStatusEnum | Unset):
+        skip (int | Unset):  Default: 0.
+        limit (int | Unset):  Default: 100.
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, RecurrentRequestsPublic]]
-     """
-
+        Response[HTTPValidationError | RecurrentRequestsPublic]
+    """
 
     kwargs = _get_kwargs(
         service_id=service_id,
-enrollment_id=enrollment_id,
-status=status,
-skip=skip,
-limit=limit,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        enrollment_id=enrollment_id,
+        status=status,
+        skip=skip,
+        limit=limit,
+        authorization=authorization,
+        x_role_id=x_role_id,
     )
 
     response = client.get_httpx_client().request(
@@ -171,145 +153,139 @@ x_role_id=x_role_id,
 
     return _build_response(client=client, response=response)
 
+
 def sync(
     *,
-    client: Union[AuthenticatedClient, Client],
-    service_id: Union[None, UUID, Unset] = UNSET,
-    enrollment_id: Union[None, UUID, Unset] = UNSET,
-    status: Union[None, RecurrentRequestStatusEnum, Unset] = UNSET,
-    skip: Union[Unset, int] = 0,
-    limit: Union[Unset, int] = 100,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Optional[Union[HTTPValidationError, RecurrentRequestsPublic]]:
-    """ List Recurrent Requests
+    client: AuthenticatedClient | Client,
+    service_id: None | Unset | UUID = UNSET,
+    enrollment_id: None | Unset | UUID = UNSET,
+    status: None | RecurrentRequestStatusEnum | Unset = UNSET,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> HTTPValidationError | RecurrentRequestsPublic | None:
+    """List Recurrent Requests
 
      List recurrent requests for the current customer.
 
     Args:
-        service_id (Union[None, UUID, Unset]):
-        enrollment_id (Union[None, UUID, Unset]):
-        status (Union[None, RecurrentRequestStatusEnum, Unset]):
-        skip (Union[Unset, int]):  Default: 0.
-        limit (Union[Unset, int]):  Default: 100.
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        service_id (None | Unset | UUID):
+        enrollment_id (None | Unset | UUID):
+        status (None | RecurrentRequestStatusEnum | Unset):
+        skip (int | Unset):  Default: 0.
+        limit (int | Unset):  Default: 100.
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, RecurrentRequestsPublic]
-     """
-
+        HTTPValidationError | RecurrentRequestsPublic
+    """
 
     return sync_detailed(
         client=client,
-service_id=service_id,
-enrollment_id=enrollment_id,
-status=status,
-skip=skip,
-limit=limit,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        service_id=service_id,
+        enrollment_id=enrollment_id,
+        status=status,
+        skip=skip,
+        limit=limit,
+        authorization=authorization,
+        x_role_id=x_role_id,
     ).parsed
+
 
 async def asyncio_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    service_id: Union[None, UUID, Unset] = UNSET,
-    enrollment_id: Union[None, UUID, Unset] = UNSET,
-    status: Union[None, RecurrentRequestStatusEnum, Unset] = UNSET,
-    skip: Union[Unset, int] = 0,
-    limit: Union[Unset, int] = 100,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Response[Union[HTTPValidationError, RecurrentRequestsPublic]]:
-    """ List Recurrent Requests
+    client: AuthenticatedClient | Client,
+    service_id: None | Unset | UUID = UNSET,
+    enrollment_id: None | Unset | UUID = UNSET,
+    status: None | RecurrentRequestStatusEnum | Unset = UNSET,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | RecurrentRequestsPublic]:
+    """List Recurrent Requests
 
      List recurrent requests for the current customer.
 
     Args:
-        service_id (Union[None, UUID, Unset]):
-        enrollment_id (Union[None, UUID, Unset]):
-        status (Union[None, RecurrentRequestStatusEnum, Unset]):
-        skip (Union[Unset, int]):  Default: 0.
-        limit (Union[Unset, int]):  Default: 100.
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        service_id (None | Unset | UUID):
+        enrollment_id (None | Unset | UUID):
+        status (None | RecurrentRequestStatusEnum | Unset):
+        skip (int | Unset):  Default: 0.
+        limit (int | Unset):  Default: 100.
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, RecurrentRequestsPublic]]
-     """
-
+        Response[HTTPValidationError | RecurrentRequestsPublic]
+    """
 
     kwargs = _get_kwargs(
         service_id=service_id,
-enrollment_id=enrollment_id,
-status=status,
-skip=skip,
-limit=limit,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        enrollment_id=enrollment_id,
+        status=status,
+        skip=skip,
+        limit=limit,
+        authorization=authorization,
+        x_role_id=x_role_id,
     )
 
-    response = await client.get_async_httpx_client().request(
-        **kwargs
-    )
+    response = await client.get_async_httpx_client().request(**kwargs)
 
     return _build_response(client=client, response=response)
 
+
 async def asyncio(
     *,
-    client: Union[AuthenticatedClient, Client],
-    service_id: Union[None, UUID, Unset] = UNSET,
-    enrollment_id: Union[None, UUID, Unset] = UNSET,
-    status: Union[None, RecurrentRequestStatusEnum, Unset] = UNSET,
-    skip: Union[Unset, int] = 0,
-    limit: Union[Unset, int] = 100,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Optional[Union[HTTPValidationError, RecurrentRequestsPublic]]:
-    """ List Recurrent Requests
+    client: AuthenticatedClient | Client,
+    service_id: None | Unset | UUID = UNSET,
+    enrollment_id: None | Unset | UUID = UNSET,
+    status: None | RecurrentRequestStatusEnum | Unset = UNSET,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> HTTPValidationError | RecurrentRequestsPublic | None:
+    """List Recurrent Requests
 
      List recurrent requests for the current customer.
 
     Args:
-        service_id (Union[None, UUID, Unset]):
-        enrollment_id (Union[None, UUID, Unset]):
-        status (Union[None, RecurrentRequestStatusEnum, Unset]):
-        skip (Union[Unset, int]):  Default: 0.
-        limit (Union[Unset, int]):  Default: 100.
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        service_id (None | Unset | UUID):
+        enrollment_id (None | Unset | UUID):
+        status (None | RecurrentRequestStatusEnum | Unset):
+        skip (int | Unset):  Default: 0.
+        limit (int | Unset):  Default: 100.
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, RecurrentRequestsPublic]
-     """
+        HTTPValidationError | RecurrentRequestsPublic
+    """
 
-
-    return (await asyncio_detailed(
-        client=client,
-service_id=service_id,
-enrollment_id=enrollment_id,
-status=status,
-skip=skip,
-limit=limit,
-authorization=authorization,
-x_role_id=x_role_id,
-
-    )).parsed
+    return (
+        await asyncio_detailed(
+            client=client,
+            service_id=service_id,
+            enrollment_id=enrollment_id,
+            status=status,
+            skip=skip,
+            limit=limit,
+            authorization=authorization,
+            x_role_id=x_role_id,
+        )
+    ).parsed

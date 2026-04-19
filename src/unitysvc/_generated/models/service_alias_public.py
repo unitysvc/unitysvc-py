@@ -1,57 +1,45 @@
+from __future__ import annotations
+
+import datetime
 from collections.abc import Mapping
-from typing import Any, TypeVar, Optional, BinaryIO, TextIO, TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-
-from ..types import UNSET, Unset
-
-from ..types import UNSET, Unset
 from dateutil.parser import isoparse
-from typing import cast
-from typing import cast, Union
-from typing import Union
-from uuid import UUID
-import datetime
+
+from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-  from ..models.service_alias_public_request_routing_key_type_0 import ServiceAliasPublicRequestRoutingKeyType0
-  from ..models.service_alias_public_routing_key_override_type_0 import ServiceAliasPublicRoutingKeyOverrideType0
-
-
-
+    from ..models.service_alias_public_request_routing_key_type_0 import ServiceAliasPublicRequestRoutingKeyType0
+    from ..models.service_alias_public_routing_key_override_type_0 import ServiceAliasPublicRoutingKeyOverrideType0
 
 
 T = TypeVar("T", bound="ServiceAliasPublic")
 
 
-
 @_attrs_define
 class ServiceAliasPublic:
-    """ Public response model for ServiceAlias.
-
-     """
+    """Public response model for ServiceAlias."""
 
     id: UUID
     customer_id: UUID
     name: str
     target_path: str
     created_at: datetime.datetime
-    description: Union[None, Unset, str] = UNSET
-    request_routing_key: Union['ServiceAliasPublicRequestRoutingKeyType0', None, Unset] = UNSET
-    routing_key_override: Union['ServiceAliasPublicRoutingKeyOverrideType0', None, Unset] = UNSET
-    is_routing: Union[Unset, bool] = True
-    updated_at: Union[None, Unset, datetime.datetime] = UNSET
-    deactivated_at: Union[None, Unset, datetime.datetime] = UNSET
+    description: None | str | Unset = UNSET
+    request_routing_key: None | ServiceAliasPublicRequestRoutingKeyType0 | Unset = UNSET
+    routing_key_override: None | ServiceAliasPublicRoutingKeyOverrideType0 | Unset = UNSET
+    is_routing: bool | Unset = True
+    updated_at: datetime.datetime | None | Unset = UNSET
+    deactivated_at: datetime.datetime | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
-
-
-
-
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.service_alias_public_request_routing_key_type_0 import ServiceAliasPublicRequestRoutingKeyType0
         from ..models.service_alias_public_routing_key_override_type_0 import ServiceAliasPublicRoutingKeyOverrideType0
+
         id = str(self.id)
 
         customer_id = str(self.customer_id)
@@ -62,13 +50,13 @@ class ServiceAliasPublic:
 
         created_at = self.created_at.isoformat()
 
-        description: Union[None, Unset, str]
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        request_routing_key: Union[None, Unset, dict[str, Any]]
+        request_routing_key: dict[str, Any] | None | Unset
         if isinstance(self.request_routing_key, Unset):
             request_routing_key = UNSET
         elif isinstance(self.request_routing_key, ServiceAliasPublicRequestRoutingKeyType0):
@@ -76,7 +64,7 @@ class ServiceAliasPublic:
         else:
             request_routing_key = self.request_routing_key
 
-        routing_key_override: Union[None, Unset, dict[str, Any]]
+        routing_key_override: dict[str, Any] | None | Unset
         if isinstance(self.routing_key_override, Unset):
             routing_key_override = UNSET
         elif isinstance(self.routing_key_override, ServiceAliasPublicRoutingKeyOverrideType0):
@@ -86,7 +74,7 @@ class ServiceAliasPublic:
 
         is_routing = self.is_routing
 
-        updated_at: Union[None, Unset, str]
+        updated_at: None | str | Unset
         if isinstance(self.updated_at, Unset):
             updated_at = UNSET
         elif isinstance(self.updated_at, datetime.datetime):
@@ -94,7 +82,7 @@ class ServiceAliasPublic:
         else:
             updated_at = self.updated_at
 
-        deactivated_at: Union[None, Unset, str]
+        deactivated_at: None | str | Unset
         if isinstance(self.deactivated_at, Unset):
             deactivated_at = UNSET
         elif isinstance(self.deactivated_at, datetime.datetime):
@@ -102,16 +90,17 @@ class ServiceAliasPublic:
         else:
             deactivated_at = self.deactivated_at
 
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({
-            "id": id,
-            "customer_id": customer_id,
-            "name": name,
-            "target_path": target_path,
-            "created_at": created_at,
-        })
+        field_dict.update(
+            {
+                "id": id,
+                "customer_id": customer_id,
+                "name": name,
+                "target_path": target_path,
+                "created_at": created_at,
+            }
+        )
         if description is not UNSET:
             field_dict["description"] = description
         if request_routing_key is not UNSET:
@@ -127,22 +116,15 @@ class ServiceAliasPublic:
 
         return field_dict
 
-
-
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.service_alias_public_request_routing_key_type_0 import ServiceAliasPublicRequestRoutingKeyType0
         from ..models.service_alias_public_routing_key_override_type_0 import ServiceAliasPublicRoutingKeyOverrideType0
+
         d = dict(src_dict)
         id = UUID(d.pop("id"))
 
-
-
-
         customer_id = UUID(d.pop("customer_id"))
-
-
-
 
         name = d.pop("name")
 
@@ -150,20 +132,16 @@ class ServiceAliasPublic:
 
         created_at = isoparse(d.pop("created_at"))
 
-
-
-
-        def _parse_description(data: object) -> Union[None, Unset, str]:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
-
-        def _parse_request_routing_key(data: object) -> Union['ServiceAliasPublicRequestRoutingKeyType0', None, Unset]:
+        def _parse_request_routing_key(data: object) -> None | ServiceAliasPublicRequestRoutingKeyType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -173,17 +151,14 @@ class ServiceAliasPublic:
                     raise TypeError()
                 request_routing_key_type_0 = ServiceAliasPublicRequestRoutingKeyType0.from_dict(data)
 
-
-
                 return request_routing_key_type_0
-            except: # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union['ServiceAliasPublicRequestRoutingKeyType0', None, Unset], data)
+            return cast(None | ServiceAliasPublicRequestRoutingKeyType0 | Unset, data)
 
         request_routing_key = _parse_request_routing_key(d.pop("request_routing_key", UNSET))
 
-
-        def _parse_routing_key_override(data: object) -> Union['ServiceAliasPublicRoutingKeyOverrideType0', None, Unset]:
+        def _parse_routing_key_override(data: object) -> None | ServiceAliasPublicRoutingKeyOverrideType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -193,19 +168,16 @@ class ServiceAliasPublic:
                     raise TypeError()
                 routing_key_override_type_0 = ServiceAliasPublicRoutingKeyOverrideType0.from_dict(data)
 
-
-
                 return routing_key_override_type_0
-            except: # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union['ServiceAliasPublicRoutingKeyOverrideType0', None, Unset], data)
+            return cast(None | ServiceAliasPublicRoutingKeyOverrideType0 | Unset, data)
 
         routing_key_override = _parse_routing_key_override(d.pop("routing_key_override", UNSET))
 
-
         is_routing = d.pop("is_routing", UNSET)
 
-        def _parse_updated_at(data: object) -> Union[None, Unset, datetime.datetime]:
+        def _parse_updated_at(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -215,17 +187,14 @@ class ServiceAliasPublic:
                     raise TypeError()
                 updated_at_type_0 = isoparse(data)
 
-
-
                 return updated_at_type_0
-            except: # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, datetime.datetime], data)
+            return cast(datetime.datetime | None | Unset, data)
 
         updated_at = _parse_updated_at(d.pop("updated_at", UNSET))
 
-
-        def _parse_deactivated_at(data: object) -> Union[None, Unset, datetime.datetime]:
+        def _parse_deactivated_at(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -235,15 +204,12 @@ class ServiceAliasPublic:
                     raise TypeError()
                 deactivated_at_type_0 = isoparse(data)
 
-
-
                 return deactivated_at_type_0
-            except: # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, datetime.datetime], data)
+            return cast(datetime.datetime | None | Unset, data)
 
         deactivated_at = _parse_deactivated_at(d.pop("deactivated_at", UNSET))
-
 
         service_alias_public = cls(
             id=id,
@@ -258,7 +224,6 @@ class ServiceAliasPublic:
             updated_at=updated_at,
             deactivated_at=deactivated_at,
         )
-
 
         service_alias_public.additional_properties = d
         return service_alias_public

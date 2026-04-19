@@ -1028,80 +1028,6 @@
       }
     },
     "/secrets/": {
-      "post": {
-        "tags": [
-          "customer-secrets"
-        ],
-        "summary": "Create Secret",
-        "description": "Create a new secret for the current customer.\n\nThe secret is encrypted and associated with the customer derived\nfrom the ``X-Role-Id`` header. **The value cannot be retrieved\nafter creation** \u2014 store it securely before submitting.\n\nThe customer's routing cache is invalidated so the gateway\nre-resolves any pending enrollments that were blocked waiting\nfor this secret to exist.",
-        "operationId": "customer-secrets-create_secret",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-role-id",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Role-Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SecretCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SecretPublic"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
       "get": {
         "tags": [
           "customer-secrets"
@@ -1265,9 +1191,9 @@
         "tags": [
           "customer-secrets"
         ],
-        "summary": "Update Secret",
-        "description": "Rotate the value of an existing customer secret.\n\nThe new value replaces the old one and is encrypted. The secret's\nname cannot be changed. The customer's routing cache is\ninvalidated so the gateway picks up the new value immediately.",
-        "operationId": "customer-secrets-update_secret",
+        "summary": "Set Secret",
+        "description": "Set a customer secret to ``value`` (idempotent create-or-replace).\n\nReturns ``201 Created`` on insert and ``200 OK`` on update.\nThe value is encrypted at rest. **The value cannot be retrieved\nafter this call** \u2014 store it securely if you need a copy.\n\nThe customer's routing cache is invalidated so the gateway picks\nup the new value immediately (and any pending enrollments that\nwere blocked waiting for this secret can now resolve).",
+        "operationId": "customer-secrets-set_secret",
         "parameters": [
           {
             "name": "name",
@@ -1527,7 +1453,7 @@
           "request_path"
         ],
         "title": "RecurrentRequestCreate",
-        "description": "Schema for creating a RecurrentRequest (draft)."
+        "description": "Schema for creating a RecurrentRequest (draft).\n\n``request_headers`` is the raw dict of headers sent on each execution\nand is the **single source of truth** for per-request opt-ins such as\n``X-Unitysvc-Log-Request``. Higher-level clients (frontend, CLI) are\nresponsible for computing the final dict \u2014 this schema does not\naccept any convenience flags that would mutate it server-side."
       },
       "RecurrentRequestPublic": {
         "properties": {
@@ -1587,6 +1513,20 @@
               }
             ],
             "title": "Body Template"
+          },
+          "request_headers": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Headers"
           },
           "schedule": {
             "anyOf": [
@@ -1737,7 +1677,7 @@
         },
         "type": "object",
         "title": "RecurrentRequestUpdate",
-        "description": "Schema for updating a RecurrentRequest."
+        "description": "Schema for updating a RecurrentRequest.\n\n``request_headers`` replaces the stored dict wholesale when provided\n(partial/PATCH semantics apply at the top level, not inside the dict).\nSee :class:`RecurrentRequestCreate` for the rationale."
       },
       "RecurrentRequestsPublic": {
         "properties": {
@@ -1761,31 +1701,6 @@
         "title": "RecurrentRequestsPublic",
         "description": "List of RecurrentRequests for API responses."
       },
-      "SecretCreate": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Name",
-            "description": "Secret name (e.g., OPENAI_API_KEY). Must be uppercase with underscores."
-          },
-          "value": {
-            "type": "string",
-            "maxLength": 4000,
-            "minLength": 1,
-            "title": "Value",
-            "description": "Secret value (will be encrypted)"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "value"
-        ],
-        "title": "SecretCreate",
-        "description": "Schema for creating a secret."
-      },
       "SecretOwnerTypeEnum": {
         "type": "string",
         "enum": [
@@ -1803,7 +1718,7 @@
             "maxLength": 100,
             "minLength": 1,
             "title": "Name",
-            "description": "Secret name (e.g., OPENAI_API_KEY). Must be uppercase with underscores."
+            "description": "Secret name (e.g., OPENAI_API_KEY). Must be uppercase letters, digits, and underscores; must start with a letter or underscore."
           },
           "id": {
             "type": "string",
@@ -1866,9 +1781,9 @@
           "value": {
             "type": "string",
             "maxLength": 4000,
-            "minLength": 1,
+            "minLength": 0,
             "title": "Value",
-            "description": "New secret value (will be encrypted)"
+            "description": "Secret value (will be encrypted). May be empty."
           }
         },
         "type": "object",
@@ -1876,7 +1791,7 @@
           "value"
         ],
         "title": "SecretUpdate",
-        "description": "Schema for updating a secret (value only - name cannot be changed)."
+        "description": "Request body for ``PUT /secrets/{name}``.\n\nCarries only the value \u2014 the name comes from the URL path. The same\nschema is used for both create and update because ``PUT`` is\nidempotent (see issue #798).\n\nEmpty string is allowed: a customer may deliberately store ``\"\"``\nto override a non-empty default in a ``${ secrets.X ?? default }``\nreference. ``??`` coalesces on null only, so the explicit empty\nvalue is preserved."
       },
       "SecretsPublic": {
         "properties": {

@@ -1,30 +1,24 @@
 from http import HTTPStatus
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
+from urllib.parse import quote
 
 import httpx
 
-from ...client import AuthenticatedClient, Client
-from ...types import Response, UNSET
 from ... import errors
-
+from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
 from ...models.service_aliases_public import ServiceAliasesPublic
-from ...types import UNSET, Unset
-from typing import cast
-from typing import cast, Union
-from typing import Union
-
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    skip: Union[Unset, int] = 0,
-    limit: Union[Unset, int] = 100,
-    name: Union[None, Unset, str] = UNSET,
-    include_deactivated: Union[Unset, bool] = False,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
+    name: None | str | Unset = UNSET,
+    include_deactivated: bool | Unset = False,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     if not isinstance(authorization, Unset):
@@ -33,17 +27,13 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
-
-
-    
-
     params: dict[str, Any] = {}
 
     params["skip"] = skip
 
     params["limit"] = limit
 
-    json_name: Union[None, Unset, str]
+    json_name: None | str | Unset
     if isinstance(name, Unset):
         json_name = UNSET
     else:
@@ -52,9 +42,7 @@ def _get_kwargs(
 
     params["include_deactivated"] = include_deactivated
 
-
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
-
 
     _kwargs: dict[str, Any] = {
         "method": "get",
@@ -62,24 +50,20 @@ def _get_kwargs(
         "params": params,
     }
 
-
     _kwargs["headers"] = headers
     return _kwargs
 
 
-
-def _parse_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Optional[Union[HTTPValidationError, ServiceAliasesPublic]]:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> HTTPValidationError | ServiceAliasesPublic | None:
     if response.status_code == 200:
         response_200 = ServiceAliasesPublic.from_dict(response.json())
-
-
 
         return response_200
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
-
-
 
         return response_422
 
@@ -89,7 +73,9 @@ def _parse_response(*, client: Union[AuthenticatedClient, Client], response: htt
         return None
 
 
-def _build_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Response[Union[HTTPValidationError, ServiceAliasesPublic]]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[HTTPValidationError | ServiceAliasesPublic]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -100,44 +86,41 @@ def _build_response(*, client: Union[AuthenticatedClient, Client], response: htt
 
 def sync_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    skip: Union[Unset, int] = 0,
-    limit: Union[Unset, int] = 100,
-    name: Union[None, Unset, str] = UNSET,
-    include_deactivated: Union[Unset, bool] = False,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Response[Union[HTTPValidationError, ServiceAliasesPublic]]:
-    """ List Aliases
+    client: AuthenticatedClient | Client,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
+    name: None | str | Unset = UNSET,
+    include_deactivated: bool | Unset = False,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | ServiceAliasesPublic]:
+    """List Aliases
 
      List customer's aliases, optionally filtered by name.
 
     Args:
-        skip (Union[Unset, int]):  Default: 0.
-        limit (Union[Unset, int]):  Default: 100.
-        name (Union[None, Unset, str]):
-        include_deactivated (Union[Unset, bool]):  Default: False.
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        skip (int | Unset):  Default: 0.
+        limit (int | Unset):  Default: 100.
+        name (None | str | Unset):
+        include_deactivated (bool | Unset):  Default: False.
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, ServiceAliasesPublic]]
-     """
-
+        Response[HTTPValidationError | ServiceAliasesPublic]
+    """
 
     kwargs = _get_kwargs(
         skip=skip,
-limit=limit,
-name=name,
-include_deactivated=include_deactivated,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        limit=limit,
+        name=name,
+        include_deactivated=include_deactivated,
+        authorization=authorization,
+        x_role_id=x_role_id,
     )
 
     response = client.get_httpx_client().request(
@@ -146,136 +129,130 @@ x_role_id=x_role_id,
 
     return _build_response(client=client, response=response)
 
+
 def sync(
     *,
-    client: Union[AuthenticatedClient, Client],
-    skip: Union[Unset, int] = 0,
-    limit: Union[Unset, int] = 100,
-    name: Union[None, Unset, str] = UNSET,
-    include_deactivated: Union[Unset, bool] = False,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Optional[Union[HTTPValidationError, ServiceAliasesPublic]]:
-    """ List Aliases
+    client: AuthenticatedClient | Client,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
+    name: None | str | Unset = UNSET,
+    include_deactivated: bool | Unset = False,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> HTTPValidationError | ServiceAliasesPublic | None:
+    """List Aliases
 
      List customer's aliases, optionally filtered by name.
 
     Args:
-        skip (Union[Unset, int]):  Default: 0.
-        limit (Union[Unset, int]):  Default: 100.
-        name (Union[None, Unset, str]):
-        include_deactivated (Union[Unset, bool]):  Default: False.
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        skip (int | Unset):  Default: 0.
+        limit (int | Unset):  Default: 100.
+        name (None | str | Unset):
+        include_deactivated (bool | Unset):  Default: False.
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, ServiceAliasesPublic]
-     """
-
+        HTTPValidationError | ServiceAliasesPublic
+    """
 
     return sync_detailed(
         client=client,
-skip=skip,
-limit=limit,
-name=name,
-include_deactivated=include_deactivated,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        skip=skip,
+        limit=limit,
+        name=name,
+        include_deactivated=include_deactivated,
+        authorization=authorization,
+        x_role_id=x_role_id,
     ).parsed
+
 
 async def asyncio_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    skip: Union[Unset, int] = 0,
-    limit: Union[Unset, int] = 100,
-    name: Union[None, Unset, str] = UNSET,
-    include_deactivated: Union[Unset, bool] = False,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Response[Union[HTTPValidationError, ServiceAliasesPublic]]:
-    """ List Aliases
+    client: AuthenticatedClient | Client,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
+    name: None | str | Unset = UNSET,
+    include_deactivated: bool | Unset = False,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | ServiceAliasesPublic]:
+    """List Aliases
 
      List customer's aliases, optionally filtered by name.
 
     Args:
-        skip (Union[Unset, int]):  Default: 0.
-        limit (Union[Unset, int]):  Default: 100.
-        name (Union[None, Unset, str]):
-        include_deactivated (Union[Unset, bool]):  Default: False.
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        skip (int | Unset):  Default: 0.
+        limit (int | Unset):  Default: 100.
+        name (None | str | Unset):
+        include_deactivated (bool | Unset):  Default: False.
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, ServiceAliasesPublic]]
-     """
-
+        Response[HTTPValidationError | ServiceAliasesPublic]
+    """
 
     kwargs = _get_kwargs(
         skip=skip,
-limit=limit,
-name=name,
-include_deactivated=include_deactivated,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        limit=limit,
+        name=name,
+        include_deactivated=include_deactivated,
+        authorization=authorization,
+        x_role_id=x_role_id,
     )
 
-    response = await client.get_async_httpx_client().request(
-        **kwargs
-    )
+    response = await client.get_async_httpx_client().request(**kwargs)
 
     return _build_response(client=client, response=response)
 
+
 async def asyncio(
     *,
-    client: Union[AuthenticatedClient, Client],
-    skip: Union[Unset, int] = 0,
-    limit: Union[Unset, int] = 100,
-    name: Union[None, Unset, str] = UNSET,
-    include_deactivated: Union[Unset, bool] = False,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Optional[Union[HTTPValidationError, ServiceAliasesPublic]]:
-    """ List Aliases
+    client: AuthenticatedClient | Client,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
+    name: None | str | Unset = UNSET,
+    include_deactivated: bool | Unset = False,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> HTTPValidationError | ServiceAliasesPublic | None:
+    """List Aliases
 
      List customer's aliases, optionally filtered by name.
 
     Args:
-        skip (Union[Unset, int]):  Default: 0.
-        limit (Union[Unset, int]):  Default: 100.
-        name (Union[None, Unset, str]):
-        include_deactivated (Union[Unset, bool]):  Default: False.
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        skip (int | Unset):  Default: 0.
+        limit (int | Unset):  Default: 100.
+        name (None | str | Unset):
+        include_deactivated (bool | Unset):  Default: False.
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, ServiceAliasesPublic]
-     """
+        HTTPValidationError | ServiceAliasesPublic
+    """
 
-
-    return (await asyncio_detailed(
-        client=client,
-skip=skip,
-limit=limit,
-name=name,
-include_deactivated=include_deactivated,
-authorization=authorization,
-x_role_id=x_role_id,
-
-    )).parsed
+    return (
+        await asyncio_detailed(
+            client=client,
+            skip=skip,
+            limit=limit,
+            name=name,
+            include_deactivated=include_deactivated,
+            authorization=authorization,
+            x_role_id=x_role_id,
+        )
+    ).parsed

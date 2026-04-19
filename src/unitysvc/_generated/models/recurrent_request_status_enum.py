@@ -1,8 +1,14 @@
 from typing import Literal, cast
 
-RecurrentRequestStatusEnum = Literal['active', 'cancelled', 'draft', 'paused']
+RecurrentRequestStatusEnum = Literal["active", "cancelled", "draft", "paused"]
 
-RECURRENT_REQUEST_STATUS_ENUM_VALUES: set[RecurrentRequestStatusEnum] = { 'active', 'cancelled', 'draft', 'paused',  }
+RECURRENT_REQUEST_STATUS_ENUM_VALUES: set[RecurrentRequestStatusEnum] = {
+    "active",
+    "cancelled",
+    "draft",
+    "paused",
+}
+
 
 def check_recurrent_request_status_enum(value: str) -> RecurrentRequestStatusEnum:
     if value in RECURRENT_REQUEST_STATUS_ENUM_VALUES:

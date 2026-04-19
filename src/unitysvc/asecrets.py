@@ -2,21 +2,24 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ._http import unwrap
 
 if TYPE_CHECKING:
     from ._generated.client import AuthenticatedClient
     from ._generated.models.message import Message
-    from ._generated.models.secret_create import SecretCreate
     from ._generated.models.secret_public import SecretPublic
-    from ._generated.models.secret_update import SecretUpdate
     from ._generated.models.secrets_public import SecretsPublic
 
 
 class AsyncSecrets:
-    """Async operations on the customer's secret store."""
+    """Async operations on the customer's secret store.
+
+    Mirrors :class:`unitysvc.secrets.Secrets` — see that class for the
+    ``list`` / ``get`` / ``set`` / ``delete`` surface and rationale
+    (unitysvc#798).
+    """
 
     def __init__(self, client: AuthenticatedClient) -> None:
         self._client = client
@@ -47,36 +50,16 @@ class AsyncSecrets:
             )
         )
 
-    async def create(self, body: SecretCreate | dict[str, Any]) -> SecretPublic:
-        from ._generated.api.customer_secrets import customer_secrets_create_secret
-        from ._generated.models.secret_create import SecretCreate
-
-        if isinstance(body, dict):
-            body = SecretCreate.from_dict(body)
-
-        return unwrap(
-            await customer_secrets_create_secret.asyncio_detailed(
-                client=self._client,
-                body=body,
-            )
-        )
-
-    async def update(
-        self,
-        name: str,
-        body: SecretUpdate | dict[str, Any],
-    ) -> SecretPublic:
-        from ._generated.api.customer_secrets import customer_secrets_update_secret
+    async def set(self, name: str, value: str) -> SecretPublic:
+        """Idempotently set ``name`` to ``value``. See sync ``Secrets.set``."""
+        from ._generated.api.customer_secrets import customer_secrets_set_secret
         from ._generated.models.secret_update import SecretUpdate
 
-        if isinstance(body, dict):
-            body = SecretUpdate.from_dict(body)
-
         return unwrap(
-            await customer_secrets_update_secret.asyncio_detailed(
+            await customer_secrets_set_secret.asyncio_detailed(
                 name=name,
                 client=self._client,
-                body=body,
+                body=SecretUpdate(value=value),
             )
         )
 
