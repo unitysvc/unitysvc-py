@@ -1,5 +1,5 @@
+"""A client library for accessing UnitySVC Customer API"""
 
-""" A client library for accessing UnitySVC Customer API """
 from .client import AuthenticatedClient, Client
 
 __all__ = (

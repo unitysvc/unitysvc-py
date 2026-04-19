@@ -20,7 +20,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from ..exceptions import NotFoundError
 from ._helpers import (
     api_key_option,
     async_client,
@@ -96,12 +95,12 @@ def set_secret(
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),
 ) -> None:
-    """Create or update a secret by name.
+    """Set a secret by name (idempotent — creates or rotates).
 
-    Looks up the secret by name; if it exists, updates its value. If
-    not, creates a new secret. Use ``--value`` or ``--from-file`` to
-    supply the value non-interactively; otherwise the CLI prompts with
-    hidden input.
+    Maps to ``PUT /v1/customer/secrets/{name}``. Use ``--value`` or
+    ``--from-file`` to supply the value non-interactively; otherwise
+    the CLI prompts with hidden input. The value is encrypted server-side
+    and cannot be retrieved later.
     """
     if from_file:
         try:
@@ -114,19 +113,12 @@ def set_secret(
     if value is None:
         value = typer.prompt(f"Value for secret '{name}'", hide_input=True, confirmation_prompt=True)
 
-    async def _impl() -> tuple[str, dict[str, Any]]:
+    async def _impl() -> dict[str, Any]:
         async with async_client(api_key, base_url) as client:
-            # Try to get existing secret by name; if it exists, update it.
-            try:
-                await client.secrets.get(name)
-                updated = await client.secrets.update(name, {"value": value})
-                return ("updated", model_to_dict(updated))
-            except NotFoundError:
-                created = await client.secrets.create({"name": name, "value": value})
-                return ("created", model_to_dict(created))
+            return model_to_dict(await client.secrets.set(name, value))
 
-    action, result = run_async(_impl(), error_prefix="Failed to set secret")
-    console.print(f"[green]✓[/green] {action} secret [bold]{result.get('name', name)}[/bold] ({result.get('id', '')})")
+    result = run_async(_impl(), error_prefix="Failed to set secret")
+    console.print(f"[green]✓[/green] set secret [bold]{result.get('name', name)}[/bold] ({result.get('id', '')})")
 
 
 # ---------------------------------------------------------------------------

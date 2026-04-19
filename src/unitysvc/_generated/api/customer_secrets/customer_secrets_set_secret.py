@@ -8,12 +8,14 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
 from ...models.secret_public import SecretPublic
+from ...models.secret_update import SecretUpdate
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     name: str,
     *,
+    body: SecretUpdate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -25,11 +27,15 @@ def _get_kwargs(
         headers["x-role-id"] = x_role_id
 
     _kwargs: dict[str, Any] = {
-        "method": "get",
+        "method": "put",
         "url": "/secrets/{name}".format(
             name=quote(str(name), safe=""),
         ),
     }
+
+    _kwargs["json"] = body.to_dict()
+
+    headers["Content-Type"] = "application/json"
 
     _kwargs["headers"] = headers
     return _kwargs
@@ -69,19 +75,36 @@ def sync_detailed(
     name: str,
     *,
     client: AuthenticatedClient | Client,
+    body: SecretUpdate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | SecretPublic]:
-    """Get Secret
+    """Set Secret
 
-     Get metadata for one of the current customer's secrets by name.
+     Set a customer secret to ``value`` (idempotent create-or-replace).
 
-    Returns metadata only — the value is never returned.
+    Returns ``201 Created`` on insert and ``200 OK`` on update.
+    The value is encrypted at rest. **The value cannot be retrieved
+    after this call** — store it securely if you need a copy.
+
+    The customer's routing cache is invalidated so the gateway picks
+    up the new value immediately (and any pending enrollments that
+    were blocked waiting for this secret can now resolve).
 
     Args:
         name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
+        body (SecretUpdate): Request body for ``PUT /secrets/{name}``.
+
+            Carries only the value — the name comes from the URL path. The same
+            schema is used for both create and update because ``PUT`` is
+            idempotent (see issue #798).
+
+            Empty string is allowed: a customer may deliberately store ``""``
+            to override a non-empty default in a ``${ secrets.X ?? default }``
+            reference. ``??`` coalesces on null only, so the explicit empty
+            value is preserved.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -93,6 +116,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         name=name,
+        body=body,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -108,19 +132,36 @@ def sync(
     name: str,
     *,
     client: AuthenticatedClient | Client,
+    body: SecretUpdate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | SecretPublic | None:
-    """Get Secret
+    """Set Secret
 
-     Get metadata for one of the current customer's secrets by name.
+     Set a customer secret to ``value`` (idempotent create-or-replace).
 
-    Returns metadata only — the value is never returned.
+    Returns ``201 Created`` on insert and ``200 OK`` on update.
+    The value is encrypted at rest. **The value cannot be retrieved
+    after this call** — store it securely if you need a copy.
+
+    The customer's routing cache is invalidated so the gateway picks
+    up the new value immediately (and any pending enrollments that
+    were blocked waiting for this secret can now resolve).
 
     Args:
         name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
+        body (SecretUpdate): Request body for ``PUT /secrets/{name}``.
+
+            Carries only the value — the name comes from the URL path. The same
+            schema is used for both create and update because ``PUT`` is
+            idempotent (see issue #798).
+
+            Empty string is allowed: a customer may deliberately store ``""``
+            to override a non-empty default in a ``${ secrets.X ?? default }``
+            reference. ``??`` coalesces on null only, so the explicit empty
+            value is preserved.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -133,6 +174,7 @@ def sync(
     return sync_detailed(
         name=name,
         client=client,
+        body=body,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -142,19 +184,36 @@ async def asyncio_detailed(
     name: str,
     *,
     client: AuthenticatedClient | Client,
+    body: SecretUpdate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | SecretPublic]:
-    """Get Secret
+    """Set Secret
 
-     Get metadata for one of the current customer's secrets by name.
+     Set a customer secret to ``value`` (idempotent create-or-replace).
 
-    Returns metadata only — the value is never returned.
+    Returns ``201 Created`` on insert and ``200 OK`` on update.
+    The value is encrypted at rest. **The value cannot be retrieved
+    after this call** — store it securely if you need a copy.
+
+    The customer's routing cache is invalidated so the gateway picks
+    up the new value immediately (and any pending enrollments that
+    were blocked waiting for this secret can now resolve).
 
     Args:
         name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
+        body (SecretUpdate): Request body for ``PUT /secrets/{name}``.
+
+            Carries only the value — the name comes from the URL path. The same
+            schema is used for both create and update because ``PUT`` is
+            idempotent (see issue #798).
+
+            Empty string is allowed: a customer may deliberately store ``""``
+            to override a non-empty default in a ``${ secrets.X ?? default }``
+            reference. ``??`` coalesces on null only, so the explicit empty
+            value is preserved.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -166,6 +225,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         name=name,
+        body=body,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -179,19 +239,36 @@ async def asyncio(
     name: str,
     *,
     client: AuthenticatedClient | Client,
+    body: SecretUpdate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | SecretPublic | None:
-    """Get Secret
+    """Set Secret
 
-     Get metadata for one of the current customer's secrets by name.
+     Set a customer secret to ``value`` (idempotent create-or-replace).
 
-    Returns metadata only — the value is never returned.
+    Returns ``201 Created`` on insert and ``200 OK`` on update.
+    The value is encrypted at rest. **The value cannot be retrieved
+    after this call** — store it securely if you need a copy.
+
+    The customer's routing cache is invalidated so the gateway picks
+    up the new value immediately (and any pending enrollments that
+    were blocked waiting for this secret can now resolve).
 
     Args:
         name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
+        body (SecretUpdate): Request body for ``PUT /secrets/{name}``.
+
+            Carries only the value — the name comes from the URL path. The same
+            schema is used for both create and update because ``PUT`` is
+            idempotent (see issue #798).
+
+            Empty string is allowed: a customer may deliberately store ``""``
+            to override a non-empty default in a ``${ secrets.X ?? default }``
+            reference. ``??`` coalesces on null only, so the explicit empty
+            value is preserved.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -205,6 +282,7 @@ async def asyncio(
         await asyncio_detailed(
             name=name,
             client=client,
+            body=body,
             authorization=authorization,
             x_role_id=x_role_id,
         )

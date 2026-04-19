@@ -1,27 +1,21 @@
 from http import HTTPStatus
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
+from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
-from ...client import AuthenticatedClient, Client
-from ...types import Response, UNSET
 from ... import errors
-
+from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...types import UNSET, Unset
-from typing import cast
-from typing import cast, Union
-from typing import Union
-from uuid import UUID
-
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     request_id: UUID,
     *,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     if not isinstance(authorization, Unset):
@@ -30,32 +24,26 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
-
-
-    
-
-    
-
     _kwargs: dict[str, Any] = {
         "method": "delete",
-        "url": "/recurrent-requests/{request_id}".format(request_id=request_id,),
+        "url": "/recurrent-requests/{request_id}".format(
+            request_id=quote(str(request_id), safe=""),
+        ),
     }
-
 
     _kwargs["headers"] = headers
     return _kwargs
 
 
-
-def _parse_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Optional[Union[Any, HTTPValidationError]]:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Any | HTTPValidationError | None:
     if response.status_code == 204:
         response_204 = cast(Any, None)
         return response_204
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
-
-
 
         return response_422
 
@@ -65,7 +53,9 @@ def _parse_response(*, client: Union[AuthenticatedClient, Client], response: htt
         return None
 
 
-def _build_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Response[Union[Any, HTTPValidationError]]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[Any | HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -77,34 +67,31 @@ def _build_response(*, client: Union[AuthenticatedClient, Client], response: htt
 def sync_detailed(
     request_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Response[Union[Any, HTTPValidationError]]:
-    """ Remove Recurrent Request
+    client: AuthenticatedClient | Client,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Response[Any | HTTPValidationError]:
+    """Remove Recurrent Request
 
      Delete a recurrent request and remove its RedBeat entry.
 
     Args:
         request_id (UUID):
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, HTTPValidationError]]
-     """
-
+        Response[Any | HTTPValidationError]
+    """
 
     kwargs = _get_kwargs(
         request_id=request_id,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        authorization=authorization,
+        x_role_id=x_role_id,
     )
 
     response = client.get_httpx_client().request(
@@ -113,109 +100,103 @@ x_role_id=x_role_id,
 
     return _build_response(client=client, response=response)
 
+
 def sync(
     request_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Optional[Union[Any, HTTPValidationError]]:
-    """ Remove Recurrent Request
+    client: AuthenticatedClient | Client,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Any | HTTPValidationError | None:
+    """Remove Recurrent Request
 
      Delete a recurrent request and remove its RedBeat entry.
 
     Args:
         request_id (UUID):
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, HTTPValidationError]
-     """
-
+        Any | HTTPValidationError
+    """
 
     return sync_detailed(
         request_id=request_id,
-client=client,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        client=client,
+        authorization=authorization,
+        x_role_id=x_role_id,
     ).parsed
+
 
 async def asyncio_detailed(
     request_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Response[Union[Any, HTTPValidationError]]:
-    """ Remove Recurrent Request
+    client: AuthenticatedClient | Client,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Response[Any | HTTPValidationError]:
+    """Remove Recurrent Request
 
      Delete a recurrent request and remove its RedBeat entry.
 
     Args:
         request_id (UUID):
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, HTTPValidationError]]
-     """
-
+        Response[Any | HTTPValidationError]
+    """
 
     kwargs = _get_kwargs(
         request_id=request_id,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        authorization=authorization,
+        x_role_id=x_role_id,
     )
 
-    response = await client.get_async_httpx_client().request(
-        **kwargs
-    )
+    response = await client.get_async_httpx_client().request(**kwargs)
 
     return _build_response(client=client, response=response)
+
 
 async def asyncio(
     request_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Optional[Union[Any, HTTPValidationError]]:
-    """ Remove Recurrent Request
+    client: AuthenticatedClient | Client,
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Any | HTTPValidationError | None:
+    """Remove Recurrent Request
 
      Delete a recurrent request and remove its RedBeat entry.
 
     Args:
         request_id (UUID):
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, HTTPValidationError]
-     """
+        Any | HTTPValidationError
+    """
 
-
-    return (await asyncio_detailed(
-        request_id=request_id,
-client=client,
-authorization=authorization,
-x_role_id=x_role_id,
-
-    )).parsed
+    return (
+        await asyncio_detailed(
+            request_id=request_id,
+            client=client,
+            authorization=authorization,
+            x_role_id=x_role_id,
+        )
+    ).parsed

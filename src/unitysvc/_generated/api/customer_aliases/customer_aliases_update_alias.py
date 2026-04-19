@@ -1,30 +1,24 @@
 from http import HTTPStatus
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
+from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
-from ...client import AuthenticatedClient, Client
-from ...types import Response, UNSET
 from ... import errors
-
+from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
 from ...models.service_alias_public import ServiceAliasPublic
 from ...models.service_alias_update import ServiceAliasUpdate
-from ...types import UNSET, Unset
-from typing import cast
-from typing import cast, Union
-from typing import Union
-from uuid import UUID
-
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     alias_id: UUID,
     *,
     body: ServiceAliasUpdate,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     if not isinstance(authorization, Unset):
@@ -33,19 +27,14 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
-
-
-    
-
-    
-
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": "/aliases/{alias_id}".format(alias_id=alias_id,),
+        "url": "/aliases/{alias_id}".format(
+            alias_id=quote(str(alias_id), safe=""),
+        ),
     }
 
     _kwargs["json"] = body.to_dict()
-
 
     headers["Content-Type"] = "application/json"
 
@@ -53,19 +42,16 @@ def _get_kwargs(
     return _kwargs
 
 
-
-def _parse_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Optional[Union[HTTPValidationError, ServiceAliasPublic]]:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> HTTPValidationError | ServiceAliasPublic | None:
     if response.status_code == 200:
         response_200 = ServiceAliasPublic.from_dict(response.json())
-
-
 
         return response_200
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
-
-
 
         return response_422
 
@@ -75,7 +61,9 @@ def _parse_response(*, client: Union[AuthenticatedClient, Client], response: htt
         return None
 
 
-def _build_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Response[Union[HTTPValidationError, ServiceAliasPublic]]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[HTTPValidationError | ServiceAliasPublic]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -87,20 +75,19 @@ def _build_response(*, client: Union[AuthenticatedClient, Client], response: htt
 def sync_detailed(
     alias_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     body: ServiceAliasUpdate,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Response[Union[HTTPValidationError, ServiceAliasPublic]]:
-    """ Update Alias
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | ServiceAliasPublic]:
+    """Update Alias
 
      Update an alias's target path or routing key override.
 
     Args:
         alias_id (UUID):
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
         body (ServiceAliasUpdate): Schema for updating a ServiceAlias.
 
             The alias name cannot be changed (it's the URL path segment).
@@ -115,16 +102,14 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, ServiceAliasPublic]]
-     """
-
+        Response[HTTPValidationError | ServiceAliasPublic]
+    """
 
     kwargs = _get_kwargs(
         alias_id=alias_id,
-body=body,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        body=body,
+        authorization=authorization,
+        x_role_id=x_role_id,
     )
 
     response = client.get_httpx_client().request(
@@ -133,23 +118,23 @@ x_role_id=x_role_id,
 
     return _build_response(client=client, response=response)
 
+
 def sync(
     alias_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     body: ServiceAliasUpdate,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Optional[Union[HTTPValidationError, ServiceAliasPublic]]:
-    """ Update Alias
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> HTTPValidationError | ServiceAliasPublic | None:
+    """Update Alias
 
      Update an alias's target path or routing key override.
 
     Args:
         alias_id (UUID):
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
         body (ServiceAliasUpdate): Schema for updating a ServiceAlias.
 
             The alias name cannot be changed (it's the URL path segment).
@@ -164,36 +149,34 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, ServiceAliasPublic]
-     """
-
+        HTTPValidationError | ServiceAliasPublic
+    """
 
     return sync_detailed(
         alias_id=alias_id,
-client=client,
-body=body,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        client=client,
+        body=body,
+        authorization=authorization,
+        x_role_id=x_role_id,
     ).parsed
+
 
 async def asyncio_detailed(
     alias_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     body: ServiceAliasUpdate,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Response[Union[HTTPValidationError, ServiceAliasPublic]]:
-    """ Update Alias
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | ServiceAliasPublic]:
+    """Update Alias
 
      Update an alias's target path or routing key override.
 
     Args:
         alias_id (UUID):
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
         body (ServiceAliasUpdate): Schema for updating a ServiceAlias.
 
             The alias name cannot be changed (it's the URL path segment).
@@ -208,41 +191,37 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, ServiceAliasPublic]]
-     """
-
+        Response[HTTPValidationError | ServiceAliasPublic]
+    """
 
     kwargs = _get_kwargs(
         alias_id=alias_id,
-body=body,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        body=body,
+        authorization=authorization,
+        x_role_id=x_role_id,
     )
 
-    response = await client.get_async_httpx_client().request(
-        **kwargs
-    )
+    response = await client.get_async_httpx_client().request(**kwargs)
 
     return _build_response(client=client, response=response)
+
 
 async def asyncio(
     alias_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     body: ServiceAliasUpdate,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Optional[Union[HTTPValidationError, ServiceAliasPublic]]:
-    """ Update Alias
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> HTTPValidationError | ServiceAliasPublic | None:
+    """Update Alias
 
      Update an alias's target path or routing key override.
 
     Args:
         alias_id (UUID):
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
         body (ServiceAliasUpdate): Schema for updating a ServiceAlias.
 
             The alias name cannot be changed (it's the URL path segment).
@@ -257,15 +236,15 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, ServiceAliasPublic]
-     """
+        HTTPValidationError | ServiceAliasPublic
+    """
 
-
-    return (await asyncio_detailed(
-        alias_id=alias_id,
-client=client,
-body=body,
-authorization=authorization,
-x_role_id=x_role_id,
-
-    )).parsed
+    return (
+        await asyncio_detailed(
+            alias_id=alias_id,
+            client=client,
+            body=body,
+            authorization=authorization,
+            x_role_id=x_role_id,
+        )
+    ).parsed

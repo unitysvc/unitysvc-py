@@ -1,55 +1,51 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, TypeVar, Optional, BinaryIO, TextIO, TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-from ..types import UNSET, Unset
-from typing import cast
-from typing import cast, Union
-from typing import Union
-from uuid import UUID
-
 if TYPE_CHECKING:
-  from ..models.recurrent_request_create_request_headers_type_0 import RecurrentRequestCreateRequestHeadersType0
-  from ..models.recurrent_request_create_body_template_type_0 import RecurrentRequestCreateBodyTemplateType0
-
-
-
+    from ..models.recurrent_request_create_body_template_type_0 import RecurrentRequestCreateBodyTemplateType0
+    from ..models.recurrent_request_create_request_headers_type_0 import RecurrentRequestCreateRequestHeadersType0
 
 
 T = TypeVar("T", bound="RecurrentRequestCreate")
 
 
-
 @_attrs_define
 class RecurrentRequestCreate:
-    """ Schema for creating a RecurrentRequest (draft).
+    """Schema for creating a RecurrentRequest (draft).
 
-     """
+    ``request_headers`` is the raw dict of headers sent on each execution
+    and is the **single source of truth** for per-request opt-ins such as
+    ``X-Unitysvc-Log-Request``. Higher-level clients (frontend, CLI) are
+    responsible for computing the final dict — this schema does not
+    accept any convenience flags that would mutate it server-side.
+
+    """
 
     request_path: str
     """ Gateway path (e.g., /u/group/service) """
-    service_id: Union[None, UUID, Unset] = UNSET
-    enrollment_id: Union[None, UUID, Unset] = UNSET
-    http_method: Union[Unset, str] = 'POST'
-    body_template: Union['RecurrentRequestCreateBodyTemplateType0', None, Unset] = UNSET
-    request_headers: Union['RecurrentRequestCreateRequestHeadersType0', None, Unset] = UNSET
-    name: Union[None, Unset, str] = UNSET
+    service_id: None | Unset | UUID = UNSET
+    enrollment_id: None | Unset | UUID = UNSET
+    http_method: str | Unset = "POST"
+    body_template: None | RecurrentRequestCreateBodyTemplateType0 | Unset = UNSET
+    request_headers: None | RecurrentRequestCreateRequestHeadersType0 | Unset = UNSET
+    name: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-
-
-
-
     def to_dict(self) -> dict[str, Any]:
-        from ..models.recurrent_request_create_request_headers_type_0 import RecurrentRequestCreateRequestHeadersType0
         from ..models.recurrent_request_create_body_template_type_0 import RecurrentRequestCreateBodyTemplateType0
+        from ..models.recurrent_request_create_request_headers_type_0 import RecurrentRequestCreateRequestHeadersType0
+
         request_path = self.request_path
 
-        service_id: Union[None, Unset, str]
+        service_id: None | str | Unset
         if isinstance(self.service_id, Unset):
             service_id = UNSET
         elif isinstance(self.service_id, UUID):
@@ -57,7 +53,7 @@ class RecurrentRequestCreate:
         else:
             service_id = self.service_id
 
-        enrollment_id: Union[None, Unset, str]
+        enrollment_id: None | str | Unset
         if isinstance(self.enrollment_id, Unset):
             enrollment_id = UNSET
         elif isinstance(self.enrollment_id, UUID):
@@ -67,7 +63,7 @@ class RecurrentRequestCreate:
 
         http_method = self.http_method
 
-        body_template: Union[None, Unset, dict[str, Any]]
+        body_template: dict[str, Any] | None | Unset
         if isinstance(self.body_template, Unset):
             body_template = UNSET
         elif isinstance(self.body_template, RecurrentRequestCreateBodyTemplateType0):
@@ -75,7 +71,7 @@ class RecurrentRequestCreate:
         else:
             body_template = self.body_template
 
-        request_headers: Union[None, Unset, dict[str, Any]]
+        request_headers: dict[str, Any] | None | Unset
         if isinstance(self.request_headers, Unset):
             request_headers = UNSET
         elif isinstance(self.request_headers, RecurrentRequestCreateRequestHeadersType0):
@@ -83,18 +79,19 @@ class RecurrentRequestCreate:
         else:
             request_headers = self.request_headers
 
-        name: Union[None, Unset, str]
+        name: None | str | Unset
         if isinstance(self.name, Unset):
             name = UNSET
         else:
             name = self.name
 
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({
-            "request_path": request_path,
-        })
+        field_dict.update(
+            {
+                "request_path": request_path,
+            }
+        )
         if service_id is not UNSET:
             field_dict["service_id"] = service_id
         if enrollment_id is not UNSET:
@@ -110,16 +107,15 @@ class RecurrentRequestCreate:
 
         return field_dict
 
-
-
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.recurrent_request_create_request_headers_type_0 import RecurrentRequestCreateRequestHeadersType0
         from ..models.recurrent_request_create_body_template_type_0 import RecurrentRequestCreateBodyTemplateType0
+        from ..models.recurrent_request_create_request_headers_type_0 import RecurrentRequestCreateRequestHeadersType0
+
         d = dict(src_dict)
         request_path = d.pop("request_path")
 
-        def _parse_service_id(data: object) -> Union[None, UUID, Unset]:
+        def _parse_service_id(data: object) -> None | Unset | UUID:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -129,17 +125,14 @@ class RecurrentRequestCreate:
                     raise TypeError()
                 service_id_type_0 = UUID(data)
 
-
-
                 return service_id_type_0
-            except: # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, UUID, Unset], data)
+            return cast(None | Unset | UUID, data)
 
         service_id = _parse_service_id(d.pop("service_id", UNSET))
 
-
-        def _parse_enrollment_id(data: object) -> Union[None, UUID, Unset]:
+        def _parse_enrollment_id(data: object) -> None | Unset | UUID:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -149,19 +142,16 @@ class RecurrentRequestCreate:
                     raise TypeError()
                 enrollment_id_type_0 = UUID(data)
 
-
-
                 return enrollment_id_type_0
-            except: # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, UUID, Unset], data)
+            return cast(None | Unset | UUID, data)
 
         enrollment_id = _parse_enrollment_id(d.pop("enrollment_id", UNSET))
 
-
         http_method = d.pop("http_method", UNSET)
 
-        def _parse_body_template(data: object) -> Union['RecurrentRequestCreateBodyTemplateType0', None, Unset]:
+        def _parse_body_template(data: object) -> None | RecurrentRequestCreateBodyTemplateType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -171,17 +161,14 @@ class RecurrentRequestCreate:
                     raise TypeError()
                 body_template_type_0 = RecurrentRequestCreateBodyTemplateType0.from_dict(data)
 
-
-
                 return body_template_type_0
-            except: # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union['RecurrentRequestCreateBodyTemplateType0', None, Unset], data)
+            return cast(None | RecurrentRequestCreateBodyTemplateType0 | Unset, data)
 
         body_template = _parse_body_template(d.pop("body_template", UNSET))
 
-
-        def _parse_request_headers(data: object) -> Union['RecurrentRequestCreateRequestHeadersType0', None, Unset]:
+        def _parse_request_headers(data: object) -> None | RecurrentRequestCreateRequestHeadersType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -191,25 +178,21 @@ class RecurrentRequestCreate:
                     raise TypeError()
                 request_headers_type_0 = RecurrentRequestCreateRequestHeadersType0.from_dict(data)
 
-
-
                 return request_headers_type_0
-            except: # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union['RecurrentRequestCreateRequestHeadersType0', None, Unset], data)
+            return cast(None | RecurrentRequestCreateRequestHeadersType0 | Unset, data)
 
         request_headers = _parse_request_headers(d.pop("request_headers", UNSET))
 
-
-        def _parse_name(data: object) -> Union[None, Unset, str]:
+        def _parse_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         name = _parse_name(d.pop("name", UNSET))
-
 
         recurrent_request_create = cls(
             request_path=request_path,
@@ -220,7 +203,6 @@ class RecurrentRequestCreate:
             request_headers=request_headers,
             name=name,
         )
-
 
         recurrent_request_create.additional_properties = d
         return recurrent_request_create

@@ -1,28 +1,22 @@
 from http import HTTPStatus
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
+from urllib.parse import quote
 
 import httpx
 
-from ...client import AuthenticatedClient, Client
-from ...types import Response, UNSET
 from ... import errors
-
+from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
 from ...models.recurrent_request_create import RecurrentRequestCreate
 from ...models.recurrent_request_public import RecurrentRequestPublic
-from ...types import UNSET, Unset
-from typing import cast
-from typing import cast, Union
-from typing import Union
-
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
     body: RecurrentRequestCreate,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     if not isinstance(authorization, Unset):
@@ -31,12 +25,6 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
-
-
-    
-
-    
-
     _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/recurrent-requests/",
@@ -44,26 +32,22 @@ def _get_kwargs(
 
     _kwargs["json"] = body.to_dict()
 
-
     headers["Content-Type"] = "application/json"
 
     _kwargs["headers"] = headers
     return _kwargs
 
 
-
-def _parse_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Optional[Union[HTTPValidationError, RecurrentRequestPublic]]:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> HTTPValidationError | RecurrentRequestPublic | None:
     if response.status_code == 201:
         response_201 = RecurrentRequestPublic.from_dict(response.json())
-
-
 
         return response_201
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
-
-
 
         return response_422
 
@@ -73,7 +57,9 @@ def _parse_response(*, client: Union[AuthenticatedClient, Client], response: htt
         return None
 
 
-def _build_response(*, client: Union[AuthenticatedClient, Client], response: httpx.Response) -> Response[Union[HTTPValidationError, RecurrentRequestPublic]]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[HTTPValidationError | RecurrentRequestPublic]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -84,13 +70,12 @@ def _build_response(*, client: Union[AuthenticatedClient, Client], response: htt
 
 def sync_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     body: RecurrentRequestCreate,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Response[Union[HTTPValidationError, RecurrentRequestPublic]]:
-    """ Create Recurrent Request
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | RecurrentRequestPublic]:
+    """Create Recurrent Request
 
      Create a draft recurrent request.
 
@@ -98,24 +83,28 @@ def sync_detailed(
     X-Playground-Request header for test requests.
 
     Args:
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
         body (RecurrentRequestCreate): Schema for creating a RecurrentRequest (draft).
+
+            ``request_headers`` is the raw dict of headers sent on each execution
+            and is the **single source of truth** for per-request opt-ins such as
+            ``X-Unitysvc-Log-Request``. Higher-level clients (frontend, CLI) are
+            responsible for computing the final dict — this schema does not
+            accept any convenience flags that would mutate it server-side.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, RecurrentRequestPublic]]
-     """
-
+        Response[HTTPValidationError | RecurrentRequestPublic]
+    """
 
     kwargs = _get_kwargs(
         body=body,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        authorization=authorization,
+        x_role_id=x_role_id,
     )
 
     response = client.get_httpx_client().request(
@@ -124,15 +113,15 @@ x_role_id=x_role_id,
 
     return _build_response(client=client, response=response)
 
+
 def sync(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     body: RecurrentRequestCreate,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Optional[Union[HTTPValidationError, RecurrentRequestPublic]]:
-    """ Create Recurrent Request
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> HTTPValidationError | RecurrentRequestPublic | None:
+    """Create Recurrent Request
 
      Create a draft recurrent request.
 
@@ -140,36 +129,40 @@ def sync(
     X-Playground-Request header for test requests.
 
     Args:
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
         body (RecurrentRequestCreate): Schema for creating a RecurrentRequest (draft).
+
+            ``request_headers`` is the raw dict of headers sent on each execution
+            and is the **single source of truth** for per-request opt-ins such as
+            ``X-Unitysvc-Log-Request``. Higher-level clients (frontend, CLI) are
+            responsible for computing the final dict — this schema does not
+            accept any convenience flags that would mutate it server-side.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, RecurrentRequestPublic]
-     """
-
+        HTTPValidationError | RecurrentRequestPublic
+    """
 
     return sync_detailed(
         client=client,
-body=body,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        body=body,
+        authorization=authorization,
+        x_role_id=x_role_id,
     ).parsed
+
 
 async def asyncio_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     body: RecurrentRequestCreate,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Response[Union[HTTPValidationError, RecurrentRequestPublic]]:
-    """ Create Recurrent Request
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | RecurrentRequestPublic]:
+    """Create Recurrent Request
 
      Create a draft recurrent request.
 
@@ -177,41 +170,43 @@ async def asyncio_detailed(
     X-Playground-Request header for test requests.
 
     Args:
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
         body (RecurrentRequestCreate): Schema for creating a RecurrentRequest (draft).
+
+            ``request_headers`` is the raw dict of headers sent on each execution
+            and is the **single source of truth** for per-request opt-ins such as
+            ``X-Unitysvc-Log-Request``. Higher-level clients (frontend, CLI) are
+            responsible for computing the final dict — this schema does not
+            accept any convenience flags that would mutate it server-side.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, RecurrentRequestPublic]]
-     """
-
+        Response[HTTPValidationError | RecurrentRequestPublic]
+    """
 
     kwargs = _get_kwargs(
         body=body,
-authorization=authorization,
-x_role_id=x_role_id,
-
+        authorization=authorization,
+        x_role_id=x_role_id,
     )
 
-    response = await client.get_async_httpx_client().request(
-        **kwargs
-    )
+    response = await client.get_async_httpx_client().request(**kwargs)
 
     return _build_response(client=client, response=response)
 
+
 async def asyncio(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     body: RecurrentRequestCreate,
-    authorization: Union[None, Unset, str] = UNSET,
-    x_role_id: Union[None, Unset, str] = UNSET,
-
-) -> Optional[Union[HTTPValidationError, RecurrentRequestPublic]]:
-    """ Create Recurrent Request
+    authorization: None | str | Unset = UNSET,
+    x_role_id: None | str | Unset = UNSET,
+) -> HTTPValidationError | RecurrentRequestPublic | None:
+    """Create Recurrent Request
 
      Create a draft recurrent request.
 
@@ -219,23 +214,29 @@ async def asyncio(
     X-Playground-Request header for test requests.
 
     Args:
-        authorization (Union[None, Unset, str]):
-        x_role_id (Union[None, Unset, str]):
+        authorization (None | str | Unset):
+        x_role_id (None | str | Unset):
         body (RecurrentRequestCreate): Schema for creating a RecurrentRequest (draft).
+
+            ``request_headers`` is the raw dict of headers sent on each execution
+            and is the **single source of truth** for per-request opt-ins such as
+            ``X-Unitysvc-Log-Request``. Higher-level clients (frontend, CLI) are
+            responsible for computing the final dict — this schema does not
+            accept any convenience flags that would mutate it server-side.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, RecurrentRequestPublic]
-     """
+        HTTPValidationError | RecurrentRequestPublic
+    """
 
-
-    return (await asyncio_detailed(
-        client=client,
-body=body,
-authorization=authorization,
-x_role_id=x_role_id,
-
-    )).parsed
+    return (
+        await asyncio_detailed(
+            client=client,
+            body=body,
+            authorization=authorization,
+            x_role_id=x_role_id,
+        )
+    ).parsed
