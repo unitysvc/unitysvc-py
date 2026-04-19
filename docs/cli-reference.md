@@ -84,10 +84,19 @@ $ usvc secrets list [OPTIONS]
 
 Set a secret by name (idempotent — creates or rotates).
 
-Maps to ``PUT /v1/customer/secrets/{name}``. Use ``--value`` or
-``--from-file`` to supply the value non-interactively; otherwise
-the CLI prompts with hidden input. The value is encrypted server-side
-and cannot be retrieved later.
+Maps to ``PUT /v1/customer/secrets/{name}``. The value is encrypted
+server-side and cannot be retrieved later. Resolution order for
+the value, in order of precedence:
+
+  1. ``--value VALUE``                     — explicit literal (or
+                                             ``--value &quot;$ENV_NAME&quot;``
+                                             via shell expansion).
+  2. piped stdin                           — ``echo v | usvc secrets set X``
+                                             (trailing newline stripped).
+  3. interactive prompt                    — TTY only; hidden input.
+
+Mirrors the convention used by ``gh secret set``, ``vault kv put``,
+and similar tools.
 
 **Usage**:
 
@@ -101,8 +110,7 @@ $ usvc secrets set [OPTIONS] NAME
 
 **Options**:
 
-* `--value TEXT`: Secret value. If omitted, reads from stdin or prompts interactively.
-* `--from-file TEXT`: Read the secret value from a file (overrides --value).
+* `--value TEXT`: Secret value. If omitted: reads from stdin when piped, prompts with hidden input when run interactively.
 * `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.

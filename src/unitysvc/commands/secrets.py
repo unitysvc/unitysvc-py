@@ -14,6 +14,7 @@ overrides.
 from __future__ import annotations
 
 import json
+import sys
 from typing import Any
 
 import typer
@@ -85,33 +86,41 @@ def set_secret(
     value: str | None = typer.Option(
         None,
         "--value",
-        help="Secret value. If omitted, reads from stdin or prompts interactively.",
-    ),
-    from_file: str | None = typer.Option(
-        None,
-        "--from-file",
-        help="Read the secret value from a file (overrides --value).",
+        help=(
+            "Secret value. If omitted: reads from stdin when piped, prompts with hidden input when run interactively."
+        ),
     ),
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),
 ) -> None:
     """Set a secret by name (idempotent — creates or rotates).
 
-    Maps to ``PUT /v1/customer/secrets/{name}``. Use ``--value`` or
-    ``--from-file`` to supply the value non-interactively; otherwise
-    the CLI prompts with hidden input. The value is encrypted server-side
-    and cannot be retrieved later.
-    """
-    if from_file:
-        try:
-            with open(from_file, encoding="utf-8") as f:
-                value = f.read().rstrip("\n")
-        except OSError as exc:
-            console.print(f"[red]✗[/red] Failed to read {from_file}: {exc}")
-            raise typer.Exit(code=1) from exc
+    Maps to ``PUT /v1/customer/secrets/{name}``. The value is encrypted
+    server-side and cannot be retrieved later. Resolution order for
+    the value, in order of precedence:
 
+      1. ``--value VALUE``                     — explicit literal (or
+                                                 ``--value "$ENV_NAME"``
+                                                 via shell expansion).
+      2. piped stdin                           — ``echo v | usvc secrets set X``
+                                                 (trailing newline stripped).
+      3. interactive prompt                    — TTY only; hidden input.
+
+    Mirrors the convention used by ``gh secret set``, ``vault kv put``,
+    and similar tools.
+    """
     if value is None:
-        value = typer.prompt(f"Value for secret '{name}'", hide_input=True, confirmation_prompt=True)
+        if not sys.stdin.isatty():
+            # Piped stdin (or closed stdin): read it. Strip a single
+            # trailing newline so ``echo "$X" | ...`` works as expected.
+            value = sys.stdin.read().rstrip("\n")
+        else:
+            # Terminal: prompt with hidden input + confirmation.
+            value = typer.prompt(
+                f"Value for secret '{name}'",
+                hide_input=True,
+                confirmation_prompt=True,
+            )
 
     async def _impl() -> dict[str, Any]:
         async with async_client(api_key, base_url) as client:
