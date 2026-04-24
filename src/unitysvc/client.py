@@ -50,9 +50,13 @@ import httpx
 from ._generated.client import AuthenticatedClient as _LowLevelClient
 
 if TYPE_CHECKING:
+    from ._generated.models.resolve_response import ResolveResponse
     from .aliases import Aliases
+    from .enrollments import Enrollments
+    from .groups import Groups
     from .recurrent_requests import RecurrentRequests
     from .secrets import Secrets
+    from .services import Services
 
 DEFAULT_API_URL = "https://api.unitysvc.com/v1"
 
@@ -120,8 +124,11 @@ class Client:
 
         # Lazy resource initialization.
         self._aliases: Aliases | None = None
+        self._enrollments: Enrollments | None = None
+        self._groups: Groups | None = None
         self._recurrent_requests: RecurrentRequests | None = None
         self._secrets: Secrets | None = None
+        self._services: Services | None = None
 
     # ------------------------------------------------------------------
     # Construction helpers
@@ -152,6 +159,58 @@ class Client:
 
             self._aliases = Aliases(self._client)
         return self._aliases
+
+    @property
+    def enrollments(self) -> Enrollments:
+        if self._enrollments is None:
+            from .enrollments import Enrollments
+
+            self._enrollments = Enrollments(self._client)
+        return self._enrollments
+
+    @property
+    def groups(self) -> Groups:
+        if self._groups is None:
+            from .groups import Groups
+
+            self._groups = Groups(self._client)
+        return self._groups
+
+    @property
+    def services(self) -> Services:
+        if self._services is None:
+            from .services import Services
+
+            self._services = Services(self._client)
+        return self._services
+
+    # ------------------------------------------------------------------
+    # Resolve (one-shot primitive, not a resource namespace)
+    # ------------------------------------------------------------------
+    def resolve(
+        self,
+        *,
+        path: str,
+        routing_key: dict | None = None,
+        gateway: str = "api",
+        strategy: str | None = None,
+    ) -> ResolveResponse:
+        """Dry-run resolve a gateway path + routing key.
+
+        Mirrors the gateway's selection decision without executing
+        the upstream call — useful for debugging routing or
+        picking a specific service/interface ahead of dispatch.
+        See :mod:`unitysvc.resolve` for details.
+        """
+        from .resolve import resolve as _resolve
+
+        return _resolve(
+            self._client,
+            path=path,
+            routing_key=routing_key,
+            gateway=gateway,
+            strategy=strategy,
+        )
 
     @property
     def recurrent_requests(self) -> RecurrentRequests:

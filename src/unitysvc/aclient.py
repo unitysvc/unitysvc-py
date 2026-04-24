@@ -37,9 +37,13 @@ from .client import (
 )
 
 if TYPE_CHECKING:
+    from ._generated.models.resolve_response import ResolveResponse
     from .aaliases import AsyncAliases
+    from .aenrollments import AsyncEnrollments
+    from .agroups import AsyncGroups
     from .arecurrent_requests import AsyncRecurrentRequests
     from .asecrets import AsyncSecrets
+    from .aservices import AsyncServices
 
 
 class AsyncClient:
@@ -91,8 +95,11 @@ class AsyncClient:
         self.smtp_base_url = smtp_base_url or os.environ.get(ENV_SMTP_BASE_URL)
 
         self._aliases: AsyncAliases | None = None
+        self._enrollments: AsyncEnrollments | None = None
+        self._groups: AsyncGroups | None = None
         self._recurrent_requests: AsyncRecurrentRequests | None = None
         self._secrets: AsyncSecrets | None = None
+        self._services: AsyncServices | None = None
 
     # ------------------------------------------------------------------
     # Construction helpers
@@ -118,6 +125,52 @@ class AsyncClient:
 
             self._aliases = AsyncAliases(self._client)
         return self._aliases
+
+    @property
+    def enrollments(self) -> AsyncEnrollments:
+        if self._enrollments is None:
+            from .aenrollments import AsyncEnrollments
+
+            self._enrollments = AsyncEnrollments(self._client)
+        return self._enrollments
+
+    @property
+    def groups(self) -> AsyncGroups:
+        if self._groups is None:
+            from .agroups import AsyncGroups
+
+            self._groups = AsyncGroups(self._client)
+        return self._groups
+
+    @property
+    def services(self) -> AsyncServices:
+        if self._services is None:
+            from .aservices import AsyncServices
+
+            self._services = AsyncServices(self._client)
+        return self._services
+
+    # ------------------------------------------------------------------
+    # Resolve (one-shot primitive)
+    # ------------------------------------------------------------------
+    async def resolve(
+        self,
+        *,
+        path: str,
+        routing_key: dict | None = None,
+        gateway: str = "api",
+        strategy: str | None = None,
+    ) -> ResolveResponse:
+        """Async dry-run resolve. See :func:`unitysvc.resolve.resolve`."""
+        from .aresolve import resolve as _resolve
+
+        return await _resolve(
+            self._client,
+            path=path,
+            routing_key=routing_key,
+            gateway=gateway,
+            strategy=strategy,
+        )
 
     @property
     def recurrent_requests(self) -> AsyncRecurrentRequests:

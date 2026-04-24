@@ -36,11 +36,15 @@ with Client.from_env() as client:
 
 ### Resources
 
-| Namespace             | Backend routes                                              |
-|-----------------------|-------------------------------------------------------------|
-| `client.secrets`      | `/v1/customer/secrets/*`                                    |
-| `client.aliases`      | `/v1/customer/aliases/*`                                    |
-| `client.recurrent_requests` | `/v1/customer/recurrent-requests/*`                   |
+| Namespace                   | Backend routes                          |
+|-----------------------------|-----------------------------------------|
+| `client.groups`             | `/v1/customer/groups/*`                 |
+| `client.services`           | `/v1/customer/services/*`               |
+| `client.enrollments`        | `/v1/customer/enrollments/*`            |
+| `client.resolve(...)`       | `/v1/customer/resolve` (dry-run)        |
+| `client.secrets`            | `/v1/customer/secrets/*`                |
+| `client.aliases`            | `/v1/customer/aliases/*`                |
+| `client.recurrent_requests` | `/v1/customer/recurrent-requests/*`     |
 
 ## `AsyncClient`
 
@@ -59,6 +63,131 @@ asyncio.run(main())
 
 Every method on `AsyncClient.<resource>.*` is an `async def` with the
 same signature as its sync counterpart on `Client`.
+
+## `groups`
+
+Groups are the entry point for service discovery. A group is a
+curated set of services (often providers of the same capability —
+e.g. "llm", "vision-api") that share a group-level access
+interface.
+
+```python
+# List / get
+client.groups.list(skip=0, limit=100, name=None)
+client.groups.get(group_id)                     # by UUID or UUID prefix
+client.groups.get_by_name("llm")                # platform-unique name
+
+# Drill into members (canonical service-discovery path — there is
+# no flat /customer/services list endpoint)
+client.groups.services(group_id, skip=0, limit=100, search=None)
+
+# Group-level dispatch — the gateway picks a member service via
+# the group's routing_policy (weighted / content-dependent /
+# by-price). No `interface=` selector needed; groups declare at
+# most one user-facing interface.
+client.groups.dispatch(
+    group_id,
+    path="",               # optional sub-path appended to interface.base_url
+    method="POST",
+    json={"messages": [...]},
+    headers=None,
+)
+```
+
+## `services`
+
+Services are what you actually dispatch to. Each carries a list of
+access interfaces — shared (public) or enrollment-bound
+(BYOK/BYOE) — and dispatch or schedule picks among them.
+
+```python
+# Read
+client.services.get(service_id)
+client.services.interfaces(service_id)          # list[CustomerAccessInterface]
+
+# One-shot dispatch
+client.services.dispatch(
+    service_id,
+    interface="chat",       # required if service has >1 interface
+    enrollment=enr_id,      # hint — picks iface where enrollment_id matches
+    path="",                # optional sub-path
+    method="POST",
+    json={...},
+    headers=None,
+    timeout=None,
+)
+
+# Scheduled dispatch — same interface-resolution rule as .dispatch
+client.services.schedule(
+    service_id,
+    recurrence={"schedule_type": "interval", "interval_seconds": 300},
+    # or: {"schedule_type": "cron", "cron_expression": "*/5 * * * *"}
+    interface="chat",
+    json={...},
+    name="health-probe",
+)
+```
+
+**Interface-resolution rule**: exactly one interface → used without
+prompting; more than one → `interface=` is required (name or UUID).
+Interfaces are typically *different operations* (chat vs
+embeddings, put vs list), not alternatives — defaulting would be
+misleading. `enrollment=` is a hint that picks the matching
+enrollment-bound interface.
+
+## `enrollments`
+
+Enrollments record "I've opted into this service with these
+parameters (optionally BYOK/BYOE credentials)". For BYOK services,
+the parameters include the customer's upstream API key; the
+platform mints an enrollment-bound access interface that
+substitutes the key at dispatch time.
+
+```python
+enr = client.enrollments.create(
+    service_id=svc.id,
+    parameters={"endpoint": "https://my-host", "api_key": "..."},
+)
+# Activation is async — poll for status:
+import time
+for _ in range(10):
+    enr = client.enrollments.get(enr.id)
+    if enr.status != "pending":
+        break
+    time.sleep(1)
+
+client.enrollments.list(include_service_details=True)
+client.enrollments.cancel(enrollment_id)
+```
+
+Secret-shaped parameter keys (`api_key`, `password`, `token`, ...)
+are returned masked (`***masked***`) on reads; only the server has
+the raw values.
+
+## `client.resolve(...)` — dry-run routing
+
+Answers "what would the gateway do for this path + routing key?"
+without executing the upstream call. Useful for debugging,
+simulating selection, or resolving an alias or group path to the
+concrete service ahead of dispatch.
+
+```python
+res = client.resolve(
+    path="v1/chat/completions",
+    routing_key={"model": "gpt-4"},
+    gateway="api",                # default; also "s3", "smtp"
+    strategy=None,                # override group routing_policy if set
+)
+# res.candidates: list[ResolveCandidate] — service_id/name/provider_name,
+#                 weight, enrollment_id per candidate
+# res.routing_strategy: {"name", "content_dependent", ...} or None
+# res.selected: pre-picked candidate when unambiguous, else None
+```
+
+Sensitive fields (`wallet_id`, `customer_secrets`, decrypted
+upstream API keys, `seller_id`, `pricing_bundle_id`) are *not*
+returned — this is a customer-safe subset of the gateway's
+internal route-resolution response.
 
 ## `secrets`
 

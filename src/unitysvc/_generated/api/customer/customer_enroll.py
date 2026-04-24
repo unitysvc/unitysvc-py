@@ -1,20 +1,20 @@
 from http import HTTPStatus
 from typing import Any, cast
 from urllib.parse import quote
-from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.customer_enrollment_create_response import CustomerEnrollmentCreateResponse
 from ...models.http_validation_error import HTTPValidationError
-from ...models.recurrent_request_public import RecurrentRequestPublic
+from ...models.service_enrollment_create import ServiceEnrollmentCreate
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    request_id: UUID,
     *,
+    body: ServiceEnrollmentCreate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -26,11 +26,13 @@ def _get_kwargs(
         headers["x-role-id"] = x_role_id
 
     _kwargs: dict[str, Any] = {
-        "method": "get",
-        "url": "/recurrent-requests/{request_id}".format(
-            request_id=quote(str(request_id), safe=""),
-        ),
+        "method": "post",
+        "url": "/enrollments/",
     }
+
+    _kwargs["json"] = body.to_dict()
+
+    headers["Content-Type"] = "application/json"
 
     _kwargs["headers"] = headers
     return _kwargs
@@ -38,11 +40,11 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | RecurrentRequestPublic | None:
-    if response.status_code == 200:
-        response_200 = RecurrentRequestPublic.from_dict(response.json())
+) -> CustomerEnrollmentCreateResponse | HTTPValidationError | None:
+    if response.status_code == 202:
+        response_202 = CustomerEnrollmentCreateResponse.from_dict(response.json())
 
-        return response_200
+        return response_202
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
@@ -57,7 +59,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | RecurrentRequestPublic]:
+) -> Response[CustomerEnrollmentCreateResponse | HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -67,31 +69,40 @@ def _build_response(
 
 
 def sync_detailed(
-    request_id: UUID,
     *,
     client: AuthenticatedClient | Client,
+    body: ServiceEnrollmentCreate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | RecurrentRequestPublic]:
-    """Get Recurrent Request Detail
+) -> Response[CustomerEnrollmentCreateResponse | HTTPValidationError]:
+    """Enroll
 
-     Get a recurrent request by ID.
+     Enroll in a service asynchronously.
+
+    Creates a pending enrollment and dispatches a Celery task to activate it.
+    Returns a task_id for polling via GET /tasks/{task_id}.
+
+    Requires X-Role-Id header (JWT) or a svcpass customer API key with
+    customer context.
 
     Args:
-        request_id (UUID):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
+        body (ServiceEnrollmentCreate): Model for creating new Enrollments.
+
+            customer_id is derived from the X-Role-Id header at the route level.
+            service_id references the Service identity layer (not listing_id).
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | RecurrentRequestPublic]
+        Response[CustomerEnrollmentCreateResponse | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        request_id=request_id,
+        body=body,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -104,63 +115,81 @@ def sync_detailed(
 
 
 def sync(
-    request_id: UUID,
     *,
     client: AuthenticatedClient | Client,
+    body: ServiceEnrollmentCreate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | RecurrentRequestPublic | None:
-    """Get Recurrent Request Detail
+) -> CustomerEnrollmentCreateResponse | HTTPValidationError | None:
+    """Enroll
 
-     Get a recurrent request by ID.
+     Enroll in a service asynchronously.
+
+    Creates a pending enrollment and dispatches a Celery task to activate it.
+    Returns a task_id for polling via GET /tasks/{task_id}.
+
+    Requires X-Role-Id header (JWT) or a svcpass customer API key with
+    customer context.
 
     Args:
-        request_id (UUID):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
+        body (ServiceEnrollmentCreate): Model for creating new Enrollments.
+
+            customer_id is derived from the X-Role-Id header at the route level.
+            service_id references the Service identity layer (not listing_id).
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | RecurrentRequestPublic
+        CustomerEnrollmentCreateResponse | HTTPValidationError
     """
 
     return sync_detailed(
-        request_id=request_id,
         client=client,
+        body=body,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
 
 
 async def asyncio_detailed(
-    request_id: UUID,
     *,
     client: AuthenticatedClient | Client,
+    body: ServiceEnrollmentCreate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | RecurrentRequestPublic]:
-    """Get Recurrent Request Detail
+) -> Response[CustomerEnrollmentCreateResponse | HTTPValidationError]:
+    """Enroll
 
-     Get a recurrent request by ID.
+     Enroll in a service asynchronously.
+
+    Creates a pending enrollment and dispatches a Celery task to activate it.
+    Returns a task_id for polling via GET /tasks/{task_id}.
+
+    Requires X-Role-Id header (JWT) or a svcpass customer API key with
+    customer context.
 
     Args:
-        request_id (UUID):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
+        body (ServiceEnrollmentCreate): Model for creating new Enrollments.
+
+            customer_id is derived from the X-Role-Id header at the route level.
+            service_id references the Service identity layer (not listing_id).
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | RecurrentRequestPublic]
+        Response[CustomerEnrollmentCreateResponse | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        request_id=request_id,
+        body=body,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -171,33 +200,42 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    request_id: UUID,
     *,
     client: AuthenticatedClient | Client,
+    body: ServiceEnrollmentCreate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | RecurrentRequestPublic | None:
-    """Get Recurrent Request Detail
+) -> CustomerEnrollmentCreateResponse | HTTPValidationError | None:
+    """Enroll
 
-     Get a recurrent request by ID.
+     Enroll in a service asynchronously.
+
+    Creates a pending enrollment and dispatches a Celery task to activate it.
+    Returns a task_id for polling via GET /tasks/{task_id}.
+
+    Requires X-Role-Id header (JWT) or a svcpass customer API key with
+    customer context.
 
     Args:
-        request_id (UUID):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
+        body (ServiceEnrollmentCreate): Model for creating new Enrollments.
+
+            customer_id is derived from the X-Role-Id header at the route level.
+            service_id references the Service identity layer (not listing_id).
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | RecurrentRequestPublic
+        CustomerEnrollmentCreateResponse | HTTPValidationError
     """
 
     return (
         await asyncio_detailed(
-            request_id=request_id,
             client=client,
+            body=body,
             authorization=authorization,
             x_role_id=x_role_id,
         )
