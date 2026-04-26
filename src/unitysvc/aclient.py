@@ -139,7 +139,7 @@ class AsyncClient:
         if self._groups is None:
             from .agroups import AsyncGroups
 
-            self._groups = AsyncGroups(self._client)
+            self._groups = AsyncGroups(self._client, parent=self)
         return self._groups
 
     @property
@@ -147,7 +147,7 @@ class AsyncClient:
         if self._services is None:
             from .aservices import AsyncServices
 
-            self._services = AsyncServices(self._client)
+            self._services = AsyncServices(self._client, parent=self)
         return self._services
 
     # ------------------------------------------------------------------

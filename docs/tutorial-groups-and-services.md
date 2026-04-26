@@ -34,50 +34,62 @@ Groups are the discovery entry point. They're identified by a
 across admin-side recreations, while group UUIDs aren't, so SDK
 scripts should hardcode the slug rather than the UUID.
 
+`client.groups.get(...)` returns a `Group` object with bound
+navigation methods, so you can chain calls without re-passing the
+slug:
+
 ```python
 llm = client.groups.get("llm")
 print(llm.name, llm.display_name)
 print("services:", llm.service_count)
 
-# Drill into members (cursor-paginated):
-page = client.groups.services("llm")
+# Drill into members (cursor-paginated). Items are `Service`
+# wrappers ready for further navigation.
+page = llm.services()
 for svc in page.data:
     print(f"  {svc.name}  ({svc.provider_name})")
 
 # Next page:
 if page.has_more:
-    page = client.groups.services("llm", cursor=page.next_cursor)
+    page = llm.services(cursor=page.next_cursor)
 ```
 
-`client.groups.services(name)` is the **canonical**
-service-discovery path — there's intentionally no flat
-`client.services.list()`, because services are only meaningful
-within the context of a group.
+`grp.services()` (or the equivalent `client.groups.services(name)`)
+is the **canonical** service-discovery path — there's intentionally
+no flat `client.services.list()`, because services are only
+meaningful within the context of a group.
 
 Need more than just names? Narrow the result with `search=`:
 
 ```python
-chat_services = client.groups.services("llm", search="chat")
+chat_services = llm.services(search="chat")
 ```
 
 ---
 
 ## 2. Dispatch a one-shot request
 
-Pick a member service, look at its interfaces, and call it.
+Pick a member service, look at its interfaces, and call it. Items
+in `page.data` are already `Service` wrappers, so you can chain
+calls directly:
 
 ```python
-svc = members.data[0]
-ifaces = client.services.interfaces(svc.id)
+svc = page.data[0]                                # already a Service wrapper
+ifaces = svc.interfaces()
 for i in ifaces:
     print(f"  {i.name}  base_url={i.base_url}  enrollment={i.enrollment_id}")
 
-response = client.services.dispatch(
-    svc.id,
-    # interface="chat" needed only when the service has >1 interface
+response = svc.dispatch(
     json={"messages": [{"role": "user", "content": "hello"}]},
 )
 print(response.status_code, response.json())
+```
+
+If you only have a service id (e.g. from a webhook payload), the
+manager-style call still works:
+
+```python
+client.services.dispatch(service_id, json={...})
 ```
 
 ### Interface-resolution rule
@@ -100,10 +112,7 @@ select a member on each call (weighted random, by price, by
 latency, by content, ...).
 
 ```python
-resp = client.groups.dispatch(
-    "llm",
-    json={"messages": [{"role": "user", "content": "hello"}]},
-)
+resp = llm.dispatch(json={"messages": [{"role": "user", "content": "hello"}]})
 ```
 
 This is the recommended path for multi-provider groups where

@@ -75,28 +75,29 @@ Groups are addressed by **name** (a URL-friendly slug like `"llm"`),
 not by UUID — group UUIDs change when admins recreate a group, so
 SDK scripts that hardcode a slug survive admin recreations.
 
+`client.groups.get(...)` returns a `Group` object with bound
+navigation methods. You can call ops on it directly without
+re-passing the slug:
+
 ```python
-# List / get
-client.groups.list(name=None)                   # unpaginated; `name` is a substring filter
-client.groups.get("llm")                        # by slug; `get_by_name` is a legacy alias
+# Active-record style (preferred)
+llm = client.groups.get("llm")
+page = llm.services(cursor=None, limit=50, search=None)
+resp = llm.dispatch(json={"messages": [...]})
 
-# Drill into members (canonical service-discovery path — there is
-# no flat /customer/services list endpoint). Cursor-paginated.
+# Or the equivalent manager-style — slug as the first positional arg:
 page = client.groups.services("llm", cursor=None, limit=50, search=None)
-# Echo `page.next_cursor` back as `cursor=` for the next page.
+resp = client.groups.dispatch("llm", json={"messages": [...]})
 
-# Group-level dispatch — the gateway picks a member service via
-# the group's routing_policy (weighted / content-dependent /
-# by-price). No `interface=` selector needed; groups declare at
-# most one user-facing interface.
-client.groups.dispatch(
-    "llm",
-    path="",               # optional sub-path appended to interface.base_url
-    method="POST",
-    json={"messages": [...]},
-    headers=None,
-)
+# List browse — items in `.data` are also `Group` wrappers.
+groups = client.groups.list(name="llm")          # `name` is a substring filter
+for grp in groups.data:
+    print(grp.name, grp.service_count)
 ```
+
+Field access on a `Group` is forwarded to the underlying record, so
+`grp.name`, `grp.routing_policy`, `grp.interface`, etc. all work
+exactly as they do on the raw response model.
 
 ## `services`
 
@@ -104,40 +105,39 @@ Services are what you actually dispatch to. Each carries a list of
 access interfaces — shared (public) or enrollment-bound
 (BYOK/BYOE) — and dispatch or schedule picks among them.
 
-```python
-# Read
-client.services.get(service_id)
-client.services.interfaces(service_id)          # list[AccessInterface]
+`client.services.get(...)` returns a `Service` object with bound
+navigation methods, mirroring the same active-record pattern as
+`Group`:
 
-# One-shot dispatch
-client.services.dispatch(
-    service_id,
-    interface="chat",       # required if service has >1 interface
-    enrollment=enr_id,      # hint — picks iface where enrollment_id matches
-    path="",                # optional sub-path
-    method="POST",
-    json={...},
-    headers=None,
-    timeout=None,
-)
+```python
+# Active-record style (preferred)
+svc = client.services.get(service_id)
+ifaces = svc.interfaces()
+resp = svc.dispatch(json={"messages": [...]})
+
+# Or the equivalent manager-style — service id as the first positional:
+client.services.interfaces(service_id)
+client.services.dispatch(service_id, json={...})
 
 # Scheduled dispatch — same interface-resolution rule as .dispatch
-client.services.schedule(
-    service_id,
+svc.schedule(
     recurrence={"schedule_type": "interval", "interval_seconds": 300},
     # or: {"schedule_type": "cron", "cron_expression": "*/5 * * * *"}
-    interface="chat",
     json={...},
     name="health-probe",
 )
 ```
 
-**Interface-resolution rule**: exactly one interface → used without
-prompting; more than one → `interface=` is required (name or UUID).
-Interfaces are typically *different operations* (chat vs
-embeddings, put vs list), not alternatives — defaulting would be
-misleading. `enrollment=` is a hint that picks the matching
-enrollment-bound interface.
+**Interface-resolution rule**: multiple public interfaces all map to
+the same upstream, so the SDK auto-picks one — no `interface=`
+needed. If the customer has exactly one enrollment-bound interface,
+that one wins (BYOK/BYOE keys take precedence over public). When
+the customer has 2+ enrollments on the same service, pass
+`enrollment=` (or `interface=`) to disambiguate.
+
+Field access on a `Service` is forwarded to the underlying record,
+so `svc.id`, `svc.name`, `svc.display_name`, etc. all work as on
+the raw response.
 
 ## `enrollments`
 

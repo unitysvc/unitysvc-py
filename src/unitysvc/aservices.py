@@ -15,23 +15,95 @@ if TYPE_CHECKING:
     from ._generated.models.access_interface import AccessInterface
     from ._generated.models.recurrent_request_public import RecurrentRequestPublic
     from ._generated.models.service_detail import ServiceDetail
+    from ._generated.models.service_summary import ServiceSummary
+    from .aclient import AsyncClient
+
+
+class AsyncService:
+    """Async active-record wrapper. See :class:`unitysvc.services.Service`."""
+
+    __slots__ = ("_raw", "_parent")
+
+    def __init__(self, raw: ServiceDetail | ServiceSummary, parent: AsyncClient) -> None:
+        object.__setattr__(self, "_raw", raw)
+        object.__setattr__(self, "_parent", parent)
+
+    def __getattr__(self, item: str) -> Any:
+        return getattr(object.__getattribute__(self, "_raw"), item)
+
+    def __repr__(self) -> str:
+        raw = object.__getattribute__(self, "_raw")
+        return f"<AsyncService id={raw.id!r} name={raw.name!r}>"
+
+    async def interfaces(self) -> list[AccessInterface]:
+        return await self._parent.services.interfaces(self._raw.id)
+
+    async def dispatch(
+        self,
+        *,
+        interface: str | UUID | None = None,
+        enrollment: str | UUID | None = None,
+        path: str = "",
+        method: str = "POST",
+        json: Any = None,
+        data: Any = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+    ) -> httpx.Response:
+        return await self._parent.services.dispatch(
+            self._raw.id,
+            interface=interface,
+            enrollment=enrollment,
+            path=path,
+            method=method,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout,
+        )
+
+    async def schedule(
+        self,
+        *,
+        recurrence: dict[str, Any],
+        interface: str | UUID | None = None,
+        enrollment: str | UUID | None = None,
+        path: str = "",
+        method: str = "POST",
+        json: Any = None,
+        headers: dict[str, str] | None = None,
+        name: str | None = None,
+    ) -> RecurrentRequestPublic:
+        return await self._parent.services.schedule(
+            self._raw.id,
+            recurrence=recurrence,
+            interface=interface,
+            enrollment=enrollment,
+            path=path,
+            method=method,
+            json=json,
+            headers=headers,
+            name=name,
+        )
 
 
 class AsyncServices:
     """Async operations on customer-visible services."""
 
-    def __init__(self, client: AuthenticatedClient) -> None:
+    def __init__(self, client: AuthenticatedClient, *, parent: AsyncClient) -> None:
         self._client = client
+        self._parent = parent
 
-    async def get(self, service_id: str | UUID) -> ServiceDetail:
+    async def get(self, service_id: str | UUID) -> AsyncService:
         from ._generated.api.customer_services import customer_services_get_service
 
-        return unwrap(
+        raw = unwrap(
             await customer_services_get_service.asyncio_detailed(
                 service_id=UUID(str(service_id)) if not isinstance(service_id, UUID) else service_id,
                 client=self._client,
             )
         )
+        return AsyncService(raw, parent=self._parent)
 
     async def interfaces(self, service_id: str | UUID) -> list[AccessInterface]:
         from ._generated.api.customer_services import (
