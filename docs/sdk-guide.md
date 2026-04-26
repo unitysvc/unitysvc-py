@@ -148,25 +148,49 @@ platform mints an enrollment-bound access interface that
 substitutes the key at dispatch time.
 
 ```python
-enr = client.enrollments.create(
-    service_id=svc.id,
-    parameters={"endpoint": "https://my-host", "api_key": "..."},
-)
-# Activation is async — poll for status:
-import time
-for _ in range(10):
-    enr = client.enrollments.get(enr.id)
-    if enr.status != "pending":
-        break
-    time.sleep(1)
+# Active-record style (preferred — pre-binds service_id):
+enr = svc.enroll(parameters={"endpoint": "https://my-host", "api_key": "..."})
 
+# Activation is async. Poll on the wrapper itself:
+import time
+while enr.status == "pending":
+    time.sleep(1)
+    enr = enr.refresh()
+
+enr.cancel()                                    # unenroll
+```
+
+You can also work directly with the manager when you only have an
+id (e.g. from a webhook):
+
+```python
+client.enrollments.create(service_id=svc.id, parameters={...})
 client.enrollments.list(include_service_details=True)
+client.enrollments.get(enrollment_id)
 client.enrollments.cancel(enrollment_id)
 ```
 
 Secret-shaped parameter keys (`api_key`, `password`, `token`, ...)
 are returned masked (`***masked***`) on reads; only the server has
 the raw values.
+
+### Inspecting required secrets
+
+A BYOK/BYOE service won't dispatch until the customer's account has
+the secrets the picked interface references (e.g. `OPENAI_API_KEY`).
+`Service` exposes those names directly:
+
+```python
+svc.required_secrets()                          # list[str]
+svc.optional_secrets()                          # list[{"name", "default"}]
+svc.required_secrets(interface="raw")           # specific interface
+```
+
+Both default to the same interface `dispatch()` would auto-pick, so
+in the common case ``svc.required_secrets()`` answers "what do I
+need to set up to use this service?". Set the secrets via
+``client.secrets.set(name=..., value=...)`` before dispatch /
+enrollment.
 
 ## `client.resolve(...)` — dry-run routing
 

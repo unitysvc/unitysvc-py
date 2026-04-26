@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from ._generated.models.service_detail import ServiceDetail
     from ._generated.models.service_summary import ServiceSummary
     from .aclient import AsyncClient
+    from .aenrollments import AsyncEnrollment
 
 
 class AsyncService:
@@ -85,6 +86,32 @@ class AsyncService:
             headers=headers,
             name=name,
         )
+
+    async def enroll(
+        self, *, parameters: dict[str, Any] | None = None
+    ) -> AsyncEnrollment:
+        """Enroll in this service. See :meth:`unitysvc.services.Service.enroll`."""
+        return await self._parent.enrollments.create(
+            service_id=self._raw.id, parameters=parameters
+        )
+
+    async def required_secrets(
+        self, *, interface: str | UUID | None = None
+    ) -> list[str]:
+        """See :meth:`unitysvc.services.Service.required_secrets`."""
+        iface = await self._parent.services._pick_interface(
+            self._raw.id, interface=interface, enrollment=None
+        )
+        return list(iface.customer_secrets_needed or [])
+
+    async def optional_secrets(
+        self, *, interface: str | UUID | None = None
+    ) -> list[Any]:
+        """See :meth:`unitysvc.services.Service.optional_secrets`."""
+        iface = await self._parent.services._pick_interface(
+            self._raw.id, interface=interface, enrollment=None
+        )
+        return list(iface.customer_secrets_optional or [])
 
 
 class AsyncServices:

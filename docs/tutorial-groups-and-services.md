@@ -146,33 +146,33 @@ and so on).
 Enrolling creates a customer-bound access interface that the
 gateway uses to substitute your key at dispatch time.
 
+Before enrolling, check what the service needs:
+
 ```python
-# Enroll — activation is async; server validates parameters and
-# mints the access interface in the background.
-enr = client.enrollments.create(
-    service_id=svc.id,
-    parameters={
-        "endpoint": "https://my-host.example",
-        "api_key": "sk-my-provider-key",
-    },
-)
+print("required:", svc.required_secrets())   # e.g. ["MY_PROVIDER_API_KEY"]
+print("optional:", svc.optional_secrets())   # list of {"name", "default"}
+```
+
+Set the required secrets on your account, then enroll:
+
+```python
+client.secrets.set(name="MY_PROVIDER_API_KEY", value="sk-...")
+
+# Active-record enrollment — pre-binds the service id.
+enr = svc.enroll(parameters={
+    "endpoint": "https://my-host.example",
+})
 print("enrolled:", enr.id, enr.status)   # "pending" initially
 
 # Poll for activation (a few seconds):
 import time
-for _ in range(15):
-    cur = client.enrollments.get(enr.id)
-    if cur.status != "pending":
-        break
+while enr.status == "pending":
     time.sleep(1)
-print("now:", cur.status)  # "active", "incomplete", or "pending"
+    enr = enr.refresh()
+print("now:", enr.status)  # "active", "incomplete", or "pending"
 
-# Dispatch using your enrollment:
-resp = client.services.dispatch(
-    svc.id,
-    enrollment=enr.id,            # → picks enrollment-bound interface
-    json={"messages": [...]},
-)
+# Dispatch — picks the enrollment-bound interface automatically.
+resp = svc.dispatch(json={"messages": [...]})
 ```
 
 Parameters that look like secrets (`api_key`, `password`, `token`,
@@ -182,7 +182,7 @@ keeps the raw values.
 To stop using an enrollment:
 
 ```python
-client.enrollments.cancel(enr.id)
+enr.cancel()
 # The interface is preserved so re-enrolling with the same
 # parameters reactivates it.
 ```

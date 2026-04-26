@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from ._generated.models.service_detail import ServiceDetail
     from ._generated.models.service_summary import ServiceSummary
     from .client import Client
+    from .enrollments import Enrollment
 
 
 class Service:
@@ -122,6 +123,55 @@ class Service:
             headers=headers,
             name=name,
         )
+
+    # ------------------------------------------------------------------
+    # Enrollment shortcut + secrets introspection
+    # ------------------------------------------------------------------
+    def enroll(self, *, parameters: dict[str, Any] | None = None) -> Enrollment:
+        """Enroll in this service. See :meth:`Enrollments.create`.
+
+        Convenience that pre-binds ``service_id``. Returns an
+        :class:`~unitysvc.enrollments.Enrollment` ready for
+        ``.refresh()`` / ``.cancel()``.
+        """
+        return self._parent.enrollments.create(
+            service_id=self._raw.id, parameters=parameters
+        )
+
+    def required_secrets(
+        self, *, interface: str | UUID | None = None
+    ) -> list[str]:
+        """Customer secrets the picked interface requires for dispatch.
+
+        These are secret *names* (e.g. ``"OPENAI_API_KEY"``) that must
+        exist on the customer account before the service will route.
+        Set them via ``client.secrets.set(name=..., value=...)``;
+        unresolved required secrets cause dispatch to fail (or, on
+        BYOK enrollment, activation to stall in ``incomplete``).
+
+        With no arguments, picks the same interface
+        :meth:`dispatch` would default to (auto-pick rule). Pass
+        ``interface="<name>"`` to inspect a specific kind.
+        """
+        iface = self._parent.services._pick_interface(
+            self._raw.id, interface=interface, enrollment=None
+        )
+        return list(iface.customer_secrets_needed or [])
+
+    def optional_secrets(
+        self, *, interface: str | UUID | None = None
+    ) -> list[Any]:
+        """Customer secrets the picked interface can use but doesn't require.
+
+        Each entry is a ``{"name": str, "default": str}`` mapping —
+        the gateway falls back to ``default`` when the customer
+        hasn't set ``name``. See :meth:`required_secrets` for the
+        interface-resolution rule.
+        """
+        iface = self._parent.services._pick_interface(
+            self._raw.id, interface=interface, enrollment=None
+        )
+        return list(iface.customer_secrets_optional or [])
 
 
 class Services:

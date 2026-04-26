@@ -131,7 +131,7 @@ class AsyncClient:
         if self._enrollments is None:
             from .aenrollments import AsyncEnrollments
 
-            self._enrollments = AsyncEnrollments(self._client)
+            self._enrollments = AsyncEnrollments(self._client, parent=self)
         return self._enrollments
 
     @property

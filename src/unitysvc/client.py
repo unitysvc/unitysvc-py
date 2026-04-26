@@ -165,7 +165,7 @@ class Client:
         if self._enrollments is None:
             from .enrollments import Enrollments
 
-            self._enrollments = Enrollments(self._client)
+            self._enrollments = Enrollments(self._client, parent=self)
         return self._enrollments
 
     @property
