@@ -80,14 +80,9 @@ navigation methods. You can call ops on it directly without
 re-passing the slug:
 
 ```python
-# Active-record style (preferred)
 llm = client.groups.get("llm")
 page = llm.services(cursor=None, limit=50, search=None)
 resp = llm.dispatch(json={"messages": [...]})
-
-# Or the equivalent manager-style — slug as the first positional arg:
-page = client.groups.services("llm", cursor=None, limit=50, search=None)
-resp = client.groups.dispatch("llm", json={"messages": [...]})
 
 # List browse — items in `.data` are also `Group` wrappers.
 groups = client.groups.list(name="llm")          # `name` is a substring filter
@@ -110,14 +105,9 @@ navigation methods, mirroring the same active-record pattern as
 `Group`:
 
 ```python
-# Active-record style (preferred)
 svc = client.services.get(service_id)
 ifaces = svc.interfaces()
 resp = svc.dispatch(json={"messages": [...]})
-
-# Or the equivalent manager-style — service id as the first positional:
-client.services.interfaces(service_id)
-client.services.dispatch(service_id, json={...})
 
 # Scheduled dispatch — same interface-resolution rule as .dispatch
 svc.schedule(
@@ -148,7 +138,6 @@ platform mints an enrollment-bound access interface that
 substitutes the key at dispatch time.
 
 ```python
-# Active-record style (preferred — pre-binds service_id):
 enr = svc.enroll(parameters={"endpoint": "https://my-host", "api_key": "..."})
 
 # Activation is async. Poll on the wrapper itself:
@@ -160,15 +149,8 @@ while enr.status == "pending":
 enr.cancel()                                    # unenroll
 ```
 
-You can also work directly with the manager when you only have an
-id (e.g. from a webhook):
-
-```python
-client.enrollments.create(service_id=svc.id, parameters={...})
-client.enrollments.list(include_service_details=True)
-client.enrollments.get(enrollment_id)
-client.enrollments.cancel(enrollment_id)
-```
+If you only have an enrollment id (e.g. from a webhook),
+`client.enrollments.get(id)` returns the same `Enrollment` wrapper.
 
 Secret-shaped parameter keys (`api_key`, `password`, `token`, ...)
 are returned masked (`***masked***`) on reads; only the server has

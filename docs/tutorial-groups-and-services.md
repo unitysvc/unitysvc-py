@@ -54,10 +54,9 @@ if page.has_more:
     page = llm.services(cursor=page.next_cursor)
 ```
 
-`grp.services()` (or the equivalent `client.groups.services(name)`)
-is the **canonical** service-discovery path — there's intentionally
-no flat `client.services.list()`, because services are only
-meaningful within the context of a group.
+`grp.services()` is the **canonical** service-discovery path —
+there's intentionally no flat `client.services.list()`, because
+services are only meaningful within the context of a group.
 
 Need more than just names? Narrow the result with `search=`:
 
@@ -85,12 +84,8 @@ response = svc.dispatch(
 print(response.status_code, response.json())
 ```
 
-If you only have a service id (e.g. from a webhook payload), the
-manager-style call still works:
-
-```python
-client.services.dispatch(service_id, json={...})
-```
+If you only have a service id (e.g. from a webhook payload),
+fetch a wrapper first: `svc = client.services.get(service_id)`.
 
 ### Interface-resolution rule
 
@@ -197,8 +192,7 @@ server runs it on your schedule.
 
 ```python
 # Every 5 minutes:
-sched = client.services.schedule(
-    svc.id,
+sched = svc.schedule(
     recurrence={"schedule_type": "interval", "interval_seconds": 300},
     json={"messages": [{"role": "user", "content": "ping"}]},
     name="chat-ping",
@@ -206,8 +200,7 @@ sched = client.services.schedule(
 print("scheduled:", sched.id, sched.status)  # "active"
 
 # Cron (if your service allows it):
-sched = client.services.schedule(
-    svc.id,
+sched = svc.schedule(
     recurrence={
         "schedule_type": "cron",
         "cron_expression": "0 */6 * * *",
@@ -235,20 +228,18 @@ minimum / maximum interval and cron usage are enforced server-side.
 from unitysvc import Client
 
 with Client.from_env() as client:
-    llm = client.groups.get_by_name("llm")
+    llm = client.groups.get("llm")
 
     # Option A — group-level, let the gateway pick:
-    resp = client.groups.dispatch(
-        llm.id,
+    resp = llm.dispatch(
         json={"messages": [{"role": "user", "content": "Hello"}]},
     )
     print(resp.json())
 
     # Option B — specific service + specific interface:
-    members = client.groups.services(llm.id)
+    members = llm.services()
     gpt4 = next(s for s in members.data if s.name == "gpt-4")
-    resp = client.services.dispatch(
-        gpt4.id,
+    resp = gpt4.dispatch(
         interface="chat",
         json={"messages": [{"role": "user", "content": "Hello"}]},
     )
