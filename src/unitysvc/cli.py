@@ -35,8 +35,7 @@ def version_callback(value: bool) -> None:
 
 app = typer.Typer(
     help=(
-        "UnitySVC customer CLI — remote operations against the UnitySVC "
-        "customer backend via the unitysvc-py HTTP SDK."
+        "UnitySVC customer CLI — remote operations against the UnitySVC customer backend via the unitysvc-py HTTP SDK."
     ),
 )
 

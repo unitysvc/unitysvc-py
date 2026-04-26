@@ -36,11 +36,15 @@ with Client.from_env() as client:
 
 ### Resources
 
-| Namespace             | Backend routes                                              |
-|-----------------------|-------------------------------------------------------------|
-| `client.secrets`      | `/v1/customer/secrets/*`                                    |
-| `client.aliases`      | `/v1/customer/aliases/*`                                    |
-| `client.recurrent_requests` | `/v1/customer/recurrent-requests/*`                   |
+| Namespace                   | Backend routes                          |
+|-----------------------------|-----------------------------------------|
+| `client.groups`             | `/v1/customer/groups/*`                 |
+| `client.services`           | `/v1/customer/services/*`               |
+| `client.enrollments`        | `/v1/customer/enrollments/*`            |
+| `client.resolve(...)`       | `/v1/customer/resolve` (dry-run)        |
+| `client.secrets`            | `/v1/customer/secrets/*`                |
+| `client.aliases`            | `/v1/customer/aliases/*`                |
+| `client.recurrent_requests` | `/v1/customer/recurrent-requests/*`     |
 
 ## `AsyncClient`
 
@@ -59,6 +63,141 @@ asyncio.run(main())
 
 Every method on `AsyncClient.<resource>.*` is an `async def` with the
 same signature as its sync counterpart on `Client`.
+
+## `groups`
+
+Groups are the entry point for service discovery. A group is a
+curated set of services (often providers of the same capability —
+e.g. "llm", "vision-api") that share a group-level access
+interface.
+
+Groups are addressed by **name** (a URL-friendly slug like `"llm"`),
+not by UUID — group UUIDs change when admins recreate a group, so
+SDK scripts that hardcode a slug survive admin recreations.
+
+`client.groups.get(...)` returns a `Group` object with bound
+navigation methods. You can call ops on it directly without
+re-passing the slug:
+
+```python
+llm = client.groups.get("llm")
+page = llm.services(cursor=None, limit=50, search=None)
+resp = llm.dispatch(json={"messages": [...]})
+
+# List browse — items in `.data` are also `Group` wrappers.
+groups = client.groups.list(name="llm")          # `name` is a substring filter
+for grp in groups.data:
+    print(grp.name, grp.service_count)
+```
+
+Field access on a `Group` is forwarded to the underlying record, so
+`grp.name`, `grp.routing_policy`, `grp.interface`, etc. all work
+exactly as they do on the raw response model.
+
+## `services`
+
+Services are what you actually dispatch to. Each carries a list of
+access interfaces — shared (public) or enrollment-bound
+(BYOK/BYOE) — and dispatch or schedule picks among them.
+
+`client.services.get(...)` returns a `Service` object with bound
+navigation methods, mirroring the same active-record pattern as
+`Group`:
+
+```python
+svc = client.services.get(service_id)
+ifaces = svc.interfaces()
+resp = svc.dispatch(json={"messages": [...]})
+
+# Scheduled dispatch — same interface-resolution rule as .dispatch
+svc.schedule(
+    recurrence={"schedule_type": "interval", "interval_seconds": 300},
+    # or: {"schedule_type": "cron", "cron_expression": "*/5 * * * *"}
+    json={...},
+    name="health-probe",
+)
+```
+
+**Interface-resolution rule**: multiple public interfaces all map to
+the same upstream, so the SDK auto-picks one — no `interface=`
+needed. If the customer has exactly one enrollment-bound interface,
+that one wins (BYOK/BYOE keys take precedence over public). When
+the customer has 2+ enrollments on the same service, pass
+`enrollment=` (or `interface=`) to disambiguate.
+
+Field access on a `Service` is forwarded to the underlying record,
+so `svc.id`, `svc.name`, `svc.display_name`, etc. all work as on
+the raw response.
+
+## `enrollments`
+
+Enrollments record "I've opted into this service with these
+parameters (optionally BYOK/BYOE credentials)". For BYOK services,
+the parameters include the customer's upstream API key; the
+platform mints an enrollment-bound access interface that
+substitutes the key at dispatch time.
+
+```python
+enr = svc.enroll(parameters={"endpoint": "https://my-host", "api_key": "..."})
+
+# Activation is async. Poll on the wrapper itself:
+import time
+while enr.status == "pending":
+    time.sleep(1)
+    enr = enr.refresh()
+
+enr.cancel()                                    # unenroll
+```
+
+If you only have an enrollment id (e.g. from a webhook),
+`client.enrollments.get(id)` returns the same `Enrollment` wrapper.
+
+Secret-shaped parameter keys (`api_key`, `password`, `token`, ...)
+are returned masked (`***masked***`) on reads; only the server has
+the raw values.
+
+### Inspecting required secrets
+
+A BYOK/BYOE service won't dispatch until the customer's account has
+the secrets the picked interface references (e.g. `OPENAI_API_KEY`).
+`Service` exposes those names directly:
+
+```python
+svc.required_secrets()                          # list[str]
+svc.optional_secrets()                          # list[{"name", "default"}]
+svc.required_secrets(interface="raw")           # specific interface
+```
+
+Both default to the same interface `dispatch()` would auto-pick, so
+in the common case ``svc.required_secrets()`` answers "what do I
+need to set up to use this service?". Set the secrets via
+``client.secrets.set(name=..., value=...)`` before dispatch /
+enrollment.
+
+## `client.resolve(...)` — dry-run routing
+
+Answers "what would the gateway do for this path + routing key?"
+without executing the upstream call. Useful for debugging,
+simulating selection, or resolving an alias or group path to the
+concrete service ahead of dispatch.
+
+```python
+res = client.resolve(
+    path="v1/chat/completions",
+    routing_key={"model": "gpt-4"},
+    gateway="api",                # default; also "s3", "smtp"
+    strategy=None,                # override group routing_policy if set
+)
+# res.candidates: list[ResolveCandidate] — service_id/name/provider_name,
+#                 weight, enrollment_id per candidate
+# res.routing_strategy: {"name", "content_dependent", ...} or None
+# res.selected: pre-picked candidate when unambiguous, else None
+```
+
+Sensitive fields (`wallet_id`, `customer_secrets`, decrypted
+upstream API keys, `seller_id`, `pricing_bundle_id`) are *not*
+returned — this is a customer-safe subset of the gateway's
+internal route-resolution response.
 
 ## `secrets`
 

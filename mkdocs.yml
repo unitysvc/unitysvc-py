@@ -70,6 +70,7 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
+  - "Tutorial: Groups & Services": tutorial-groups-and-services.md
   - CLI Reference: cli-reference.md
   - SDK Guide: sdk-guide.md
   - SDK Reference: sdk-reference.md

@@ -30,9 +30,7 @@ def list_aliases(
     skip: int = typer.Option(0, "--skip", help="Offset for pagination."),
     limit: int = typer.Option(100, "--limit", help="Max records to return."),
     name: str | None = typer.Option(None, "--name", "-n", help="Filter by alias name."),
-    include_deactivated: bool = typer.Option(
-        False, "--include-deactivated", help="Include deactivated aliases."
-    ),
+    include_deactivated: bool = typer.Option(False, "--include-deactivated", help="Include deactivated aliases."),
     output_format: str = typer.Option("table", "--format", "-f", help="Output format: table | json."),
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),

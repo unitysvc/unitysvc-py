@@ -10,6 +10,10 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
     options:
       members:
         - from_env
+        - groups
+        - services
+        - enrollments
+        - resolve
         - secrets
         - aliases
         - recurrent_requests
@@ -20,11 +24,33 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
     options:
       members:
         - from_env
+        - groups
+        - services
+        - enrollments
+        - resolve
         - secrets
         - aliases
         - recurrent_requests
 
 ## Resources
+
+### Groups
+
+::: unitysvc.groups.Groups
+    options:
+      show_root_heading: true
+
+### Services
+
+::: unitysvc.services.Services
+    options:
+      show_root_heading: true
+
+### Enrollments
+
+::: unitysvc.enrollments.Enrollments
+    options:
+      show_root_heading: true
 
 ### Secrets
 
@@ -43,6 +69,13 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
 ::: unitysvc.recurrent_requests.RecurrentRequests
     options:
       show_root_heading: true
+
+### Resolve (dry-run primitive)
+
+::: unitysvc.resolve
+    options:
+      members:
+        - resolve
 
 ## Exceptions
 

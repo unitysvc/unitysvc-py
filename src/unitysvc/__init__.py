@@ -3,8 +3,9 @@
 This package provides:
 
 - The :class:`Client` / :class:`AsyncClient` HTTP SDK targeting the
-  customer-tagged ``/v1/customer/*`` endpoints (aliases, recurrent
-  requests, secrets).
+  customer-tagged ``/v1/customer/*`` endpoints: groups, services,
+  enrollments, aliases, secrets, recurrent requests, and the
+  ``resolve`` dry-run primitive.
 - The ``usvc`` CLI for managing the same resources from the terminal.
 
 Quick start::
@@ -12,7 +13,17 @@ Quick start::
     from unitysvc import Client
 
     client = Client(api_key="svcpass_...")
-    secrets = client.secrets.list()
+
+    # Discover: group → service
+    llm = client.groups.get_by_name("llm")
+    services = client.groups.services(llm.id)
+
+    # Dispatch one-shot
+    svc = services.data[0]
+    resp = client.services.dispatch(svc.id, json={"messages": [...]})
+
+    # Or at the group level (gateway picks a member service):
+    resp = client.groups.dispatch(llm.id, json={"messages": [...]})
 
 The customer context is encoded entirely in the API key, so no
 separate ``customer_id`` is required. The default base URL points at

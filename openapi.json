@@ -511,6 +511,624 @@
         }
       }
     },
+    "/enrollments/": {
+      "post": {
+        "tags": [
+          "customer",
+          "enrollments"
+        ],
+        "summary": "Enroll",
+        "description": "Enroll in a service asynchronously.\n\nCreates a pending enrollment and dispatches a Celery task to activate it.\nReturns a task_id for polling via GET /tasks/{task_id}.\n\nRequires X-Role-Id header (JWT) or a svcpass customer API key with\ncustomer context.",
+        "operationId": "customer-enroll",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceEnrollmentCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerEnrollmentCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "customer",
+          "enrollments"
+        ],
+        "summary": "List Enrollments",
+        "description": "List user's service enrollments with optional enriched service data.\n\nUses ServiceMView for efficient data retrieval when include_service_details=True.",
+        "operationId": "customer-list_enrollments",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "include_service_details",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Service Details"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerEnrollmentsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enrollments/{enrollment_id}": {
+      "get": {
+        "tags": [
+          "customer",
+          "enrollments"
+        ],
+        "summary": "Get Enrollment",
+        "description": "Get a specific enrollment by ID with enriched service data.\nUsers can only access their own customer's enrollments.\n\nUses ServiceMView and AccessInterface resolution for comprehensive data.",
+        "operationId": "customer-get_enrollment",
+        "parameters": [
+          {
+            "name": "enrollment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Enrollment Id"
+            }
+          },
+          {
+            "name": "include_service_details",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Service Details"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerEnrollment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "customer",
+          "enrollments"
+        ],
+        "summary": "Cancel Enrollment",
+        "description": "Cancel (unenroll from) an enrollment.\n\nSets status to ``cancelled`` and invalidates the gateway routing\ncache so in-flight requests stop being proxied. The enrollment\nrow and its AccessInterfaces are preserved for potential\nreactivation via re-enrollment with matching parameters.\n\nCallers can only cancel their own customer's enrollments.",
+        "operationId": "customer-cancel_enrollment",
+        "parameters": [
+          {
+            "name": "enrollment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Enrollment Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerEnrollmentCancelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups": {
+      "get": {
+        "tags": [
+          "customer-groups"
+        ],
+        "summary": "List Groups",
+        "description": "List active platform service groups visible to the customer.\n\nExcludes draft/archived/private groups, empty nodes, and\nseller-owned or customer-owned groups. Ordered with ``misc``\ngroups last, then by ``sort_order``, then alphabetically by name\n\u2014 matching the marketplace browse order.",
+        "operationId": "customer-groups-list_groups",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by name (partial match)",
+              "title": "Name"
+            },
+            "description": "Filter by name (partial match)"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceGroupListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{name}": {
+      "get": {
+        "tags": [
+          "customer-groups"
+        ],
+        "summary": "Get Group",
+        "description": "Get metadata for a single visible group, looked up by name.\n\nReturns 404 for hidden groups (draft, seller-owned, empty) \u2014\nexistence is not leaked. Member services are fetched separately\nvia ``GET /customer/groups/{name}/services``.",
+        "operationId": "customer-groups-get_group",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceGroupDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{name}/services": {
+      "get": {
+        "tags": [
+          "customer-groups"
+        ],
+        "summary": "List Group Services",
+        "description": "List customer-visible services that belong to a group.\n\nThe group is identified by its name (not UUID) so SDK scripts\nkeep working if an admin recreates the group with the same slug.\nMirrors the visibility rule used by the GraphQL\n``resolve_group_services`` resolver for non-admin / non-seller\ncallers: service must be ``status='active'`` and\n``visibility='public'``. The group itself must be in the\ncustomer-visible set (active + platform + non-empty).\n\nUses keyset pagination on ``(created_at DESC, service_id DESC)``\nto match the seller ``services_list`` endpoint \u2014 clients echo\n``next_cursor`` back unchanged to fetch subsequent pages.",
+        "operationId": "customer-groups-list_group_services",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque pagination cursor from a previous response's `next_cursor`. Omit to start from the first page.",
+              "title": "Cursor"
+            },
+            "description": "Opaque pagination cursor from a previous response's `next_cursor`. Omit to start from the first page."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "description": "Page size (default 50, max 200).",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Page size (default 50, max 200)."
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive substring match on name, display_name, or provider_name.",
+              "title": "Search"
+            },
+            "description": "Case-insensitive substring match on name, display_name, or provider_name."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CursorPage_ServiceSummary_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/recurrent-requests/": {
       "post": {
         "tags": [
@@ -729,9 +1347,9 @@
         "tags": [
           "customer-recurrent-requests"
         ],
-        "summary": "Get Recurrent Request Detail",
+        "summary": "Get Recurrent Request",
         "description": "Get a recurrent request by ID.",
-        "operationId": "customer-recurrent-requests-get_recurrent_request_detail",
+        "operationId": "customer-recurrent-requests-get_recurrent_request",
         "parameters": [
           {
             "name": "request_id",
@@ -1027,6 +1645,82 @@
         }
       }
     },
+    "/resolve": {
+      "post": {
+        "tags": [
+          "customer-resolve"
+        ],
+        "summary": "Resolve Route",
+        "description": "Dry-run resolve a gateway path + routing key to its candidate services.\n\nMirrors the gateway's decision without executing or caching the\nresult. Response shape is customer-safe \u2014 no wallet, no secrets,\nno upstream credentials.",
+        "operationId": "customer-resolve-resolve_route",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolveResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/secrets/": {
       "get": {
         "tags": [
@@ -1201,6 +1895,7 @@
             "required": true,
             "schema": {
               "type": "string",
+              "pattern": "^[A-Z_][A-Z0-9_]*$",
               "title": "Name"
             }
           },
@@ -1343,10 +2038,486 @@
           }
         }
       }
+    },
+    "/services/{service_id}": {
+      "get": {
+        "tags": [
+          "customer-services"
+        ],
+        "summary": "Get Service",
+        "description": "Get details of a single service visible to the customer.\n\nReturns 404 for inactive, unlisted, or non-public services\nrather than leaking existence \u2014 the customer-visible set\nmatches what ``GET /customer/groups/{id}/services`` returns.",
+        "operationId": "customer-services-get_service",
+        "parameters": [
+          {
+            "name": "service_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Service Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/{service_id}/interfaces": {
+      "get": {
+        "tags": [
+          "customer-services"
+        ],
+        "summary": "List Service Interfaces",
+        "description": "List access interfaces dispatchable by the calling customer.\n\nReturns two kinds of interfaces, unified so the SDK can present\nthem as a single ``service.interfaces()`` list:\n\n1. **Shared** interfaces (``enrollment_id IS NULL``) \u2014 usable by\n   any customer, matches the public playground behaviour.\n2. **Enrollment-bound** interfaces whose ``enrollment_id`` belongs\n   to an enrollment owned by the authenticated customer. BYOK /\n   BYOE services create these on enrollment activation so the\n   gateway can substitute customer-supplied secrets at runtime.\n\nInterfaces bound to *other* customers' enrollments are filtered\nout \u2014 existence is not leaked. ``base_url`` is resolved with\n``settings.resolve_gateway_urls`` so SDK consumers can dispatch\ndirectly without knowing gateway substitution rules.",
+        "operationId": "customer-services-list_service_interfaces",
+        "parameters": [
+          {
+            "name": "service_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Service Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessInterface"
+                  },
+                  "title": "Response Customer-Services-List Service Interfaces"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AccessInterface": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "access_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Access Method"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "group_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Name"
+          },
+          "enrollment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enrollment Id"
+          },
+          "customer_secrets_needed": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Secrets Needed"
+          },
+          "customer_secrets_optional": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Secrets Optional"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "AccessInterface",
+        "description": "Access interface entry exposed to customers.\n\nIdentified by ``name`` (per ``service`` for service-bound\ninterfaces, per ``group`` for group-level ones). The DB primary\nkey is intentionally not exposed \u2014 interface UUIDs change when\nadmins recreate parent rows, so an ``id`` field would tempt SDK\nconsumers to cache an unstable handle.\n\nThe actual ``api_key`` is never included \u2014 secrets are\nwrite-only. ``base_url`` is resolved against the active gateway\nconfig so the client can dispatch without further substitution.\n\nScoping fields let the SDK filter the returned list:\n\n- ``enrollment_id`` \u2014 set when the interface is bound to a\n  specific enrollment (BYOK/BYOE services); ``None`` for shared\n  interfaces. SDK uses this for\n  ``service.dispatch(enrollment=enr)`` resolution.\n- ``group_name`` \u2014 set when the interface is declared on a\n  service group rather than on the service itself; ``None`` for\n  per-service interfaces. Identified by name (not UUID) because\n  group UUIDs are not stable across admin recreations.\n\nIntentionally omits:\n- ``is_primary`` \u2014 multiple public interfaces on the same\n  service map to the same upstream, so ``service.dispatch()``\n  auto-picks one and a \"primary\" flag is unnecessary. The\n  ``interface=`` argument on ``service.dispatch()`` is only\n  needed to disambiguate when the customer has multiple\n  enrollments on the service.\n- ``is_active`` \u2014 only active interfaces are returned, so the\n  field would always be ``True``.\n- ``sort_order`` \u2014 seller-internal ordering hint, used to\n  sort this response but not surfaced to the customer."
+      },
+      "CursorPage_ServiceSummary_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceSummary"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "CursorPage[ServiceSummary]"
+      },
+      "CustomerEnrollment": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "service_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Service Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ServiceEnrollmentStatusEnum"
+          },
+          "parameters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parameters"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "service": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service"
+          },
+          "proxy_endpoint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proxy Endpoint"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "service_id",
+          "status",
+          "created_at"
+        ],
+        "title": "CustomerEnrollment",
+        "description": "Customer-visible enrollment record.\n\n``parameters`` is always sanitized \u2014 keys matching common secret\nnames (``api_key``, ``password``, ...) are returned as\n``***masked***`` so the SDK never round-trips raw secrets.\n``service`` and ``proxy_endpoint`` are present when the list/get\nendpoint is called with ``include_service_details=True`` (the\ndefault)."
+      },
+      "CustomerEnrollmentCancelResponse": {
+        "properties": {
+          "enrollment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Enrollment Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ServiceEnrollmentStatusEnum"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enrollment_id",
+          "status",
+          "message"
+        ],
+        "title": "CustomerEnrollmentCancelResponse",
+        "description": "Response after cancelling (unenrolling from) an enrollment."
+      },
+      "CustomerEnrollmentCreateResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "service_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Service Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ServiceEnrollmentStatusEnum"
+          },
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "service_id",
+          "status",
+          "task_id",
+          "message"
+        ],
+        "title": "CustomerEnrollmentCreateResponse",
+        "description": "Async enrollment ack. Poll the ``task_id`` via ``/tasks/{id}``\nto observe activation progress, or fetch the enrollment later\nto check its ``status``."
+      },
+      "CustomerEnrollmentsResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/CustomerEnrollment"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "skip": {
+            "type": "integer",
+            "title": "Skip"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count",
+          "skip",
+          "limit"
+        ],
+        "title": "CustomerEnrollmentsResponse",
+        "description": "Paginated list of the caller's enrollments."
+      },
+      "GatewayKind": {
+        "type": "string",
+        "enum": [
+          "api",
+          "s3",
+          "smtp"
+        ],
+        "title": "GatewayKind",
+        "description": "Short-form gateway selector for ``ResolveRequest.gateway``.\n\nCustomer-facing shorthand \u2014 maps to the ``<NAME>_GATEWAY_BASE_URL``\nsettings template internally. ``api`` covers HTTP services (LLM,\nuptime monitors, generic APIs); ``s3`` and ``smtp`` cover storage\nand email relay."
+      },
+      "GroupTypeEnum": {
+        "type": "string",
+        "enum": [
+          "category",
+          "collection",
+          "routable",
+          "misc"
+        ],
+        "title": "GroupTypeEnum",
+        "description": "Type of service group \u2014 derived from configuration, not set directly.\n\nDerivation rules:\n- No rules, no access interfaces \u2192 category (organizes descendants)\n- Rules, no access interfaces \u2192 collection (curated set for browsing)\n- Rules + access interfaces \u2192 group (has own API endpoint + routing)\n- System-generated catch-all \u2192 misc"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1700,6 +2871,146 @@
         ],
         "title": "RecurrentRequestsPublic",
         "description": "List of RecurrentRequests for API responses."
+      },
+      "ResolveCandidate": {
+        "properties": {
+          "service_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Service Id"
+          },
+          "service_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Name"
+          },
+          "provider_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Name"
+          },
+          "weight": {
+            "type": "integer",
+            "title": "Weight",
+            "default": 10
+          },
+          "enrollment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enrollment Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "service_id"
+        ],
+        "title": "ResolveCandidate",
+        "description": "One service the gateway would route to, customer-safe subset.\n\nOmits operational fields (upstream_config with resolved API keys,\ntransformers, response_rules, seller_id, pricing_bundle_id) \u2014 those\nare gateway internals. The SDK gets identity + the enrollment\nbinding it needs to reason about dispatch."
+      },
+      "ResolveRequest": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Gateway request path without the gateway base URL \u2014 same shape as what ``service.dispatch(path=...)`` / ``group.dispatch(path=...)`` produces. Examples: ``v1/chat/completions``, ``p/openai``, ``a/my-alias/foo``."
+          },
+          "routing_key": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routing Key",
+            "description": "Optional routing key the gateway would match against interface ``routing_key`` rules (e.g. ``{'model': 'gpt-4'}``). Omit to see every interface matching the path."
+          },
+          "strategy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strategy",
+            "description": "Override the group's configured routing strategy (e.g. ``by_price``, ``lowest_latency``). Omit to use the strategy declared on the group's ``routing_policy``. ``weighted_random`` is the implicit baseline."
+          },
+          "gateway": {
+            "$ref": "#/components/schemas/GatewayKind",
+            "description": "Which gateway the path belongs to \u2014 ``api`` (default, HTTP services like LLM / uptime), ``s3`` (storage), or ``smtp`` (email relay). Internally mapped to the corresponding ``<NAME>_GATEWAY_BASE_URL`` setting so customers don't have to know the env-var naming.",
+            "default": "api"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "title": "ResolveRequest",
+        "description": "Dry-run resolution input, mirroring what the gateway accepts."
+      },
+      "ResolveResponse": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ResolveCandidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "routing_strategy": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routing Strategy",
+            "description": "Effective strategy object (``{name, content_dependent, [timeout_ms], [parameters]}``), or ``None`` if the default ``weighted_random`` applies. ``content_dependent=True`` means final selection depends on the request body and the server can't pre-select \u2014 ``selected`` will be ``None``."
+          },
+          "selected": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolveCandidate"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Pre-selected candidate for content-independent strategies (weighted random, by-price, by-latency, ...). ``None`` when the strategy is content-dependent \u2014 the caller must supply a body to get a deterministic pick."
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidates"
+        ],
+        "title": "ResolveResponse",
+        "description": "Dry-run result: candidate services, strategy, optional pre-pick."
       },
       "SecretOwnerTypeEnum": {
         "type": "string",
@@ -2057,6 +3368,384 @@
         ],
         "title": "ServiceAliasesPublic",
         "description": "List response for ServiceAliases."
+      },
+      "ServiceDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "service_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Type"
+          },
+          "gateway_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gateway Type"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "provider_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Name"
+          },
+          "seller_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Name"
+          },
+          "capabilities": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capabilities"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "list_price": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Price"
+          },
+          "enrollment_required": {
+            "type": "boolean",
+            "title": "Enrollment Required",
+            "default": false
+          },
+          "listing_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Listing Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "ServiceDetail",
+        "description": "Full customer-facing service details.\n\nSourced from ``service_mview``. Intentionally narrow:\n\n- Omits seller-internal fields (``seller_id``, ``routing_vars``,\n  ``payout_price``, ``ops_subscription_id``, ``ops_customer_id``)\n  and draft-only fields (``pending_revision_id``).\n- Omits review stats (``review_count``, ``average_rating``) and\n  logo URLs (``provider_logo``, ``offering_logo``,\n  ``seller_logo``); those belong to the marketing/dashboard\n  surface, not the SDK.\n- Omits ``tagline`` as marketing copy not used for dispatch."
+      },
+      "ServiceEnrollmentCreate": {
+        "properties": {
+          "service_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Service Id"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ServiceEnrollmentStatusEnum"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "parameters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parameters"
+          },
+          "recurrence_schedule": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurrence Schedule"
+          }
+        },
+        "type": "object",
+        "required": [
+          "service_id"
+        ],
+        "title": "ServiceEnrollmentCreate",
+        "description": "Model for creating new Enrollments.\n\ncustomer_id is derived from the X-Role-Id header at the route level.\nservice_id references the Service identity layer (not listing_id)."
+      },
+      "ServiceEnrollmentStatusEnum": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "incomplete",
+          "active",
+          "paused",
+          "cancelled"
+        ],
+        "title": "ServiceEnrollmentStatusEnum",
+        "description": "Status of a customer's service enrollment.\n\nWorkflow for services requiring parameters (user_parameters_schema exists):\n\n    [not enrolled] \u2192 (enroll) \u2192 pending \u2192 (task completes) \u2192 incomplete \u2192 (configure) \u2192 active\n                          \u2502                                                                \u2193\n                          \u2502                                  paused \u2190 (pause) \u2190\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                          \u2502\n                          \u2514\u2500\u2192 active  (if required secret already exists)\n\nWorkflow for services without parameters:\n\n    [not enrolled] \u2192 (enroll) \u2192 pending \u2192 (task completes) \u2192 active\n                                                                \u2193\n                                  paused \u2190 (pause) \u2190\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\nStates:\n- pending: Celery task is processing (transient, show spinner)\n- incomplete: Needs user configuration (required parameters not provided)\n- active: Enrolled and fully configured\n- paused: Enrolled but temporarily disabled\n- cancelled: Enrollment cancelled\n\nSecrets do not affect enrollment status \u2014 they are resolved at routing time."
+      },
+      "ServiceGroupDetail": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "group_type": {
+            "$ref": "#/components/schemas/GroupTypeEnum"
+          },
+          "service_count": {
+            "type": "integer",
+            "title": "Service Count"
+          },
+          "interface": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccessInterface"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "routing_policy": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routing Policy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "display_name",
+          "group_type",
+          "service_count"
+        ],
+        "title": "ServiceGroupDetail",
+        "description": "Service group metadata with the (single) group-level interface.\n\nGroups declare at most one ``user_access_interfaces`` entry, so\n``interface`` is embedded here directly rather than returned via a\nseparate endpoint. The SDK reads ``grp.interface.base_url`` for\n``group.dispatch(json=...)`` \u2014 an HTTP call to that base URL where\nthe gateway's ``routing_policy`` picks a member service via\nweighted / content-dependent / price-based strategies. ``None`` if\nthe group has no user-facing interface configured.\n\nMember services are fetched separately via\n``GET /customer/groups/{id}/services`` so this response stays\nsmall for groups with many members.\n\n``routing_policy`` is exposed in full (not just the strategy\nname) because customers can configure it themselves via issue\n#857 \u2014 they need to read back the exact config they set."
+      },
+      "ServiceGroupListResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceGroupSummary"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "ServiceGroupListResponse",
+        "description": "Paginated list of customer-visible service groups."
+      },
+      "ServiceGroupSummary": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "group_type": {
+            "$ref": "#/components/schemas/GroupTypeEnum"
+          },
+          "service_count": {
+            "type": "integer",
+            "title": "Service Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "display_name",
+          "group_type",
+          "service_count"
+        ],
+        "title": "ServiceGroupSummary",
+        "description": "Customer-visible service group summary.\n\nIdentified by ``name`` rather than UUID \u2014 group UUIDs change when\nadmins recreate a group, so SDK scripts that hardcode UUIDs break\nsilently after a recreation. Names survive because admins reuse\nthe same slug.\n\nExcludes internal platform configuration (``membership_rules``,\n``routing_policy``, ``user_access_interfaces``) \u2014 customers only\nneed the resolved ``base_url`` for gateway dispatch, not the raw\ninterface config."
+      },
+      "ServiceSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "service_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Type"
+          },
+          "gateway_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gateway Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "ServiceSummary",
+        "description": "Minimal service info used when listing services inside a group.\n\nIntentionally narrow: enough to render a picker and drill in,\nnothing that customers don't need at browse time. Fetch\n``ServiceDetail`` for the full schema.\n\n``status`` is intentionally not exposed \u2014 customers only ever\nsee ``active`` services (the visibility filter guarantees it),\nso a field whose only valid value is ``\"active\"`` carries no\ninformation. Same reasoning for ``is_active`` on\n``AccessInterface``."
       },
       "SwitchRoutingResponse": {
         "properties": {

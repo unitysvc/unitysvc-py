@@ -59,11 +59,11 @@ class AsyncRecurrentRequests:
 
     async def get(self, request_id: str | UUID) -> RecurrentRequestPublic:
         from ._generated.api.customer_recurrent_requests import (
-            customer_recurrent_requests_get_recurrent_request_detail,
+            customer_recurrent_requests_get_recurrent_request,
         )
 
         return unwrap(
-            await customer_recurrent_requests_get_recurrent_request_detail.asyncio_detailed(
+            await customer_recurrent_requests_get_recurrent_request.asyncio_detailed(
                 request_id=UUID(str(request_id)) if not isinstance(request_id, UUID) else request_id,
                 client=self._client,
             )

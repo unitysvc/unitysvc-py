@@ -1,20 +1,19 @@
 from http import HTTPStatus
 from typing import Any, cast
 from urllib.parse import quote
-from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.recurrent_request_public import RecurrentRequestPublic
+from ...models.service_group_list_response import ServiceGroupListResponse
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    request_id: UUID,
     *,
+    name: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -25,11 +24,21 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
+    params: dict[str, Any] = {}
+
+    json_name: None | str | Unset
+    if isinstance(name, Unset):
+        json_name = UNSET
+    else:
+        json_name = name
+    params["name"] = json_name
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/recurrent-requests/{request_id}".format(
-            request_id=quote(str(request_id), safe=""),
-        ),
+        "url": "/groups",
+        "params": params,
     }
 
     _kwargs["headers"] = headers
@@ -38,9 +47,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | RecurrentRequestPublic | None:
+) -> HTTPValidationError | ServiceGroupListResponse | None:
     if response.status_code == 200:
-        response_200 = RecurrentRequestPublic.from_dict(response.json())
+        response_200 = ServiceGroupListResponse.from_dict(response.json())
 
         return response_200
 
@@ -57,7 +66,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | RecurrentRequestPublic]:
+) -> Response[HTTPValidationError | ServiceGroupListResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -67,18 +76,23 @@ def _build_response(
 
 
 def sync_detailed(
-    request_id: UUID,
     *,
     client: AuthenticatedClient | Client,
+    name: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | RecurrentRequestPublic]:
-    """Get Recurrent Request Detail
+) -> Response[HTTPValidationError | ServiceGroupListResponse]:
+    """List Groups
 
-     Get a recurrent request by ID.
+     List active platform service groups visible to the customer.
+
+    Excludes draft/archived/private groups, empty nodes, and
+    seller-owned or customer-owned groups. Ordered with ``misc``
+    groups last, then by ``sort_order``, then alphabetically by name
+    — matching the marketplace browse order.
 
     Args:
-        request_id (UUID):
+        name (None | str | Unset): Filter by name (partial match)
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -87,11 +101,11 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | RecurrentRequestPublic]
+        Response[HTTPValidationError | ServiceGroupListResponse]
     """
 
     kwargs = _get_kwargs(
-        request_id=request_id,
+        name=name,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -104,18 +118,23 @@ def sync_detailed(
 
 
 def sync(
-    request_id: UUID,
     *,
     client: AuthenticatedClient | Client,
+    name: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | RecurrentRequestPublic | None:
-    """Get Recurrent Request Detail
+) -> HTTPValidationError | ServiceGroupListResponse | None:
+    """List Groups
 
-     Get a recurrent request by ID.
+     List active platform service groups visible to the customer.
+
+    Excludes draft/archived/private groups, empty nodes, and
+    seller-owned or customer-owned groups. Ordered with ``misc``
+    groups last, then by ``sort_order``, then alphabetically by name
+    — matching the marketplace browse order.
 
     Args:
-        request_id (UUID):
+        name (None | str | Unset): Filter by name (partial match)
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -124,30 +143,35 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | RecurrentRequestPublic
+        HTTPValidationError | ServiceGroupListResponse
     """
 
     return sync_detailed(
-        request_id=request_id,
         client=client,
+        name=name,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
 
 
 async def asyncio_detailed(
-    request_id: UUID,
     *,
     client: AuthenticatedClient | Client,
+    name: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | RecurrentRequestPublic]:
-    """Get Recurrent Request Detail
+) -> Response[HTTPValidationError | ServiceGroupListResponse]:
+    """List Groups
 
-     Get a recurrent request by ID.
+     List active platform service groups visible to the customer.
+
+    Excludes draft/archived/private groups, empty nodes, and
+    seller-owned or customer-owned groups. Ordered with ``misc``
+    groups last, then by ``sort_order``, then alphabetically by name
+    — matching the marketplace browse order.
 
     Args:
-        request_id (UUID):
+        name (None | str | Unset): Filter by name (partial match)
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -156,11 +180,11 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | RecurrentRequestPublic]
+        Response[HTTPValidationError | ServiceGroupListResponse]
     """
 
     kwargs = _get_kwargs(
-        request_id=request_id,
+        name=name,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -171,18 +195,23 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    request_id: UUID,
     *,
     client: AuthenticatedClient | Client,
+    name: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | RecurrentRequestPublic | None:
-    """Get Recurrent Request Detail
+) -> HTTPValidationError | ServiceGroupListResponse | None:
+    """List Groups
 
-     Get a recurrent request by ID.
+     List active platform service groups visible to the customer.
+
+    Excludes draft/archived/private groups, empty nodes, and
+    seller-owned or customer-owned groups. Ordered with ``misc``
+    groups last, then by ``sort_order``, then alphabetically by name
+    — matching the marketplace browse order.
 
     Args:
-        request_id (UUID):
+        name (None | str | Unset): Filter by name (partial match)
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -191,13 +220,13 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | RecurrentRequestPublic
+        HTTPValidationError | ServiceGroupListResponse
     """
 
     return (
         await asyncio_detailed(
-            request_id=request_id,
             client=client,
+            name=name,
             authorization=authorization,
             x_role_id=x_role_id,
         )
