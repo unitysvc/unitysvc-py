@@ -1,22 +1,21 @@
 from http import HTTPStatus
 from typing import Any, cast
 from urllib.parse import quote
-from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.customer_services_response import CustomerServicesResponse
+from ...models.cursor_page_service_summary import CursorPageServiceSummary
 from ...models.http_validation_error import HTTPValidationError
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    group_id: UUID,
+    name: str,
     *,
-    skip: int | Unset = 0,
-    limit: int | Unset = 100,
+    cursor: None | str | Unset = UNSET,
+    limit: int | Unset = 50,
     search: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
@@ -30,7 +29,12 @@ def _get_kwargs(
 
     params: dict[str, Any] = {}
 
-    params["skip"] = skip
+    json_cursor: None | str | Unset
+    if isinstance(cursor, Unset):
+        json_cursor = UNSET
+    else:
+        json_cursor = cursor
+    params["cursor"] = json_cursor
 
     params["limit"] = limit
 
@@ -45,8 +49,8 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/groups/{group_id}/services".format(
-            group_id=quote(str(group_id), safe=""),
+        "url": "/groups/{name}/services".format(
+            name=quote(str(name), safe=""),
         ),
         "params": params,
     }
@@ -57,9 +61,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> CustomerServicesResponse | HTTPValidationError | None:
+) -> CursorPageServiceSummary | HTTPValidationError | None:
     if response.status_code == 200:
-        response_200 = CustomerServicesResponse.from_dict(response.json())
+        response_200 = CursorPageServiceSummary.from_dict(response.json())
 
         return response_200
 
@@ -76,7 +80,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[CustomerServicesResponse | HTTPValidationError]:
+) -> Response[CursorPageServiceSummary | HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -86,34 +90,38 @@ def _build_response(
 
 
 def sync_detailed(
-    group_id: UUID,
+    name: str,
     *,
     client: AuthenticatedClient | Client,
-    skip: int | Unset = 0,
-    limit: int | Unset = 100,
+    cursor: None | str | Unset = UNSET,
+    limit: int | Unset = 50,
     search: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[CustomerServicesResponse | HTTPValidationError]:
+) -> Response[CursorPageServiceSummary | HTTPValidationError]:
     """List Group Services
 
      List customer-visible services that belong to a group.
 
+    The group is identified by its name (not UUID) so SDK scripts
+    keep working if an admin recreates the group with the same slug.
     Mirrors the visibility rule used by the GraphQL
     ``resolve_group_services`` resolver for non-admin / non-seller
     callers: service must be ``status='active'`` and
     ``visibility='public'``. The group itself must be in the
     customer-visible set (active + platform + non-empty).
 
-    Ordering is by ``name`` so SDK consumers can rely on stable
-    pagination for ``group.services()``.
+    Uses keyset pagination on ``(created_at DESC, service_id DESC)``
+    to match the seller ``services_list`` endpoint — clients echo
+    ``next_cursor`` back unchanged to fetch subsequent pages.
 
     Args:
-        group_id (UUID):
-        skip (int | Unset):  Default: 0.
-        limit (int | Unset):  Default: 100.
-        search (None | str | Unset): Case-insensitive substring match on display_name,
-            description, provider_name, or seller_name.
+        name (str):
+        cursor (None | str | Unset): Opaque pagination cursor from a previous response's
+            `next_cursor`. Omit to start from the first page.
+        limit (int | Unset): Page size (default 50, max 200). Default: 50.
+        search (None | str | Unset): Case-insensitive substring match on name, display_name, or
+            provider_name.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -122,12 +130,12 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CustomerServicesResponse | HTTPValidationError]
+        Response[CursorPageServiceSummary | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        group_id=group_id,
-        skip=skip,
+        name=name,
+        cursor=cursor,
         limit=limit,
         search=search,
         authorization=authorization,
@@ -142,34 +150,38 @@ def sync_detailed(
 
 
 def sync(
-    group_id: UUID,
+    name: str,
     *,
     client: AuthenticatedClient | Client,
-    skip: int | Unset = 0,
-    limit: int | Unset = 100,
+    cursor: None | str | Unset = UNSET,
+    limit: int | Unset = 50,
     search: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> CustomerServicesResponse | HTTPValidationError | None:
+) -> CursorPageServiceSummary | HTTPValidationError | None:
     """List Group Services
 
      List customer-visible services that belong to a group.
 
+    The group is identified by its name (not UUID) so SDK scripts
+    keep working if an admin recreates the group with the same slug.
     Mirrors the visibility rule used by the GraphQL
     ``resolve_group_services`` resolver for non-admin / non-seller
     callers: service must be ``status='active'`` and
     ``visibility='public'``. The group itself must be in the
     customer-visible set (active + platform + non-empty).
 
-    Ordering is by ``name`` so SDK consumers can rely on stable
-    pagination for ``group.services()``.
+    Uses keyset pagination on ``(created_at DESC, service_id DESC)``
+    to match the seller ``services_list`` endpoint — clients echo
+    ``next_cursor`` back unchanged to fetch subsequent pages.
 
     Args:
-        group_id (UUID):
-        skip (int | Unset):  Default: 0.
-        limit (int | Unset):  Default: 100.
-        search (None | str | Unset): Case-insensitive substring match on display_name,
-            description, provider_name, or seller_name.
+        name (str):
+        cursor (None | str | Unset): Opaque pagination cursor from a previous response's
+            `next_cursor`. Omit to start from the first page.
+        limit (int | Unset): Page size (default 50, max 200). Default: 50.
+        search (None | str | Unset): Case-insensitive substring match on name, display_name, or
+            provider_name.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -178,13 +190,13 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CustomerServicesResponse | HTTPValidationError
+        CursorPageServiceSummary | HTTPValidationError
     """
 
     return sync_detailed(
-        group_id=group_id,
+        name=name,
         client=client,
-        skip=skip,
+        cursor=cursor,
         limit=limit,
         search=search,
         authorization=authorization,
@@ -193,34 +205,38 @@ def sync(
 
 
 async def asyncio_detailed(
-    group_id: UUID,
+    name: str,
     *,
     client: AuthenticatedClient | Client,
-    skip: int | Unset = 0,
-    limit: int | Unset = 100,
+    cursor: None | str | Unset = UNSET,
+    limit: int | Unset = 50,
     search: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[CustomerServicesResponse | HTTPValidationError]:
+) -> Response[CursorPageServiceSummary | HTTPValidationError]:
     """List Group Services
 
      List customer-visible services that belong to a group.
 
+    The group is identified by its name (not UUID) so SDK scripts
+    keep working if an admin recreates the group with the same slug.
     Mirrors the visibility rule used by the GraphQL
     ``resolve_group_services`` resolver for non-admin / non-seller
     callers: service must be ``status='active'`` and
     ``visibility='public'``. The group itself must be in the
     customer-visible set (active + platform + non-empty).
 
-    Ordering is by ``name`` so SDK consumers can rely on stable
-    pagination for ``group.services()``.
+    Uses keyset pagination on ``(created_at DESC, service_id DESC)``
+    to match the seller ``services_list`` endpoint — clients echo
+    ``next_cursor`` back unchanged to fetch subsequent pages.
 
     Args:
-        group_id (UUID):
-        skip (int | Unset):  Default: 0.
-        limit (int | Unset):  Default: 100.
-        search (None | str | Unset): Case-insensitive substring match on display_name,
-            description, provider_name, or seller_name.
+        name (str):
+        cursor (None | str | Unset): Opaque pagination cursor from a previous response's
+            `next_cursor`. Omit to start from the first page.
+        limit (int | Unset): Page size (default 50, max 200). Default: 50.
+        search (None | str | Unset): Case-insensitive substring match on name, display_name, or
+            provider_name.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -229,12 +245,12 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CustomerServicesResponse | HTTPValidationError]
+        Response[CursorPageServiceSummary | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        group_id=group_id,
-        skip=skip,
+        name=name,
+        cursor=cursor,
         limit=limit,
         search=search,
         authorization=authorization,
@@ -247,34 +263,38 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    group_id: UUID,
+    name: str,
     *,
     client: AuthenticatedClient | Client,
-    skip: int | Unset = 0,
-    limit: int | Unset = 100,
+    cursor: None | str | Unset = UNSET,
+    limit: int | Unset = 50,
     search: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> CustomerServicesResponse | HTTPValidationError | None:
+) -> CursorPageServiceSummary | HTTPValidationError | None:
     """List Group Services
 
      List customer-visible services that belong to a group.
 
+    The group is identified by its name (not UUID) so SDK scripts
+    keep working if an admin recreates the group with the same slug.
     Mirrors the visibility rule used by the GraphQL
     ``resolve_group_services`` resolver for non-admin / non-seller
     callers: service must be ``status='active'`` and
     ``visibility='public'``. The group itself must be in the
     customer-visible set (active + platform + non-empty).
 
-    Ordering is by ``name`` so SDK consumers can rely on stable
-    pagination for ``group.services()``.
+    Uses keyset pagination on ``(created_at DESC, service_id DESC)``
+    to match the seller ``services_list`` endpoint — clients echo
+    ``next_cursor`` back unchanged to fetch subsequent pages.
 
     Args:
-        group_id (UUID):
-        skip (int | Unset):  Default: 0.
-        limit (int | Unset):  Default: 100.
-        search (None | str | Unset): Case-insensitive substring match on display_name,
-            description, provider_name, or seller_name.
+        name (str):
+        cursor (None | str | Unset): Opaque pagination cursor from a previous response's
+            `next_cursor`. Omit to start from the first page.
+        limit (int | Unset): Page size (default 50, max 200). Default: 50.
+        search (None | str | Unset): Case-insensitive substring match on name, display_name, or
+            provider_name.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -283,14 +303,14 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CustomerServicesResponse | HTTPValidationError
+        CursorPageServiceSummary | HTTPValidationError
     """
 
     return (
         await asyncio_detailed(
-            group_id=group_id,
+            name=name,
             client=client,
-            skip=skip,
+            cursor=cursor,
             limit=limit,
             search=search,
             authorization=authorization,

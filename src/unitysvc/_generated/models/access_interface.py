@@ -9,12 +9,18 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="CustomerAccessInterface")
+T = TypeVar("T", bound="AccessInterface")
 
 
 @_attrs_define
-class CustomerAccessInterface:
+class AccessInterface:
     """Access interface entry exposed to customers.
+
+    Identified by ``name`` (per ``service`` for service-bound
+    interfaces, per ``group`` for group-level ones). The DB primary
+    key is intentionally not exposed — interface UUIDs change when
+    admins recreate parent rows, so an ``id`` field would tempt SDK
+    consumers to cache an unstable handle.
 
     The actual ``api_key`` is never included — secrets are
     write-only. ``base_url`` is resolved against the active gateway
@@ -26,17 +32,18 @@ class CustomerAccessInterface:
       specific enrollment (BYOK/BYOE services); ``None`` for shared
       interfaces. SDK uses this for
       ``service.dispatch(enrollment=enr)`` resolution.
-    - ``group_id`` — set when the interface is declared on a
+    - ``group_name`` — set when the interface is declared on a
       service group rather than on the service itself; ``None`` for
-      per-service interfaces. Reserved; not yet populated by this
-      endpoint.
+      per-service interfaces. Identified by name (not UUID) because
+      group UUIDs are not stable across admin recreations.
 
     Intentionally omits:
-    - ``is_primary`` — for most multi-interface services the
-      interfaces are *different operations* (chat vs embeddings,
-      put vs list), not alternatives, so a "primary" flag is
-      misleading. Callers with more than one interface select
-      explicitly via ``service.dispatch(interface="<name>")``.
+    - ``is_primary`` — multiple public interfaces on the same
+      service map to the same upstream, so ``service.dispatch()``
+      auto-picks one and a "primary" flag is unnecessary. The
+      ``interface=`` argument on ``service.dispatch()`` is only
+      needed to disambiguate when the customer has multiple
+      enrollments on the service.
     - ``is_active`` — only active interfaces are returned, so the
       field would always be ``True``.
     - ``sort_order`` — seller-internal ordering hint, used to
@@ -44,20 +51,17 @@ class CustomerAccessInterface:
 
     """
 
-    id: UUID
     name: str
     description: None | str | Unset = UNSET
     access_method: None | str | Unset = UNSET
     base_url: None | str | Unset = UNSET
-    group_id: None | Unset | UUID = UNSET
+    group_name: None | str | Unset = UNSET
     enrollment_id: None | Unset | UUID = UNSET
     customer_secrets_needed: list[str] | None | Unset = UNSET
     customer_secrets_optional: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        id = str(self.id)
-
         name = self.name
 
         description: None | str | Unset
@@ -78,13 +82,11 @@ class CustomerAccessInterface:
         else:
             base_url = self.base_url
 
-        group_id: None | str | Unset
-        if isinstance(self.group_id, Unset):
-            group_id = UNSET
-        elif isinstance(self.group_id, UUID):
-            group_id = str(self.group_id)
+        group_name: None | str | Unset
+        if isinstance(self.group_name, Unset):
+            group_name = UNSET
         else:
-            group_id = self.group_id
+            group_name = self.group_name
 
         enrollment_id: None | str | Unset
         if isinstance(self.enrollment_id, Unset):
@@ -116,7 +118,6 @@ class CustomerAccessInterface:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "id": id,
                 "name": name,
             }
         )
@@ -126,8 +127,8 @@ class CustomerAccessInterface:
             field_dict["access_method"] = access_method
         if base_url is not UNSET:
             field_dict["base_url"] = base_url
-        if group_id is not UNSET:
-            field_dict["group_id"] = group_id
+        if group_name is not UNSET:
+            field_dict["group_name"] = group_name
         if enrollment_id is not UNSET:
             field_dict["enrollment_id"] = enrollment_id
         if customer_secrets_needed is not UNSET:
@@ -140,8 +141,6 @@ class CustomerAccessInterface:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        id = UUID(d.pop("id"))
-
         name = d.pop("name")
 
         def _parse_description(data: object) -> None | str | Unset:
@@ -171,22 +170,14 @@ class CustomerAccessInterface:
 
         base_url = _parse_base_url(d.pop("base_url", UNSET))
 
-        def _parse_group_id(data: object) -> None | Unset | UUID:
+        def _parse_group_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            try:
-                if not isinstance(data, str):
-                    raise TypeError()
-                group_id_type_0 = UUID(data)
+            return cast(None | str | Unset, data)
 
-                return group_id_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(None | Unset | UUID, data)
-
-        group_id = _parse_group_id(d.pop("group_id", UNSET))
+        group_name = _parse_group_name(d.pop("group_name", UNSET))
 
         def _parse_enrollment_id(data: object) -> None | Unset | UUID:
             if data is None:
@@ -239,20 +230,19 @@ class CustomerAccessInterface:
 
         customer_secrets_optional = _parse_customer_secrets_optional(d.pop("customer_secrets_optional", UNSET))
 
-        customer_access_interface = cls(
-            id=id,
+        access_interface = cls(
             name=name,
             description=description,
             access_method=access_method,
             base_url=base_url,
-            group_id=group_id,
+            group_name=group_name,
             enrollment_id=enrollment_id,
             customer_secrets_needed=customer_secrets_needed,
             customer_secrets_optional=customer_secrets_optional,
         )
 
-        customer_access_interface.additional_properties = d
-        return customer_access_interface
+        access_interface.additional_properties = d
+        return access_interface
 
     @property
     def additional_keys(self) -> list[str]:

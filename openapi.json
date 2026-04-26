@@ -855,29 +855,6 @@
         "operationId": "customer-groups-list_groups",
         "parameters": [
           {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 1,
-              "default": 100,
-              "title": "Limit"
-            }
-          },
-          {
             "name": "name",
             "in": "query",
             "required": false,
@@ -934,7 +911,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CustomerServiceGroupsResponse"
+                  "$ref": "#/components/schemas/ServiceGroupListResponse"
                 }
               }
             }
@@ -952,23 +929,22 @@
         }
       }
     },
-    "/groups/{group_id}": {
+    "/groups/{name}": {
       "get": {
         "tags": [
           "customer-groups"
         ],
         "summary": "Get Group",
-        "description": "Get metadata for a single visible group.\n\nReturns 404 for hidden groups (draft, seller-owned, empty) \u2014\nexistence is not leaked. Member services are fetched separately\nvia ``GET /customer/groups/{id}/services``.",
+        "description": "Get metadata for a single visible group, looked up by name.\n\nReturns 404 for hidden groups (draft, seller-owned, empty) \u2014\nexistence is not leaked. Member services are fetched separately\nvia ``GET /customer/groups/{name}/services``.",
         "operationId": "customer-groups-get_group",
         "parameters": [
           {
-            "name": "group_id",
+            "name": "name",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Group Id"
+              "title": "Name"
             }
           },
           {
@@ -1010,7 +986,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CustomerServiceGroupDetail"
+                  "$ref": "#/components/schemas/ServiceGroupDetail"
                 }
               }
             }
@@ -1028,35 +1004,41 @@
         }
       }
     },
-    "/groups/{group_id}/services": {
+    "/groups/{name}/services": {
       "get": {
         "tags": [
           "customer-groups"
         ],
         "summary": "List Group Services",
-        "description": "List customer-visible services that belong to a group.\n\nMirrors the visibility rule used by the GraphQL\n``resolve_group_services`` resolver for non-admin / non-seller\ncallers: service must be ``status='active'`` and\n``visibility='public'``. The group itself must be in the\ncustomer-visible set (active + platform + non-empty).\n\nOrdering is by ``name`` so SDK consumers can rely on stable\npagination for ``group.services()``.",
+        "description": "List customer-visible services that belong to a group.\n\nThe group is identified by its name (not UUID) so SDK scripts\nkeep working if an admin recreates the group with the same slug.\nMirrors the visibility rule used by the GraphQL\n``resolve_group_services`` resolver for non-admin / non-seller\ncallers: service must be ``status='active'`` and\n``visibility='public'``. The group itself must be in the\ncustomer-visible set (active + platform + non-empty).\n\nUses keyset pagination on ``(created_at DESC, service_id DESC)``\nto match the seller ``services_list`` endpoint \u2014 clients echo\n``next_cursor`` back unchanged to fetch subsequent pages.",
         "operationId": "customer-groups-list_group_services",
         "parameters": [
           {
-            "name": "group_id",
+            "name": "name",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Group Id"
+              "title": "Name"
             }
           },
           {
-            "name": "skip",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Skip"
-            }
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque pagination cursor from a previous response's `next_cursor`. Omit to start from the first page.",
+              "title": "Cursor"
+            },
+            "description": "Opaque pagination cursor from a previous response's `next_cursor`. Omit to start from the first page."
           },
           {
             "name": "limit",
@@ -1064,11 +1046,13 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 1000,
+              "maximum": 200,
               "minimum": 1,
-              "default": 100,
+              "description": "Page size (default 50, max 200).",
+              "default": 50,
               "title": "Limit"
-            }
+            },
+            "description": "Page size (default 50, max 200)."
           },
           {
             "name": "search",
@@ -1083,10 +1067,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Case-insensitive substring match on display_name, description, provider_name, or seller_name.",
+              "description": "Case-insensitive substring match on name, display_name, or provider_name.",
               "title": "Search"
             },
-            "description": "Case-insensitive substring match on display_name, description, provider_name, or seller_name."
+            "description": "Case-insensitive substring match on name, display_name, or provider_name."
           },
           {
             "name": "authorization",
@@ -1127,7 +1111,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CustomerServicesResponse"
+                  "$ref": "#/components/schemas/CursorPage_ServiceSummary_"
                 }
               }
             }
@@ -2113,7 +2097,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CustomerServiceDetail"
+                  "$ref": "#/components/schemas/ServiceDetail"
                 }
               }
             }
@@ -2191,7 +2175,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/CustomerAccessInterface"
+                    "$ref": "#/components/schemas/AccessInterface"
                   },
                   "title": "Response Customer-Services-List Service Interfaces"
                 }
@@ -2214,13 +2198,8 @@
   },
   "components": {
     "schemas": {
-      "CustomerAccessInterface": {
+      "AccessInterface": {
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
           "name": {
             "type": "string",
             "title": "Name"
@@ -2258,17 +2237,16 @@
             ],
             "title": "Base Url"
           },
-          "group_id": {
+          "group_name": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "uuid"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Group Id"
+            "title": "Group Name"
           },
           "enrollment_id": {
             "anyOf": [
@@ -2313,11 +2291,42 @@
         },
         "type": "object",
         "required": [
-          "id",
           "name"
         ],
-        "title": "CustomerAccessInterface",
-        "description": "Access interface entry exposed to customers.\n\nThe actual ``api_key`` is never included \u2014 secrets are\nwrite-only. ``base_url`` is resolved against the active gateway\nconfig so the client can dispatch without further substitution.\n\nScoping fields let the SDK filter the returned list:\n\n- ``enrollment_id`` \u2014 set when the interface is bound to a\n  specific enrollment (BYOK/BYOE services); ``None`` for shared\n  interfaces. SDK uses this for\n  ``service.dispatch(enrollment=enr)`` resolution.\n- ``group_id`` \u2014 set when the interface is declared on a\n  service group rather than on the service itself; ``None`` for\n  per-service interfaces. Reserved; not yet populated by this\n  endpoint.\n\nIntentionally omits:\n- ``is_primary`` \u2014 for most multi-interface services the\n  interfaces are *different operations* (chat vs embeddings,\n  put vs list), not alternatives, so a \"primary\" flag is\n  misleading. Callers with more than one interface select\n  explicitly via ``service.dispatch(interface=\"<name>\")``.\n- ``is_active`` \u2014 only active interfaces are returned, so the\n  field would always be ``True``.\n- ``sort_order`` \u2014 seller-internal ordering hint, used to\n  sort this response but not surfaced to the customer."
+        "title": "AccessInterface",
+        "description": "Access interface entry exposed to customers.\n\nIdentified by ``name`` (per ``service`` for service-bound\ninterfaces, per ``group`` for group-level ones). The DB primary\nkey is intentionally not exposed \u2014 interface UUIDs change when\nadmins recreate parent rows, so an ``id`` field would tempt SDK\nconsumers to cache an unstable handle.\n\nThe actual ``api_key`` is never included \u2014 secrets are\nwrite-only. ``base_url`` is resolved against the active gateway\nconfig so the client can dispatch without further substitution.\n\nScoping fields let the SDK filter the returned list:\n\n- ``enrollment_id`` \u2014 set when the interface is bound to a\n  specific enrollment (BYOK/BYOE services); ``None`` for shared\n  interfaces. SDK uses this for\n  ``service.dispatch(enrollment=enr)`` resolution.\n- ``group_name`` \u2014 set when the interface is declared on a\n  service group rather than on the service itself; ``None`` for\n  per-service interfaces. Identified by name (not UUID) because\n  group UUIDs are not stable across admin recreations.\n\nIntentionally omits:\n- ``is_primary`` \u2014 multiple public interfaces on the same\n  service map to the same upstream, so ``service.dispatch()``\n  auto-picks one and a \"primary\" flag is unnecessary. The\n  ``interface=`` argument on ``service.dispatch()`` is only\n  needed to disambiguate when the customer has multiple\n  enrollments on the service.\n- ``is_active`` \u2014 only active interfaces are returned, so the\n  field would always be ``True``.\n- ``sort_order`` \u2014 seller-internal ordering hint, used to\n  sort this response but not surfaced to the customer."
+      },
+      "CursorPage_ServiceSummary_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceSummary"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "CursorPage[ServiceSummary]"
       },
       "CustomerEnrollment": {
         "properties": {
@@ -2487,365 +2496,6 @@
         ],
         "title": "CustomerEnrollmentsResponse",
         "description": "Paginated list of the caller's enrollments."
-      },
-      "CustomerServiceDetail": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "display_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Display Name"
-          },
-          "service_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Service Type"
-          },
-          "gateway_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Gateway Type"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "provider_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Provider Name"
-          },
-          "seller_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Seller Name"
-          },
-          "capabilities": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Capabilities"
-          },
-          "tags": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tags"
-          },
-          "list_price": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "List Price"
-          },
-          "enrollment_required": {
-            "type": "boolean",
-            "title": "Enrollment Required",
-            "default": false
-          },
-          "listing_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Listing Type"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name"
-        ],
-        "title": "CustomerServiceDetail",
-        "description": "Full customer-facing service details.\n\nSourced from ``service_mview``. Intentionally narrow:\n\n- Omits seller-internal fields (``seller_id``, ``routing_vars``,\n  ``payout_price``, ``ops_subscription_id``, ``ops_customer_id``)\n  and draft-only fields (``pending_revision_id``).\n- Omits review stats (``review_count``, ``average_rating``) and\n  logo URLs (``provider_logo``, ``offering_logo``,\n  ``seller_logo``); those belong to the marketing/dashboard\n  surface, not the SDK.\n- Omits ``tagline`` as marketing copy not used for dispatch."
-      },
-      "CustomerServiceGroupDetail": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "display_name": {
-            "type": "string",
-            "title": "Display Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "group_type": {
-            "$ref": "#/components/schemas/GroupTypeEnum"
-          },
-          "ancestor_path": {
-            "type": "string",
-            "title": "Ancestor Path"
-          },
-          "sort_order": {
-            "type": "integer",
-            "title": "Sort Order"
-          },
-          "service_count": {
-            "type": "integer",
-            "title": "Service Count"
-          },
-          "interface": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/CustomerAccessInterface"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "display_name",
-          "group_type",
-          "ancestor_path",
-          "sort_order",
-          "service_count"
-        ],
-        "title": "CustomerServiceGroupDetail",
-        "description": "Service group metadata with the (single) group-level interface.\n\nGroups declare at most one ``user_access_interfaces`` entry, so\n``interface`` is embedded here directly rather than returned via a\nseparate endpoint. The SDK reads ``grp.interface.base_url`` for\n``group.dispatch(json=...)`` \u2014 an HTTP call to that base URL where\nthe gateway's ``routing_policy`` picks a member service via\nweighted / content-dependent / price-based strategies. ``None`` if\nthe group has no user-facing interface configured.\n\nMember services are fetched separately via\n``GET /customer/groups/{id}/services`` so this response stays\nsmall for groups with many members."
-      },
-      "CustomerServiceGroupPublic": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "display_name": {
-            "type": "string",
-            "title": "Display Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "group_type": {
-            "$ref": "#/components/schemas/GroupTypeEnum"
-          },
-          "ancestor_path": {
-            "type": "string",
-            "title": "Ancestor Path"
-          },
-          "sort_order": {
-            "type": "integer",
-            "title": "Sort Order"
-          },
-          "service_count": {
-            "type": "integer",
-            "title": "Service Count"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "display_name",
-          "group_type",
-          "ancestor_path",
-          "sort_order",
-          "service_count"
-        ],
-        "title": "CustomerServiceGroupPublic",
-        "description": "Customer-visible service group summary.\n\nExcludes internal platform configuration (``membership_rules``,\n``routing_policy``, ``user_access_interfaces``) \u2014 customers only\nneed the resolved ``base_url`` for gateway dispatch, not the raw\ninterface config."
-      },
-      "CustomerServiceGroupsResponse": {
-        "properties": {
-          "data": {
-            "items": {
-              "$ref": "#/components/schemas/CustomerServiceGroupPublic"
-            },
-            "type": "array",
-            "title": "Data"
-          },
-          "count": {
-            "type": "integer",
-            "title": "Count"
-          }
-        },
-        "type": "object",
-        "required": [
-          "data",
-          "count"
-        ],
-        "title": "CustomerServiceGroupsResponse",
-        "description": "Paginated list of customer-visible service groups."
-      },
-      "CustomerServiceSummary": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "display_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Display Name"
-          },
-          "service_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Service Type"
-          },
-          "gateway_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Gateway Type"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name"
-        ],
-        "title": "CustomerServiceSummary",
-        "description": "Minimal service info used when listing services inside a group.\n\nIntentionally narrow: enough to render a picker and drill in,\nnothing that customers don't need at browse time. Fetch\n``CustomerServiceDetail`` for the full schema.\n\n``status`` is intentionally not exposed \u2014 customers only ever\nsee ``active`` services (the visibility filter guarantees it),\nso a field whose only valid value is ``\"active\"`` carries no\ninformation. Same reasoning for ``is_active`` on\n``CustomerAccessInterface``."
-      },
-      "CustomerServicesResponse": {
-        "properties": {
-          "data": {
-            "items": {
-              "$ref": "#/components/schemas/CustomerServiceSummary"
-            },
-            "type": "array",
-            "title": "Data"
-          },
-          "count": {
-            "type": "integer",
-            "title": "Count"
-          }
-        },
-        "type": "object",
-        "required": [
-          "data",
-          "count"
-        ],
-        "title": "CustomerServicesResponse",
-        "description": "Paginated list of customer-visible services in a group."
       },
       "GatewayKind": {
         "type": "string",
@@ -3719,6 +3369,148 @@
         "title": "ServiceAliasesPublic",
         "description": "List response for ServiceAliases."
       },
+      "ServiceDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "service_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Type"
+          },
+          "gateway_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gateway Type"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "provider_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Name"
+          },
+          "seller_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Name"
+          },
+          "capabilities": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capabilities"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "list_price": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Price"
+          },
+          "enrollment_required": {
+            "type": "boolean",
+            "title": "Enrollment Required",
+            "default": false
+          },
+          "listing_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Listing Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "ServiceDetail",
+        "description": "Full customer-facing service details.\n\nSourced from ``service_mview``. Intentionally narrow:\n\n- Omits seller-internal fields (``seller_id``, ``routing_vars``,\n  ``payout_price``, ``ops_subscription_id``, ``ops_customer_id``)\n  and draft-only fields (``pending_revision_id``).\n- Omits review stats (``review_count``, ``average_rating``) and\n  logo URLs (``provider_logo``, ``offering_logo``,\n  ``seller_logo``); those belong to the marketing/dashboard\n  surface, not the SDK.\n- Omits ``tagline`` as marketing copy not used for dispatch."
+      },
       "ServiceEnrollmentCreate": {
         "properties": {
           "service_id": {
@@ -3779,6 +3571,181 @@
         ],
         "title": "ServiceEnrollmentStatusEnum",
         "description": "Status of a customer's service enrollment.\n\nWorkflow for services requiring parameters (user_parameters_schema exists):\n\n    [not enrolled] \u2192 (enroll) \u2192 pending \u2192 (task completes) \u2192 incomplete \u2192 (configure) \u2192 active\n                          \u2502                                                                \u2193\n                          \u2502                                  paused \u2190 (pause) \u2190\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                          \u2502\n                          \u2514\u2500\u2192 active  (if required secret already exists)\n\nWorkflow for services without parameters:\n\n    [not enrolled] \u2192 (enroll) \u2192 pending \u2192 (task completes) \u2192 active\n                                                                \u2193\n                                  paused \u2190 (pause) \u2190\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\nStates:\n- pending: Celery task is processing (transient, show spinner)\n- incomplete: Needs user configuration (required parameters not provided)\n- active: Enrolled and fully configured\n- paused: Enrolled but temporarily disabled\n- cancelled: Enrollment cancelled\n\nSecrets do not affect enrollment status \u2014 they are resolved at routing time."
+      },
+      "ServiceGroupDetail": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "group_type": {
+            "$ref": "#/components/schemas/GroupTypeEnum"
+          },
+          "service_count": {
+            "type": "integer",
+            "title": "Service Count"
+          },
+          "interface": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccessInterface"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "routing_policy": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routing Policy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "display_name",
+          "group_type",
+          "service_count"
+        ],
+        "title": "ServiceGroupDetail",
+        "description": "Service group metadata with the (single) group-level interface.\n\nGroups declare at most one ``user_access_interfaces`` entry, so\n``interface`` is embedded here directly rather than returned via a\nseparate endpoint. The SDK reads ``grp.interface.base_url`` for\n``group.dispatch(json=...)`` \u2014 an HTTP call to that base URL where\nthe gateway's ``routing_policy`` picks a member service via\nweighted / content-dependent / price-based strategies. ``None`` if\nthe group has no user-facing interface configured.\n\nMember services are fetched separately via\n``GET /customer/groups/{id}/services`` so this response stays\nsmall for groups with many members.\n\n``routing_policy`` is exposed in full (not just the strategy\nname) because customers can configure it themselves via issue\n#857 \u2014 they need to read back the exact config they set."
+      },
+      "ServiceGroupListResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceGroupSummary"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "ServiceGroupListResponse",
+        "description": "Paginated list of customer-visible service groups."
+      },
+      "ServiceGroupSummary": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "group_type": {
+            "$ref": "#/components/schemas/GroupTypeEnum"
+          },
+          "service_count": {
+            "type": "integer",
+            "title": "Service Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "display_name",
+          "group_type",
+          "service_count"
+        ],
+        "title": "ServiceGroupSummary",
+        "description": "Customer-visible service group summary.\n\nIdentified by ``name`` rather than UUID \u2014 group UUIDs change when\nadmins recreate a group, so SDK scripts that hardcode UUIDs break\nsilently after a recreation. Names survive because admins reuse\nthe same slug.\n\nExcludes internal platform configuration (``membership_rules``,\n``routing_policy``, ``user_access_interfaces``) \u2014 customers only\nneed the resolved ``base_url`` for gateway dispatch, not the raw\ninterface config."
+      },
+      "ServiceSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "service_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Type"
+          },
+          "gateway_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gateway Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "ServiceSummary",
+        "description": "Minimal service info used when listing services inside a group.\n\nIntentionally narrow: enough to render a picker and drill in,\nnothing that customers don't need at browse time. Fetch\n``ServiceDetail`` for the full schema.\n\n``status`` is intentionally not exposed \u2014 customers only ever\nsee ``active`` services (the visibility filter guarantees it),\nso a field whose only valid value is ``\"active\"`` carries no\ninformation. Same reasoning for ``is_active`` on\n``AccessInterface``."
       },
       "SwitchRoutingResponse": {
         "properties": {

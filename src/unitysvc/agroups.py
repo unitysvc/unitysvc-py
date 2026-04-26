@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
-from uuid import UUID
 
 from ._http import unwrap
 
@@ -11,14 +10,12 @@ if TYPE_CHECKING:
     import httpx
 
     from ._generated.client import AuthenticatedClient
-    from ._generated.models.customer_service_group_detail import (
-        CustomerServiceGroupDetail,
+    from ._generated.models.cursor_page_service_summary import (
+        CursorPageServiceSummary,
     )
-    from ._generated.models.customer_service_groups_response import (
-        CustomerServiceGroupsResponse,
-    )
-    from ._generated.models.customer_services_response import (
-        CustomerServicesResponse,
+    from ._generated.models.service_group_detail import ServiceGroupDetail
+    from ._generated.models.service_group_list_response import (
+        ServiceGroupListResponse,
     )
 
 
@@ -31,49 +28,39 @@ class AsyncGroups:
     async def list(
         self,
         *,
-        skip: int = 0,
-        limit: int = 100,
         name: str | None = None,
-    ) -> CustomerServiceGroupsResponse:
+    ) -> ServiceGroupListResponse:
         from ._generated.api.customer_groups import customer_groups_list_groups
         from ._generated.types import UNSET
 
         return unwrap(
             await customer_groups_list_groups.asyncio_detailed(
                 client=self._client,
-                skip=skip,
-                limit=limit,
                 name=name if name is not None else UNSET,
             )
         )
 
-    async def get(self, group_id: str | UUID) -> CustomerServiceGroupDetail:
+    async def get(self, name: str) -> ServiceGroupDetail:
         from ._generated.api.customer_groups import customer_groups_get_group
 
         return unwrap(
             await customer_groups_get_group.asyncio_detailed(
-                group_id=UUID(str(group_id)) if not isinstance(group_id, UUID) else group_id,
+                name=name,
                 client=self._client,
             )
         )
 
-    async def get_by_name(self, name: str) -> CustomerServiceGroupDetail:
-        from .exceptions import NotFoundError
-
-        resp = await self.list(name=name, limit=2)
-        for g in resp.data:
-            if g.name == name:
-                return await self.get(g.id)
-        raise NotFoundError(f"No service group named {name!r}", status_code=404)
+    # Legacy alias — same rationale as the sync :class:`Groups` facade.
+    get_by_name = get
 
     async def services(
         self,
-        group_id: str | UUID,
+        name: str,
         *,
-        skip: int = 0,
-        limit: int = 100,
+        cursor: str | None = None,
+        limit: int = 50,
         search: str | None = None,
-    ) -> CustomerServicesResponse:
+    ) -> CursorPageServiceSummary:
         from ._generated.api.customer_groups import (
             customer_groups_list_group_services,
         )
@@ -81,9 +68,9 @@ class AsyncGroups:
 
         return unwrap(
             await customer_groups_list_group_services.asyncio_detailed(
-                group_id=UUID(str(group_id)) if not isinstance(group_id, UUID) else group_id,
+                name=name,
                 client=self._client,
-                skip=skip,
+                cursor=cursor if cursor is not None else UNSET,
                 limit=limit,
                 search=search if search is not None else UNSET,
             )
@@ -91,7 +78,7 @@ class AsyncGroups:
 
     async def dispatch(
         self,
-        group_id: str | UUID,
+        name: str,
         *,
         path: str = "",
         method: str = "POST",
@@ -101,15 +88,13 @@ class AsyncGroups:
         timeout: float | None = None,
     ) -> httpx.Response:
         """Async group-level dispatch. See :meth:`unitysvc.groups.Groups.dispatch`."""
-        from ._generated.models.customer_access_interface import (
-            CustomerAccessInterface,
-        )
+        from ._generated.models.access_interface import AccessInterface
 
-        group = await self.get(group_id)
+        group = await self.get(name)
         iface = group.interface
-        if not isinstance(iface, CustomerAccessInterface):
+        if not isinstance(iface, AccessInterface):
             raise ValueError(
-                f"Group {group_id!r} has no user-facing interface configured — "
+                f"Group {name!r} has no user-facing interface configured — "
                 f"call service.dispatch() on a member service instead."
             )
         base_url = iface.base_url if isinstance(iface.base_url, str) else None

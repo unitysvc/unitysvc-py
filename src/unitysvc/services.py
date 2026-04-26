@@ -7,14 +7,15 @@ enrollment, and schedule.
 
 Dispatch and schedule share one interface-resolution rule:
 
-- Exactly one interface on the service → use it, ``interface=`` optional.
-- More than one interface and ``interface=`` unspecified → raise
-  :class:`ValueError`. Interfaces are different *operations*
-  (chat vs embeddings, put vs list), not alternatives, so defaulting
-  would be misleading.
-- ``enrollment=<Enrollment|uuid>`` hints: pick the interface whose
-  ``enrollment_id`` matches. Silently ignored when the service has
-  exactly one interface.
+- Multiple public (``enrollment_id IS NULL``) interfaces on a service
+  all map to the same upstream, so the SDK auto-picks one — no
+  ``interface=`` argument is needed in the common case.
+- If the customer has exactly one enrollment-bound interface on the
+  service, that one is preferred over public interfaces (the customer
+  enrolled to use their own key/parameters).
+- ``interface=`` is only required to disambiguate when the customer
+  has 2+ enrollments on the service. ``enrollment=<Enrollment|uuid>``
+  is an equivalent hint that picks by ``enrollment_id``.
 """
 
 from __future__ import annotations
@@ -251,20 +252,24 @@ class Services:
 
         Rules (in order):
 
-        1. If only one interface exists, return it — ``interface=``
-           and ``enrollment=`` are silently ignored.
-        2. If ``interface=`` is set, match by name or UUID; raise
+        1. If ``interface=`` is set, match by name or UUID; raise
            ``ValueError`` on no match.
-        3. If ``enrollment=`` is set, match by ``enrollment_id``;
+        2. If ``enrollment=`` is set, match by ``enrollment_id``;
            raise ``ValueError`` on no match.
-        4. Otherwise raise ``ValueError`` listing the available
-           interface names — the caller must disambiguate.
+        3. If the customer has exactly one enrollment-bound interface
+           on this service, use it — multiple public interfaces all
+           map to the same upstream, so the enrollment binding is the
+           only decision worth making.
+        4. If there are no enrollment-bound interfaces, pick the first
+           public (``enrollment_id IS NULL``) interface. Multiple public
+           interfaces on the same service map to the same upstream, so
+           any one is fine; ``interface=`` can override.
+        5. If there are 2+ enrollment-bound interfaces, raise — the
+           caller must specify ``enrollment=`` (or ``interface=``).
         """
         ifaces = self.interfaces(service_id)
         if not ifaces:
             raise ValueError(f"Service {service_id!r} has no dispatchable interfaces.")
-        if len(ifaces) == 1:
-            return ifaces[0]
 
         if interface is not None:
             key = str(interface)
@@ -286,8 +291,12 @@ class Services:
                 )
             return matches[0]
 
-        names = ", ".join(repr(i.name) for i in ifaces)
-        raise ValueError(
-            f"Service {service_id!r} has {len(ifaces)} interfaces ({names}); "
-            f"specify interface= or enrollment= to pick one."
-        )
+        bound = [i for i in ifaces if i.enrollment_id is not None]
+        if len(bound) == 1:
+            return bound[0]
+        if len(bound) >= 2:
+            raise ValueError(
+                f"Service {service_id!r} has {len(bound)} enrollment-bound interfaces; "
+                f"specify enrollment= or interface= to pick one."
+            )
+        return ifaces[0]

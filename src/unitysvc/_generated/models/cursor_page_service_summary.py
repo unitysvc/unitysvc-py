@@ -9,62 +9,80 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.customer_service_summary import CustomerServiceSummary
+    from ..models.service_summary import ServiceSummary
 
 
-T = TypeVar("T", bound="CustomerServicesResponse")
+T = TypeVar("T", bound="CursorPageServiceSummary")
 
 
 @_attrs_define
-class CustomerServicesResponse:
-    """Paginated list of customer-visible services in a group."""
-
-    data: list[CustomerServiceSummary]
-    count: int
+class CursorPageServiceSummary:
+    data: list[ServiceSummary]
+    next_cursor: None | str | Unset = UNSET
+    has_more: bool | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.customer_service_summary import CustomerServiceSummary
+        from ..models.service_summary import ServiceSummary
 
         data = []
         for data_item_data in self.data:
             data_item = data_item_data.to_dict()
             data.append(data_item)
 
-        count = self.count
+        next_cursor: None | str | Unset
+        if isinstance(self.next_cursor, Unset):
+            next_cursor = UNSET
+        else:
+            next_cursor = self.next_cursor
+
+        has_more = self.has_more
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "data": data,
-                "count": count,
             }
         )
+        if next_cursor is not UNSET:
+            field_dict["next_cursor"] = next_cursor
+        if has_more is not UNSET:
+            field_dict["has_more"] = has_more
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.customer_service_summary import CustomerServiceSummary
+        from ..models.service_summary import ServiceSummary
 
         d = dict(src_dict)
         data = []
         _data = d.pop("data")
         for data_item_data in _data:
-            data_item = CustomerServiceSummary.from_dict(data_item_data)
+            data_item = ServiceSummary.from_dict(data_item_data)
 
             data.append(data_item)
 
-        count = d.pop("count")
+        def _parse_next_cursor(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
 
-        customer_services_response = cls(
+        next_cursor = _parse_next_cursor(d.pop("next_cursor", UNSET))
+
+        has_more = d.pop("has_more", UNSET)
+
+        cursor_page_service_summary = cls(
             data=data,
-            count=count,
+            next_cursor=next_cursor,
+            has_more=has_more,
         )
 
-        customer_services_response.additional_properties = d
-        return customer_services_response
+        cursor_page_service_summary.additional_properties = d
+        return cursor_page_service_summary
 
     @property
     def additional_keys(self) -> list[str]:

@@ -5,18 +5,21 @@ the generated low-level client. Service groups are the entry point
 for service discovery: customers drill from a group into its member
 services.
 
-Group-level dispatch uses the embedded ``CustomerServiceGroupDetail.interface``
-— a single ``CustomerAccessInterface`` whose ``base_url`` is already
-resolved against the active gateway. Calling ``group.dispatch(...)``
-HTTP-POSTs to that URL; the gateway then picks a member service via
-the group's ``routing_policy`` (weighted / content-dependent /
-price-based).
+Groups are addressed on the public API by ``name`` (a URL-friendly
+slug), not UUID — group UUIDs change when admins recreate a group, so
+SDK scripts that hardcode a name survive admin recreations while
+UUID-keyed scripts would break.
+
+Group-level dispatch uses the embedded ``ServiceGroupDetail.interface``
+— a single ``AccessInterface`` whose ``base_url`` is already resolved
+against the active gateway. Calling ``group.dispatch(...)`` HTTP-POSTs
+to that URL; the gateway then picks a member service via the group's
+``routing_policy`` (weighted / content-dependent / price-based).
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
-from uuid import UUID
 
 from ._http import unwrap
 
@@ -24,14 +27,12 @@ if TYPE_CHECKING:
     import httpx
 
     from ._generated.client import AuthenticatedClient
-    from ._generated.models.customer_service_group_detail import (
-        CustomerServiceGroupDetail,
+    from ._generated.models.cursor_page_service_summary import (
+        CursorPageServiceSummary,
     )
-    from ._generated.models.customer_service_groups_response import (
-        CustomerServiceGroupsResponse,
-    )
-    from ._generated.models.customer_services_response import (
-        CustomerServicesResponse,
+    from ._generated.models.service_group_detail import ServiceGroupDetail
+    from ._generated.models.service_group_list_response import (
+        ServiceGroupListResponse,
     )
 
 
@@ -40,9 +41,9 @@ class Groups:
 
     Example::
 
-        llm = client.groups.get_by_name("llm")           # by name
-        services = client.groups.services(llm.id)        # list members
-        resp = client.groups.dispatch(llm.id, json={...})  # call group-level interface
+        llm = client.groups.get("llm")              # by name
+        services = client.groups.services("llm")    # list members
+        resp = client.groups.dispatch("llm", json={...})  # group-level dispatch
     """
 
     def __init__(self, client: AuthenticatedClient) -> None:
@@ -54,60 +55,53 @@ class Groups:
     def list(
         self,
         *,
-        skip: int = 0,
-        limit: int = 100,
         name: str | None = None,
-    ) -> CustomerServiceGroupsResponse:
-        """List active platform service groups visible to the customer."""
+    ) -> ServiceGroupListResponse:
+        """List active platform service groups visible to the customer.
+
+        The visible set is small and bounded — the endpoint is not
+        paginated. ``name`` filters by partial substring match.
+        """
         from ._generated.api.customer_groups import customer_groups_list_groups
         from ._generated.types import UNSET
 
         return unwrap(
             customer_groups_list_groups.sync_detailed(
                 client=self._client,
-                skip=skip,
-                limit=limit,
                 name=name if name is not None else UNSET,
             )
         )
 
-    def get(self, group_id: str | UUID) -> CustomerServiceGroupDetail:
-        """Get a single group by UUID (or partial UUID prefix)."""
+    def get(self, name: str) -> ServiceGroupDetail:
+        """Get a single group by its slug name."""
         from ._generated.api.customer_groups import customer_groups_get_group
 
         return unwrap(
             customer_groups_get_group.sync_detailed(
-                group_id=UUID(str(group_id)) if not isinstance(group_id, UUID) else group_id,
+                name=name,
                 client=self._client,
             )
         )
 
-    def get_by_name(self, name: str) -> CustomerServiceGroupDetail:
-        """Get a group by its (unique per platform) name.
-
-        Convenience over :meth:`list` + :meth:`get` — raises
-        :class:`~unitysvc.NotFoundError` if no group matches.
-        """
-        from .exceptions import NotFoundError
-
-        resp = self.list(name=name, limit=2)
-        for g in resp.data:
-            if g.name == name:
-                return self.get(g.id)
-        raise NotFoundError(f"No service group named {name!r}", status_code=404)
+    # Legacy alias — kept so SDK scripts that called ``get_by_name`` keep
+    # working. Lookup is name-native now, so it's just ``get``.
+    get_by_name = get
 
     # ------------------------------------------------------------------
     # Navigation
     # ------------------------------------------------------------------
     def services(
         self,
-        group_id: str | UUID,
+        name: str,
         *,
-        skip: int = 0,
-        limit: int = 100,
+        cursor: str | None = None,
+        limit: int = 50,
         search: str | None = None,
-    ) -> CustomerServicesResponse:
+    ) -> CursorPageServiceSummary:
         """List services that belong to a group.
+
+        Cursor-paginated newest-first. Pass the response's
+        ``next_cursor`` back as ``cursor=`` to fetch the next page.
 
         This is the canonical service-discovery path — there is no
         flat ``/customer/services`` list endpoint.
@@ -119,9 +113,9 @@ class Groups:
 
         return unwrap(
             customer_groups_list_group_services.sync_detailed(
-                group_id=UUID(str(group_id)) if not isinstance(group_id, UUID) else group_id,
+                name=name,
                 client=self._client,
-                skip=skip,
+                cursor=cursor if cursor is not None else UNSET,
                 limit=limit,
                 search=search if search is not None else UNSET,
             )
@@ -132,7 +126,7 @@ class Groups:
     # ------------------------------------------------------------------
     def dispatch(
         self,
-        group_id: str | UUID,
+        name: str,
         *,
         path: str = "",
         method: str = "POST",
@@ -152,7 +146,7 @@ class Groups:
         user-facing interface.
 
         Args:
-            group_id: Group UUID.
+            name: Group slug.
             path: Optional sub-path appended to ``interface.base_url``
                 (e.g. ``"completions"`` for an LLM gateway that
                 already has ``/v1`` in its base).
@@ -171,15 +165,13 @@ class Groups:
             ValueError: If the group has no group-level interface
                 configured (``group.interface`` is ``None``).
         """
-        from ._generated.models.customer_access_interface import (
-            CustomerAccessInterface,
-        )
+        from ._generated.models.access_interface import AccessInterface
 
-        group = self.get(group_id)
+        group = self.get(name)
         iface = group.interface
-        if not isinstance(iface, CustomerAccessInterface):
+        if not isinstance(iface, AccessInterface):
             raise ValueError(
-                f"Group {group_id!r} has no user-facing interface configured — "
+                f"Group {name!r} has no user-facing interface configured — "
                 f"call service.dispatch() on a member service instead."
             )
         base_url = iface.base_url if isinstance(iface.base_url, str) else None

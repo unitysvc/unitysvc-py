@@ -7,7 +7,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.customer_access_interface import CustomerAccessInterface
+from ...models.access_interface import AccessInterface
 from ...models.http_validation_error import HTTPValidationError
 from ...types import UNSET, Response, Unset
 
@@ -38,12 +38,12 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | list[CustomerAccessInterface] | None:
+) -> HTTPValidationError | list[AccessInterface] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
         for response_200_item_data in _response_200:
-            response_200_item = CustomerAccessInterface.from_dict(response_200_item_data)
+            response_200_item = AccessInterface.from_dict(response_200_item_data)
 
             response_200.append(response_200_item)
 
@@ -62,7 +62,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | list[CustomerAccessInterface]]:
+) -> Response[HTTPValidationError | list[AccessInterface]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -77,7 +77,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | list[CustomerAccessInterface]]:
+) -> Response[HTTPValidationError | list[AccessInterface]]:
     """List Service Interfaces
 
      List access interfaces dispatchable by the calling customer.
@@ -107,7 +107,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | list[CustomerAccessInterface]]
+        Response[HTTPValidationError | list[AccessInterface]]
     """
 
     kwargs = _get_kwargs(
@@ -129,7 +129,7 @@ def sync(
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | list[CustomerAccessInterface] | None:
+) -> HTTPValidationError | list[AccessInterface] | None:
     """List Service Interfaces
 
      List access interfaces dispatchable by the calling customer.
@@ -159,7 +159,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | list[CustomerAccessInterface]
+        HTTPValidationError | list[AccessInterface]
     """
 
     return sync_detailed(
@@ -176,7 +176,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | list[CustomerAccessInterface]]:
+) -> Response[HTTPValidationError | list[AccessInterface]]:
     """List Service Interfaces
 
      List access interfaces dispatchable by the calling customer.
@@ -206,7 +206,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | list[CustomerAccessInterface]]
+        Response[HTTPValidationError | list[AccessInterface]]
     """
 
     kwargs = _get_kwargs(
@@ -226,7 +226,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | list[CustomerAccessInterface] | None:
+) -> HTTPValidationError | list[AccessInterface] | None:
     """List Service Interfaces
 
      List access interfaces dispatchable by the calling customer.
@@ -256,7 +256,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | list[CustomerAccessInterface]
+        HTTPValidationError | list[AccessInterface]
     """
 
     return (

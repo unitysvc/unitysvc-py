@@ -148,8 +148,6 @@ class AsyncServices:
         ifaces = await self.interfaces(service_id)
         if not ifaces:
             raise ValueError(f"Service {service_id!r} has no dispatchable interfaces.")
-        if len(ifaces) == 1:
-            return ifaces[0]
         if interface is not None:
             key = str(interface)
             for i in ifaces:
@@ -168,8 +166,12 @@ class AsyncServices:
                     f"{enrollment!r} on service {service_id!r}."
                 )
             return matches[0]
-        names = ", ".join(repr(i.name) for i in ifaces)
-        raise ValueError(
-            f"Service {service_id!r} has {len(ifaces)} interfaces ({names}); "
-            f"specify interface= or enrollment= to pick one."
-        )
+        bound = [i for i in ifaces if i.enrollment_id is not None]
+        if len(bound) == 1:
+            return bound[0]
+        if len(bound) >= 2:
+            raise ValueError(
+                f"Service {service_id!r} has {len(bound)} enrollment-bound interfaces; "
+                f"specify enrollment= or interface= to pick one."
+            )
+        return ifaces[0]

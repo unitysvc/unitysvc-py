@@ -7,8 +7,8 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.customer_service_detail import CustomerServiceDetail
 from ...models.http_validation_error import HTTPValidationError
+from ...models.service_detail import ServiceDetail
 from ...types import UNSET, Response, Unset
 
 
@@ -38,9 +38,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> CustomerServiceDetail | HTTPValidationError | None:
+) -> HTTPValidationError | ServiceDetail | None:
     if response.status_code == 200:
-        response_200 = CustomerServiceDetail.from_dict(response.json())
+        response_200 = ServiceDetail.from_dict(response.json())
 
         return response_200
 
@@ -57,7 +57,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[CustomerServiceDetail | HTTPValidationError]:
+) -> Response[HTTPValidationError | ServiceDetail]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -72,7 +72,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[CustomerServiceDetail | HTTPValidationError]:
+) -> Response[HTTPValidationError | ServiceDetail]:
     """Get Service
 
      Get details of a single service visible to the customer.
@@ -91,7 +91,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CustomerServiceDetail | HTTPValidationError]
+        Response[HTTPValidationError | ServiceDetail]
     """
 
     kwargs = _get_kwargs(
@@ -113,7 +113,7 @@ def sync(
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> CustomerServiceDetail | HTTPValidationError | None:
+) -> HTTPValidationError | ServiceDetail | None:
     """Get Service
 
      Get details of a single service visible to the customer.
@@ -132,7 +132,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CustomerServiceDetail | HTTPValidationError
+        HTTPValidationError | ServiceDetail
     """
 
     return sync_detailed(
@@ -149,7 +149,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[CustomerServiceDetail | HTTPValidationError]:
+) -> Response[HTTPValidationError | ServiceDetail]:
     """Get Service
 
      Get details of a single service visible to the customer.
@@ -168,7 +168,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CustomerServiceDetail | HTTPValidationError]
+        Response[HTTPValidationError | ServiceDetail]
     """
 
     kwargs = _get_kwargs(
@@ -188,7 +188,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> CustomerServiceDetail | HTTPValidationError | None:
+) -> HTTPValidationError | ServiceDetail | None:
     """Get Service
 
      Get details of a single service visible to the customer.
@@ -207,7 +207,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CustomerServiceDetail | HTTPValidationError
+        HTTPValidationError | ServiceDetail
     """
 
     return (

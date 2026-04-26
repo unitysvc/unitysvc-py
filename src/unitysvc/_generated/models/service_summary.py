@@ -9,22 +9,22 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="CustomerServiceSummary")
+T = TypeVar("T", bound="ServiceSummary")
 
 
 @_attrs_define
-class CustomerServiceSummary:
+class ServiceSummary:
     """Minimal service info used when listing services inside a group.
 
     Intentionally narrow: enough to render a picker and drill in,
     nothing that customers don't need at browse time. Fetch
-    ``CustomerServiceDetail`` for the full schema.
+    ``ServiceDetail`` for the full schema.
 
     ``status`` is intentionally not exposed — customers only ever
     see ``active`` services (the visibility filter guarantees it),
     so a field whose only valid value is ``"active"`` carries no
     information. Same reasoning for ``is_active`` on
-    ``CustomerAccessInterface``.
+    ``AccessInterface``.
 
     """
 
@@ -109,7 +109,7 @@ class CustomerServiceSummary:
 
         gateway_type = _parse_gateway_type(d.pop("gateway_type", UNSET))
 
-        customer_service_summary = cls(
+        service_summary = cls(
             id=id,
             name=name,
             display_name=display_name,
@@ -117,8 +117,8 @@ class CustomerServiceSummary:
             gateway_type=gateway_type,
         )
 
-        customer_service_summary.additional_properties = d
-        return customer_service_summary
+        service_summary.additional_properties = d
+        return service_summary
 
     @property
     def additional_keys(self) -> list[str]:

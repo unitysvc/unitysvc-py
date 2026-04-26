@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
-from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -10,12 +9,17 @@ from attrs import field as _attrs_field
 from ..models.group_type_enum import GroupTypeEnum, check_group_type_enum
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="CustomerServiceGroupPublic")
+T = TypeVar("T", bound="ServiceGroupSummary")
 
 
 @_attrs_define
-class CustomerServiceGroupPublic:
+class ServiceGroupSummary:
     """Customer-visible service group summary.
+
+    Identified by ``name`` rather than UUID — group UUIDs change when
+    admins recreate a group, so SDK scripts that hardcode UUIDs break
+    silently after a recreation. Names survive because admins reuse
+    the same slug.
 
     Excludes internal platform configuration (``membership_rules``,
     ``routing_policy``, ``user_access_interfaces``) — customers only
@@ -24,7 +28,6 @@ class CustomerServiceGroupPublic:
 
     """
 
-    id: UUID
     name: str
     display_name: str
     group_type: GroupTypeEnum
@@ -35,24 +38,16 @@ class CustomerServiceGroupPublic:
     - Rules, no access interfaces → collection (curated set for browsing)
     - Rules + access interfaces → group (has own API endpoint + routing)
     - System-generated catch-all → misc """
-    ancestor_path: str
-    sort_order: int
     service_count: int
     description: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        id = str(self.id)
-
         name = self.name
 
         display_name = self.display_name
 
         group_type: str = self.group_type
-
-        ancestor_path = self.ancestor_path
-
-        sort_order = self.sort_order
 
         service_count = self.service_count
 
@@ -66,12 +61,9 @@ class CustomerServiceGroupPublic:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "id": id,
                 "name": name,
                 "display_name": display_name,
                 "group_type": group_type,
-                "ancestor_path": ancestor_path,
-                "sort_order": sort_order,
                 "service_count": service_count,
             }
         )
@@ -83,17 +75,11 @@ class CustomerServiceGroupPublic:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        id = UUID(d.pop("id"))
-
         name = d.pop("name")
 
         display_name = d.pop("display_name")
 
         group_type = check_group_type_enum(d.pop("group_type"))
-
-        ancestor_path = d.pop("ancestor_path")
-
-        sort_order = d.pop("sort_order")
 
         service_count = d.pop("service_count")
 
@@ -106,19 +92,16 @@ class CustomerServiceGroupPublic:
 
         description = _parse_description(d.pop("description", UNSET))
 
-        customer_service_group_public = cls(
-            id=id,
+        service_group_summary = cls(
             name=name,
             display_name=display_name,
             group_type=group_type,
-            ancestor_path=ancestor_path,
-            sort_order=sort_order,
             service_count=service_count,
             description=description,
         )
 
-        customer_service_group_public.additional_properties = d
-        return customer_service_group_public
+        service_group_summary.additional_properties = d
+        return service_group_summary
 
     @property
     def additional_keys(self) -> list[str]:

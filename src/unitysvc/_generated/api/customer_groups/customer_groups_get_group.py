@@ -1,19 +1,18 @@
 from http import HTTPStatus
 from typing import Any, cast
 from urllib.parse import quote
-from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.customer_service_group_detail import CustomerServiceGroupDetail
 from ...models.http_validation_error import HTTPValidationError
+from ...models.service_group_detail import ServiceGroupDetail
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    group_id: UUID,
+    name: str,
     *,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
@@ -27,8 +26,8 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/groups/{group_id}".format(
-            group_id=quote(str(group_id), safe=""),
+        "url": "/groups/{name}".format(
+            name=quote(str(name), safe=""),
         ),
     }
 
@@ -38,9 +37,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> CustomerServiceGroupDetail | HTTPValidationError | None:
+) -> HTTPValidationError | ServiceGroupDetail | None:
     if response.status_code == 200:
-        response_200 = CustomerServiceGroupDetail.from_dict(response.json())
+        response_200 = ServiceGroupDetail.from_dict(response.json())
 
         return response_200
 
@@ -57,7 +56,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[CustomerServiceGroupDetail | HTTPValidationError]:
+) -> Response[HTTPValidationError | ServiceGroupDetail]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -67,22 +66,22 @@ def _build_response(
 
 
 def sync_detailed(
-    group_id: UUID,
+    name: str,
     *,
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[CustomerServiceGroupDetail | HTTPValidationError]:
+) -> Response[HTTPValidationError | ServiceGroupDetail]:
     """Get Group
 
-     Get metadata for a single visible group.
+     Get metadata for a single visible group, looked up by name.
 
     Returns 404 for hidden groups (draft, seller-owned, empty) —
     existence is not leaked. Member services are fetched separately
-    via ``GET /customer/groups/{id}/services``.
+    via ``GET /customer/groups/{name}/services``.
 
     Args:
-        group_id (UUID):
+        name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -91,11 +90,11 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CustomerServiceGroupDetail | HTTPValidationError]
+        Response[HTTPValidationError | ServiceGroupDetail]
     """
 
     kwargs = _get_kwargs(
-        group_id=group_id,
+        name=name,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -108,22 +107,22 @@ def sync_detailed(
 
 
 def sync(
-    group_id: UUID,
+    name: str,
     *,
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> CustomerServiceGroupDetail | HTTPValidationError | None:
+) -> HTTPValidationError | ServiceGroupDetail | None:
     """Get Group
 
-     Get metadata for a single visible group.
+     Get metadata for a single visible group, looked up by name.
 
     Returns 404 for hidden groups (draft, seller-owned, empty) —
     existence is not leaked. Member services are fetched separately
-    via ``GET /customer/groups/{id}/services``.
+    via ``GET /customer/groups/{name}/services``.
 
     Args:
-        group_id (UUID):
+        name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -132,11 +131,11 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CustomerServiceGroupDetail | HTTPValidationError
+        HTTPValidationError | ServiceGroupDetail
     """
 
     return sync_detailed(
-        group_id=group_id,
+        name=name,
         client=client,
         authorization=authorization,
         x_role_id=x_role_id,
@@ -144,22 +143,22 @@ def sync(
 
 
 async def asyncio_detailed(
-    group_id: UUID,
+    name: str,
     *,
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[CustomerServiceGroupDetail | HTTPValidationError]:
+) -> Response[HTTPValidationError | ServiceGroupDetail]:
     """Get Group
 
-     Get metadata for a single visible group.
+     Get metadata for a single visible group, looked up by name.
 
     Returns 404 for hidden groups (draft, seller-owned, empty) —
     existence is not leaked. Member services are fetched separately
-    via ``GET /customer/groups/{id}/services``.
+    via ``GET /customer/groups/{name}/services``.
 
     Args:
-        group_id (UUID):
+        name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -168,11 +167,11 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CustomerServiceGroupDetail | HTTPValidationError]
+        Response[HTTPValidationError | ServiceGroupDetail]
     """
 
     kwargs = _get_kwargs(
-        group_id=group_id,
+        name=name,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -183,22 +182,22 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    group_id: UUID,
+    name: str,
     *,
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> CustomerServiceGroupDetail | HTTPValidationError | None:
+) -> HTTPValidationError | ServiceGroupDetail | None:
     """Get Group
 
-     Get metadata for a single visible group.
+     Get metadata for a single visible group, looked up by name.
 
     Returns 404 for hidden groups (draft, seller-owned, empty) —
     existence is not leaked. Member services are fetched separately
-    via ``GET /customer/groups/{id}/services``.
+    via ``GET /customer/groups/{name}/services``.
 
     Args:
-        group_id (UUID):
+        name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -207,12 +206,12 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CustomerServiceGroupDetail | HTTPValidationError
+        HTTPValidationError | ServiceGroupDetail
     """
 
     return (
         await asyncio_detailed(
-            group_id=group_id,
+            name=name,
             client=client,
             authorization=authorization,
             x_role_id=x_role_id,

@@ -10,14 +10,14 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.customer_service_detail_list_price_type_0 import CustomerServiceDetailListPriceType0
+    from ..models.service_detail_list_price_type_0 import ServiceDetailListPriceType0
 
 
-T = TypeVar("T", bound="CustomerServiceDetail")
+T = TypeVar("T", bound="ServiceDetail")
 
 
 @_attrs_define
-class CustomerServiceDetail:
+class ServiceDetail:
     """Full customer-facing service details.
 
     Sourced from ``service_mview``. Intentionally narrow:
@@ -43,13 +43,13 @@ class CustomerServiceDetail:
     seller_name: None | str | Unset = UNSET
     capabilities: list[str] | None | Unset = UNSET
     tags: list[str] | None | Unset = UNSET
-    list_price: CustomerServiceDetailListPriceType0 | None | Unset = UNSET
+    list_price: None | ServiceDetailListPriceType0 | Unset = UNSET
     enrollment_required: bool | Unset = False
     listing_type: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.customer_service_detail_list_price_type_0 import CustomerServiceDetailListPriceType0
+        from ..models.service_detail_list_price_type_0 import ServiceDetailListPriceType0
 
         id = str(self.id)
 
@@ -112,7 +112,7 @@ class CustomerServiceDetail:
         list_price: dict[str, Any] | None | Unset
         if isinstance(self.list_price, Unset):
             list_price = UNSET
-        elif isinstance(self.list_price, CustomerServiceDetailListPriceType0):
+        elif isinstance(self.list_price, ServiceDetailListPriceType0):
             list_price = self.list_price.to_dict()
         else:
             list_price = self.list_price
@@ -160,7 +160,7 @@ class CustomerServiceDetail:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.customer_service_detail_list_price_type_0 import CustomerServiceDetailListPriceType0
+        from ..models.service_detail_list_price_type_0 import ServiceDetailListPriceType0
 
         d = dict(src_dict)
         id = UUID(d.pop("id"))
@@ -255,7 +255,7 @@ class CustomerServiceDetail:
 
         tags = _parse_tags(d.pop("tags", UNSET))
 
-        def _parse_list_price(data: object) -> CustomerServiceDetailListPriceType0 | None | Unset:
+        def _parse_list_price(data: object) -> None | ServiceDetailListPriceType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -263,12 +263,12 @@ class CustomerServiceDetail:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                list_price_type_0 = CustomerServiceDetailListPriceType0.from_dict(data)
+                list_price_type_0 = ServiceDetailListPriceType0.from_dict(data)
 
                 return list_price_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(CustomerServiceDetailListPriceType0 | None | Unset, data)
+            return cast(None | ServiceDetailListPriceType0 | Unset, data)
 
         list_price = _parse_list_price(d.pop("list_price", UNSET))
 
@@ -283,7 +283,7 @@ class CustomerServiceDetail:
 
         listing_type = _parse_listing_type(d.pop("listing_type", UNSET))
 
-        customer_service_detail = cls(
+        service_detail = cls(
             id=id,
             name=name,
             display_name=display_name,
@@ -299,8 +299,8 @@ class CustomerServiceDetail:
             listing_type=listing_type,
         )
 
-        customer_service_detail.additional_properties = d
-        return customer_service_detail
+        service_detail.additional_properties = d
+        return service_detail
 
     @property
     def additional_keys(self) -> list[str]:

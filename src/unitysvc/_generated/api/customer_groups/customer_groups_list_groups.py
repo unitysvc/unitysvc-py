@@ -6,15 +6,13 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.customer_service_groups_response import CustomerServiceGroupsResponse
 from ...models.http_validation_error import HTTPValidationError
+from ...models.service_group_list_response import ServiceGroupListResponse
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    skip: int | Unset = 0,
-    limit: int | Unset = 100,
     name: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
@@ -27,10 +25,6 @@ def _get_kwargs(
         headers["x-role-id"] = x_role_id
 
     params: dict[str, Any] = {}
-
-    params["skip"] = skip
-
-    params["limit"] = limit
 
     json_name: None | str | Unset
     if isinstance(name, Unset):
@@ -53,9 +47,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> CustomerServiceGroupsResponse | HTTPValidationError | None:
+) -> HTTPValidationError | ServiceGroupListResponse | None:
     if response.status_code == 200:
-        response_200 = CustomerServiceGroupsResponse.from_dict(response.json())
+        response_200 = ServiceGroupListResponse.from_dict(response.json())
 
         return response_200
 
@@ -72,7 +66,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[CustomerServiceGroupsResponse | HTTPValidationError]:
+) -> Response[HTTPValidationError | ServiceGroupListResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -84,12 +78,10 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    skip: int | Unset = 0,
-    limit: int | Unset = 100,
     name: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[CustomerServiceGroupsResponse | HTTPValidationError]:
+) -> Response[HTTPValidationError | ServiceGroupListResponse]:
     """List Groups
 
      List active platform service groups visible to the customer.
@@ -100,8 +92,6 @@ def sync_detailed(
     — matching the marketplace browse order.
 
     Args:
-        skip (int | Unset):  Default: 0.
-        limit (int | Unset):  Default: 100.
         name (None | str | Unset): Filter by name (partial match)
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
@@ -111,12 +101,10 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CustomerServiceGroupsResponse | HTTPValidationError]
+        Response[HTTPValidationError | ServiceGroupListResponse]
     """
 
     kwargs = _get_kwargs(
-        skip=skip,
-        limit=limit,
         name=name,
         authorization=authorization,
         x_role_id=x_role_id,
@@ -132,12 +120,10 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    skip: int | Unset = 0,
-    limit: int | Unset = 100,
     name: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> CustomerServiceGroupsResponse | HTTPValidationError | None:
+) -> HTTPValidationError | ServiceGroupListResponse | None:
     """List Groups
 
      List active platform service groups visible to the customer.
@@ -148,8 +134,6 @@ def sync(
     — matching the marketplace browse order.
 
     Args:
-        skip (int | Unset):  Default: 0.
-        limit (int | Unset):  Default: 100.
         name (None | str | Unset): Filter by name (partial match)
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
@@ -159,13 +143,11 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CustomerServiceGroupsResponse | HTTPValidationError
+        HTTPValidationError | ServiceGroupListResponse
     """
 
     return sync_detailed(
         client=client,
-        skip=skip,
-        limit=limit,
         name=name,
         authorization=authorization,
         x_role_id=x_role_id,
@@ -175,12 +157,10 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    skip: int | Unset = 0,
-    limit: int | Unset = 100,
     name: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[CustomerServiceGroupsResponse | HTTPValidationError]:
+) -> Response[HTTPValidationError | ServiceGroupListResponse]:
     """List Groups
 
      List active platform service groups visible to the customer.
@@ -191,8 +171,6 @@ async def asyncio_detailed(
     — matching the marketplace browse order.
 
     Args:
-        skip (int | Unset):  Default: 0.
-        limit (int | Unset):  Default: 100.
         name (None | str | Unset): Filter by name (partial match)
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
@@ -202,12 +180,10 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CustomerServiceGroupsResponse | HTTPValidationError]
+        Response[HTTPValidationError | ServiceGroupListResponse]
     """
 
     kwargs = _get_kwargs(
-        skip=skip,
-        limit=limit,
         name=name,
         authorization=authorization,
         x_role_id=x_role_id,
@@ -221,12 +197,10 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    skip: int | Unset = 0,
-    limit: int | Unset = 100,
     name: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> CustomerServiceGroupsResponse | HTTPValidationError | None:
+) -> HTTPValidationError | ServiceGroupListResponse | None:
     """List Groups
 
      List active platform service groups visible to the customer.
@@ -237,8 +211,6 @@ async def asyncio(
     — matching the marketplace browse order.
 
     Args:
-        skip (int | Unset):  Default: 0.
-        limit (int | Unset):  Default: 100.
         name (None | str | Unset): Filter by name (partial match)
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
@@ -248,14 +220,12 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CustomerServiceGroupsResponse | HTTPValidationError
+        HTTPValidationError | ServiceGroupListResponse
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            skip=skip,
-            limit=limit,
             name=name,
             authorization=authorization,
             x_role_id=x_role_id,

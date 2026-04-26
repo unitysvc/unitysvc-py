@@ -9,22 +9,22 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.customer_service_group_public import CustomerServiceGroupPublic
+    from ..models.service_group_summary import ServiceGroupSummary
 
 
-T = TypeVar("T", bound="CustomerServiceGroupsResponse")
+T = TypeVar("T", bound="ServiceGroupListResponse")
 
 
 @_attrs_define
-class CustomerServiceGroupsResponse:
+class ServiceGroupListResponse:
     """Paginated list of customer-visible service groups."""
 
-    data: list[CustomerServiceGroupPublic]
+    data: list[ServiceGroupSummary]
     count: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.customer_service_group_public import CustomerServiceGroupPublic
+        from ..models.service_group_summary import ServiceGroupSummary
 
         data = []
         for data_item_data in self.data:
@@ -46,25 +46,25 @@ class CustomerServiceGroupsResponse:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.customer_service_group_public import CustomerServiceGroupPublic
+        from ..models.service_group_summary import ServiceGroupSummary
 
         d = dict(src_dict)
         data = []
         _data = d.pop("data")
         for data_item_data in _data:
-            data_item = CustomerServiceGroupPublic.from_dict(data_item_data)
+            data_item = ServiceGroupSummary.from_dict(data_item_data)
 
             data.append(data_item)
 
         count = d.pop("count")
 
-        customer_service_groups_response = cls(
+        service_group_list_response = cls(
             data=data,
             count=count,
         )
 
-        customer_service_groups_response.additional_properties = d
-        return customer_service_groups_response
+        service_group_list_response.additional_properties = d
+        return service_group_list_response
 
     @property
     def additional_keys(self) -> list[str]:
