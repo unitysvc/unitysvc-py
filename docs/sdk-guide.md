@@ -71,22 +71,26 @@ curated set of services (often providers of the same capability —
 e.g. "llm", "vision-api") that share a group-level access
 interface.
 
+Groups are addressed by **name** (a URL-friendly slug like `"llm"`),
+not by UUID — group UUIDs change when admins recreate a group, so
+SDK scripts that hardcode a slug survive admin recreations.
+
 ```python
 # List / get
-client.groups.list(skip=0, limit=100, name=None)
-client.groups.get(group_id)                     # by UUID or UUID prefix
-client.groups.get_by_name("llm")                # platform-unique name
+client.groups.list(name=None)                   # unpaginated; `name` is a substring filter
+client.groups.get("llm")                        # by slug; `get_by_name` is a legacy alias
 
 # Drill into members (canonical service-discovery path — there is
-# no flat /customer/services list endpoint)
-client.groups.services(group_id, skip=0, limit=100, search=None)
+# no flat /customer/services list endpoint). Cursor-paginated.
+page = client.groups.services("llm", cursor=None, limit=50, search=None)
+# Echo `page.next_cursor` back as `cursor=` for the next page.
 
 # Group-level dispatch — the gateway picks a member service via
 # the group's routing_policy (weighted / content-dependent /
 # by-price). No `interface=` selector needed; groups declare at
 # most one user-facing interface.
 client.groups.dispatch(
-    group_id,
+    "llm",
     path="",               # optional sub-path appended to interface.base_url
     method="POST",
     json={"messages": [...]},
@@ -103,7 +107,7 @@ access interfaces — shared (public) or enrollment-bound
 ```python
 # Read
 client.services.get(service_id)
-client.services.interfaces(service_id)          # list[CustomerAccessInterface]
+client.services.interfaces(service_id)          # list[AccessInterface]
 
 # One-shot dispatch
 client.services.dispatch(

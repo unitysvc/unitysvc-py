@@ -29,21 +29,27 @@ The API key encodes your customer identity — no separate
 
 ## 1. Browse a group
 
-Groups are the discovery entry point. Find one by its platform-unique
-name, then list its member services.
+Groups are the discovery entry point. They're identified by a
+**slug name** (e.g. `"llm"`, `"vision-api"`) — names are stable
+across admin-side recreations, while group UUIDs aren't, so SDK
+scripts should hardcode the slug rather than the UUID.
 
 ```python
-llm = client.groups.get_by_name("llm")
+llm = client.groups.get("llm")
 print(llm.name, llm.display_name)
 print("services:", llm.service_count)
 
-# Drill into members:
-members = client.groups.services(llm.id)
-for svc in members.data:
+# Drill into members (cursor-paginated):
+page = client.groups.services("llm")
+for svc in page.data:
     print(f"  {svc.name}  ({svc.provider_name})")
+
+# Next page:
+if page.has_more:
+    page = client.groups.services("llm", cursor=page.next_cursor)
 ```
 
-`client.groups.services(group_id)` is the **canonical**
+`client.groups.services(name)` is the **canonical**
 service-discovery path — there's intentionally no flat
 `client.services.list()`, because services are only meaningful
 within the context of a group.
@@ -51,7 +57,7 @@ within the context of a group.
 Need more than just names? Narrow the result with `search=`:
 
 ```python
-chat_services = client.groups.services(llm.id, search="chat")
+chat_services = client.groups.services("llm", search="chat")
 ```
 
 ---
@@ -76,15 +82,14 @@ print(response.status_code, response.json())
 
 ### Interface-resolution rule
 
-- **Exactly one interface** → used automatically, `interface=` is
-  ignored.
-- **More than one** → `interface=` is *required* (by name or UUID).
-  Interfaces are typically different **operations** (chat vs
-  embeddings, put vs list), not alternatives, so the SDK refuses to
-  guess.
-- **`enrollment=` hint** → picks the interface whose
-  `enrollment_id` matches. Useful after BYOK enrollment
-  (see step 3).
+- **Multiple public interfaces** all map to the same upstream — the
+  SDK auto-picks one. No `interface=` required in the common case.
+- **One enrollment-bound interface** (e.g. after BYOK) → preferred
+  over public interfaces; the customer enrolled to use their own
+  key/parameters.
+- **`interface=`** is only required to disambiguate when the customer
+  has 2+ enrollments on the same service. **`enrollment=`** is an
+  equivalent hint that picks by `enrollment_id`.
 
 ### Group-level dispatch
 
@@ -96,7 +101,7 @@ latency, by content, ...).
 
 ```python
 resp = client.groups.dispatch(
-    llm.id,
+    "llm",
     json={"messages": [{"role": "user", "content": "hello"}]},
 )
 ```

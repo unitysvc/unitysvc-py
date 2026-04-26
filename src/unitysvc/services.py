@@ -1,7 +1,7 @@
 """``client.services`` — customer service browsing and dispatch.
 
 Wraps the customer-tagged ``/v1/customer/services/*`` operations.
-Service discovery flows through a group (``client.groups.services(group_id)``);
+Service discovery flows through a group (``client.groups.services(name)``);
 this resource handles per-service details, interfaces, dispatch,
 enrollment, and schedule.
 
@@ -30,11 +30,9 @@ if TYPE_CHECKING:
     import httpx
 
     from ._generated.client import AuthenticatedClient
-    from ._generated.models.customer_access_interface import (
-        CustomerAccessInterface,
-    )
-    from ._generated.models.customer_service_detail import CustomerServiceDetail
+    from ._generated.models.access_interface import AccessInterface
     from ._generated.models.recurrent_request_public import RecurrentRequestPublic
+    from ._generated.models.service_detail import ServiceDetail
 
 
 class Services:
@@ -53,12 +51,12 @@ class Services:
     # ------------------------------------------------------------------
     # Read
     # ------------------------------------------------------------------
-    def get(self, service_id: str | UUID) -> CustomerServiceDetail:
+    def get(self, service_id: str | UUID) -> ServiceDetail:
         """Get a single service by UUID (or partial UUID prefix).
 
         Returns ``404`` for inactive or non-public services — the
         customer-visible set matches what
-        ``client.groups.services(group_id)`` returns.
+        ``client.groups.services(name)`` returns.
         """
         from ._generated.api.customer_services import customer_services_get_service
 
@@ -69,7 +67,7 @@ class Services:
             )
         )
 
-    def interfaces(self, service_id: str | UUID) -> list[CustomerAccessInterface]:
+    def interfaces(self, service_id: str | UUID) -> list[AccessInterface]:
         """List access interfaces dispatchable by this customer.
 
         Returns shared interfaces plus any enrollment-bound interfaces
@@ -247,8 +245,8 @@ class Services:
         *,
         interface: str | UUID | None,
         enrollment: str | UUID | None,
-    ) -> CustomerAccessInterface:
-        """Resolve an interface selector to a ``CustomerAccessInterface``.
+    ) -> AccessInterface:
+        """Resolve an interface selector to a ``AccessInterface``.
 
         Rules (in order):
 
@@ -272,9 +270,11 @@ class Services:
             raise ValueError(f"Service {service_id!r} has no dispatchable interfaces.")
 
         if interface is not None:
+            # AccessInterface is identified by name now (no UUID
+            # surfaced on the customer schema).
             key = str(interface)
             for i in ifaces:
-                if i.name == key or str(i.id) == key:
+                if i.name == key:
                     return i
             names = ", ".join(repr(i.name) for i in ifaces)
             raise ValueError(f"No interface {interface!r} on service {service_id!r}. Available: {names}")

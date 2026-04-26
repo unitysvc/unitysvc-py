@@ -12,11 +12,9 @@ if TYPE_CHECKING:
     import httpx
 
     from ._generated.client import AuthenticatedClient
-    from ._generated.models.customer_access_interface import (
-        CustomerAccessInterface,
-    )
-    from ._generated.models.customer_service_detail import CustomerServiceDetail
+    from ._generated.models.access_interface import AccessInterface
     from ._generated.models.recurrent_request_public import RecurrentRequestPublic
+    from ._generated.models.service_detail import ServiceDetail
 
 
 class AsyncServices:
@@ -25,7 +23,7 @@ class AsyncServices:
     def __init__(self, client: AuthenticatedClient) -> None:
         self._client = client
 
-    async def get(self, service_id: str | UUID) -> CustomerServiceDetail:
+    async def get(self, service_id: str | UUID) -> ServiceDetail:
         from ._generated.api.customer_services import customer_services_get_service
 
         return unwrap(
@@ -35,7 +33,7 @@ class AsyncServices:
             )
         )
 
-    async def interfaces(self, service_id: str | UUID) -> list[CustomerAccessInterface]:
+    async def interfaces(self, service_id: str | UUID) -> list[AccessInterface]:
         from ._generated.api.customer_services import (
             customer_services_list_service_interfaces,
         )
@@ -144,14 +142,16 @@ class AsyncServices:
         *,
         interface: str | UUID | None,
         enrollment: str | UUID | None,
-    ) -> CustomerAccessInterface:
+    ) -> AccessInterface:
         ifaces = await self.interfaces(service_id)
         if not ifaces:
             raise ValueError(f"Service {service_id!r} has no dispatchable interfaces.")
         if interface is not None:
+            # AccessInterface is identified by name now (no UUID
+            # surfaced on the customer schema).
             key = str(interface)
             for i in ifaces:
-                if i.name == key or str(i.id) == key:
+                if i.name == key:
                     return i
             names = ", ".join(repr(i.name) for i in ifaces)
             raise ValueError(f"No interface {interface!r} on service {service_id!r}. Available: {names}")
