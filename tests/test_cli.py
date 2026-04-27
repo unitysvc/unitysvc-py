@@ -7,32 +7,44 @@ tests against a mock HTTP server once the backend surface stabilizes.
 
 from __future__ import annotations
 
+import re
+
 from typer.testing import CliRunner
 
 from unitysvc.cli import app
 
 runner = CliRunner()
 
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+
+
+def _plain(text: str) -> str:
+    """Strip ANSI escapes and collapse whitespace.
+
+    Rich's help output interleaves ANSI codes between characters and
+    wraps lines based on terminal width — neither matters when checking
+    that an option flag appears in the help, but both break naive
+    substring matches in narrow CI terminals.
+    """
+    stripped = _ANSI_RE.sub("", text)
+    return re.sub(r"\s+", " ", stripped)
+
 
 def test_help_runs_cleanly() -> None:
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
-    assert "UnitySVC customer CLI" in result.stdout
-    assert "secrets" in result.stdout
-    assert "aliases" in result.stdout
-    assert "recurrent-requests" in result.stdout
-    assert "groups" in result.stdout
-    assert "services" in result.stdout
-    assert "enrollments" in result.stdout
-    assert "resolve" in result.stdout
+    plain = _plain(result.stdout)
+    assert "UnitySVC customer CLI" in plain
+    for sub in ("secrets", "aliases", "recurrent-requests", "groups", "services", "enrollments", "resolve"):
+        assert sub in plain
 
 
 def test_secrets_help_lists_subcommands() -> None:
     result = runner.invoke(app, ["secrets", "--help"])
     assert result.exit_code == 0
-    assert "list" in result.stdout
-    assert "set" in result.stdout
-    assert "delete" in result.stdout
+    plain = _plain(result.stdout)
+    for sub in ("list", "set", "delete"):
+        assert sub in plain
 
 
 def test_env_command_prints_defaults(monkeypatch) -> None:
@@ -62,13 +74,15 @@ def test_secrets_list_without_api_key_exits(monkeypatch) -> None:
 def test_groups_help_lists_subcommands() -> None:
     result = runner.invoke(app, ["groups", "--help"])
     assert result.exit_code == 0
+    plain = _plain(result.stdout)
     for sub in ("list", "show", "services", "dispatch"):
-        assert sub in result.stdout
+        assert sub in plain
 
 
 def test_services_help_lists_subcommands() -> None:
     result = runner.invoke(app, ["services", "--help"])
     assert result.exit_code == 0
+    plain = _plain(result.stdout)
     for sub in (
         "show",
         "interfaces",
@@ -78,21 +92,23 @@ def test_services_help_lists_subcommands() -> None:
         "required-secrets",
         "optional-secrets",
     ):
-        assert sub in result.stdout
+        assert sub in plain
 
 
 def test_enrollments_help_lists_subcommands() -> None:
     result = runner.invoke(app, ["enrollments", "--help"])
     assert result.exit_code == 0
+    plain = _plain(result.stdout)
     for sub in ("list", "show", "cancel"):
-        assert sub in result.stdout
+        assert sub in plain
 
 
 def test_resolve_help_runs_cleanly() -> None:
     result = runner.invoke(app, ["resolve", "--help"])
     assert result.exit_code == 0
-    assert "--path" in result.stdout
-    assert "--routing-key" in result.stdout
+    plain = _plain(result.stdout)
+    assert "--path" in plain
+    assert "--routing-key" in plain
 
 
 def test_groups_list_without_api_key_exits(monkeypatch) -> None:
@@ -111,7 +127,8 @@ def test_services_schedule_requires_a_recurrence_form(monkeypatch) -> None:
         ["services", "schedule", "00000000-0000-0000-0000-000000000000"],
     )
     assert result.exit_code != 0
-    assert "one of --recurrence, --interval, or --cron" in (result.output + (result.stderr or ""))
+    combined = _plain(result.output + (result.stderr or ""))
+    assert "one of --recurrence, --interval, or --cron" in combined
 
 
 def test_services_schedule_rejects_multiple_recurrence_forms(monkeypatch) -> None:
@@ -129,7 +146,7 @@ def test_services_schedule_rejects_multiple_recurrence_forms(monkeypatch) -> Non
         ],
     )
     assert result.exit_code != 0
-    assert "only one of" in (result.output + (result.stderr or ""))
+    assert "only one of" in _plain(result.output + (result.stderr or ""))
 
 
 def test_services_dispatch_rejects_json_and_data_together(monkeypatch) -> None:
@@ -147,7 +164,7 @@ def test_services_dispatch_rejects_json_and_data_together(monkeypatch) -> None:
         ],
     )
     assert result.exit_code != 0
-    assert "mutually exclusive" in (result.output + (result.stderr or ""))
+    assert "mutually exclusive" in _plain(result.output + (result.stderr or ""))
 
 
 def test_services_enroll_parses_parameter_pairs(monkeypatch) -> None:
