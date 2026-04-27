@@ -248,6 +248,43 @@ with Client.from_env() as client:
 
 ---
 
+## Same flow from the CLI
+
+Every step above has a `usvc` counterpart — handy for shell pipelines or
+quick one-offs without writing Python:
+
+```bash
+# 1. Browse a group + its services
+usvc groups list
+usvc groups services llm
+
+# 2. One-shot dispatch (body to stdout, status to stderr)
+usvc services dispatch <service-id> \
+    --json '{"messages": [{"role": "user", "content": "Hello"}]}'
+
+# 3. BYOK enrollment
+usvc services enroll <service-id> \
+    --parameter api_key=sk-... \
+    --parameter endpoint=https://my-host
+
+usvc enrollments list
+usvc enrollments cancel <enrollment-id>
+
+# 4. Schedule a recurring dispatch — --interval / --cron sugar over the
+#    full --recurrence JSON form
+usvc services schedule <service-id> \
+    --interval 300 \
+    --json '{"prompt": "ping"}' \
+    --name "5-min ping"
+
+# Dry-run a route to inspect candidates without sending the upstream call
+usvc resolve --path v1/chat/completions --routing-key '{"model": "gpt-4"}'
+```
+
+See [CLI Reference](cli-reference.md) for the full option list.
+
+---
+
 ## Further reading
 
 - [SDK Guide](sdk-guide.md) — full resource reference
