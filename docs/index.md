@@ -36,4 +36,13 @@ usvc secrets list
 usvc secrets set openai-key --value sk-...
 usvc aliases list
 usvc recurrent-requests list
+
+usvc groups list
+usvc groups services llm
+usvc services show <service-id>
+usvc services enroll <service-id> --parameter api_key=sk-...
+usvc services dispatch <service-id> --json '{"messages": [...]}'
+usvc services schedule <service-id> --interval 300 --json '{...}'
+usvc enrollments list
+usvc resolve --path v1/chat/completions --routing-key '{"model": "gpt-4"}'
 ```

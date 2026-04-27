@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
+import sys
 from collections.abc import Coroutine
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any, TypeVar
 
 import typer
@@ -102,3 +105,142 @@ def base_url_option():
         envvar=ENV_API_URL,
         help="Backend base URL.",
     )
+
+
+# ---------------------------------------------------------------------------
+# Dispatch / payload parsing helpers
+# ---------------------------------------------------------------------------
+def parse_json_option(raw: str | None, *, flag: str = "--json") -> Any:
+    """Parse a JSON string from a CLI option.
+
+    Returns ``None`` if ``raw`` is None. Raises ``typer.BadParameter``
+    on malformed JSON so the user sees a clean error rather than a
+    traceback.
+    """
+    if raw is None:
+        return None
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise typer.BadParameter(f"{flag} is not valid JSON: {exc}") from exc
+
+
+def parse_data_option(raw: str | None) -> bytes | str | None:
+    """Parse a ``--data`` option.
+
+    Supports ``@path`` to read raw bytes from a file (mirrors curl).
+    A bare value is passed through as-is.
+    """
+    if raw is None:
+        return None
+    if raw.startswith("@"):
+        path = Path(raw[1:])
+        if not path.exists():
+            raise typer.BadParameter(f"--data file not found: {path}")
+        return path.read_bytes()
+    return raw
+
+
+def parse_headers(items: list[str] | None) -> dict[str, str] | None:
+    """Parse repeated ``--header K:V`` options into a dict."""
+    if not items:
+        return None
+    out: dict[str, str] = {}
+    for raw in items:
+        if ":" not in raw:
+            raise typer.BadParameter(f"--header must be 'Key: Value', got {raw!r}")
+        key, _, value = raw.partition(":")
+        out[key.strip()] = value.strip()
+    return out
+
+
+def parse_parameters(
+    raw_json: str | None,
+    items: list[str] | None,
+    *,
+    json_flag: str = "--parameters",
+    item_flag: str = "--parameter",
+) -> dict[str, Any] | None:
+    """Combine ``--parameters '<json>'`` and repeated ``--parameter K=V``.
+
+    Both are optional; if both are given, ``--parameter`` items override
+    keys from ``--parameters``. Returns ``None`` if neither is set.
+    Values from ``--parameter`` are kept as strings — JSON must use the
+    JSON form for non-string values.
+    """
+    if raw_json is None and not items:
+        return None
+    out: dict[str, Any] = {}
+    if raw_json is not None:
+        parsed = parse_json_option(raw_json, flag=json_flag)
+        if not isinstance(parsed, dict):
+            raise typer.BadParameter(f"{json_flag} must be a JSON object, got {type(parsed).__name__}")
+        out.update(parsed)
+    for raw in items or []:
+        if "=" not in raw:
+            raise typer.BadParameter(f"{item_flag} must be 'key=value', got {raw!r}")
+        key, _, value = raw.partition("=")
+        out[key.strip()] = value
+    return out
+
+
+def build_recurrence(
+    recurrence_json: str | None,
+    interval: int | None,
+    cron: str | None,
+    timezone: str,
+) -> dict[str, Any]:
+    """Resolve the ``recurrence`` dict for ``services schedule``.
+
+    Exactly one of ``--recurrence`` / ``--interval`` / ``--cron`` must be
+    given. ``--timezone`` only applies when ``--cron`` is used.
+    """
+    forms = [
+        ("--recurrence", recurrence_json),
+        ("--interval", interval),
+        ("--cron", cron),
+    ]
+    chosen = [name for name, val in forms if val is not None]
+    if len(chosen) == 0:
+        raise typer.BadParameter("one of --recurrence, --interval, or --cron is required")
+    if len(chosen) > 1:
+        raise typer.BadParameter(f"only one of --recurrence/--interval/--cron may be given (got {', '.join(chosen)})")
+
+    if recurrence_json is not None:
+        parsed = parse_json_option(recurrence_json, flag="--recurrence")
+        if not isinstance(parsed, dict):
+            raise typer.BadParameter("--recurrence must be a JSON object")
+        return parsed
+    if interval is not None:
+        if interval <= 0:
+            raise typer.BadParameter("--interval must be a positive integer (seconds)")
+        return {"schedule_type": "interval", "interval_seconds": interval}
+    return {"schedule_type": "cron", "cron_expression": cron, "timezone": timezone}
+
+
+def write_response(response: Any) -> None:
+    """Write an httpx-style response: status to stderr, body raw to stdout.
+
+    The body is written as raw bytes so the caller can pipe binary
+    payloads losslessly. The status line goes to stderr so it can be
+    inspected without polluting the piped body.
+    """
+    status = getattr(response, "status_code", None)
+    reason = getattr(response, "reason_phrase", "") or ""
+    if status is not None:
+        sys.stderr.write(f"HTTP {status} {reason}\n".rstrip() + "\n")
+        sys.stderr.flush()
+
+    content = getattr(response, "content", None)
+    if content is None:
+        text = getattr(response, "text", "")
+        sys.stdout.write(text)
+        sys.stdout.flush()
+        return
+    try:
+        sys.stdout.buffer.write(content)
+        sys.stdout.flush()
+    except (AttributeError, ValueError):
+        # Fallback when stdout has no underlying buffer (e.g. captured).
+        sys.stdout.write(content.decode("utf-8", errors="replace"))
+        sys.stdout.flush()
