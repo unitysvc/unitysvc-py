@@ -65,9 +65,15 @@ def test_client_resources_are_lazy_and_cached() -> None:
         second = client.secrets
         assert first is second
 
+        # request_logs is also lazy + cached.
+        rl_first = client.request_logs
+        rl_second = client.request_logs
+        assert rl_first is rl_second
+
         # All resource namespaces should be reachable.
         assert client.aliases is not None
         assert client.recurrent_requests is not None
+        assert client.request_logs is not None
 
 
 def test_async_client_defaults_to_production() -> None:
@@ -78,6 +84,7 @@ def test_async_client_defaults_to_production() -> None:
     assert client.secrets is not None
     assert client.aliases is not None
     assert client.recurrent_requests is not None
+    assert client.request_logs is not None
 
 
 def test_exception_hierarchy() -> None:

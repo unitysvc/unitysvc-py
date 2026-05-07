@@ -1645,6 +1645,499 @@
         }
       }
     },
+    "/request-logs": {
+      "get": {
+        "tags": [
+          "customer",
+          "request-logs"
+        ],
+        "summary": "List request logs",
+        "description": "List request logs for the authenticated customer. Returns lightweight columns (no body/header fields) for fast pagination.",
+        "operationId": "customer-list_request_logs",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Pagination offset",
+              "default": 0,
+              "title": "Skip"
+            },
+            "description": "Pagination offset"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "description": "Page size",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Page size"
+          },
+          {
+            "name": "service_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by service listing",
+              "title": "Service Id"
+            },
+            "description": "Filter by service listing"
+          },
+          {
+            "name": "service_enrollment_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by enrollment",
+              "title": "Service Enrollment Id"
+            },
+            "description": "Filter by enrollment"
+          },
+          {
+            "name": "status_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 599,
+                  "minimum": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Min upstream status code",
+              "title": "Status Min"
+            },
+            "description": "Min upstream status code"
+          },
+          {
+            "name": "status_max",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 599,
+                  "minimum": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max upstream status code",
+              "title": "Status Max"
+            },
+            "description": "Max upstream status code"
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start of time range",
+              "title": "Start Time"
+            },
+            "description": "Start of time range"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End of time range",
+              "title": "End Time"
+            },
+            "description": "End of time range"
+          },
+          {
+            "name": "user_request_path",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Path prefix filter",
+              "title": "User Request Path"
+            },
+            "description": "Path prefix filter"
+          },
+          {
+            "name": "error_source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter: 'gateway' or 'upstream'",
+              "title": "Error Source"
+            },
+            "description": "Filter: 'gateway' or 'upstream'"
+          },
+          {
+            "name": "error_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by error type",
+              "title": "Error Type"
+            },
+            "description": "Filter by error type"
+          },
+          {
+            "name": "gateway_source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter: 'apisix' or 'backend'",
+              "title": "Gateway Source"
+            },
+            "description": "Filter: 'apisix' or 'backend'"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestLogListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/request-logs/start": {
+      "post": {
+        "tags": [
+          "customer",
+          "request-logs"
+        ],
+        "summary": "Start request logging",
+        "description": "Enable request logging for the authenticated user.",
+        "operationId": "customer-start_request_logging",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoggingStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/request-logs/stop": {
+      "post": {
+        "tags": [
+          "customer",
+          "request-logs"
+        ],
+        "summary": "Stop request logging",
+        "description": "Disable request logging for the authenticated user.",
+        "operationId": "customer-stop_request_logging",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoggingStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/request-logs/{log_id}": {
+      "get": {
+        "tags": [
+          "customer",
+          "request-logs"
+        ],
+        "summary": "Get request log detail",
+        "description": "Get full detail of a single request log, including request/response bodies.",
+        "operationId": "customer-get_request_log",
+        "parameters": [
+          {
+            "name": "log_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Log Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestLogDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/resolve": {
       "post": {
         "tags": [
@@ -2507,6 +3000,42 @@
         "title": "GatewayKind",
         "description": "Short-form gateway selector for ``ResolveRequest.gateway``.\n\nCustomer-facing shorthand \u2014 maps to the ``<NAME>_GATEWAY_BASE_URL``\nsettings template internally. ``api`` covers HTTP services (LLM,\nuptime monitors, generic APIs); ``s3`` and ``smtp`` cover storage\nand email relay."
       },
+      "GatewayRequestInfo": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "headers": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headers"
+          },
+          "body": {
+            "title": "Body"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "url"
+        ],
+        "title": "GatewayRequestInfo",
+        "description": "Gateway-transformed request sent to upstream."
+      },
       "GroupTypeEnum": {
         "type": "string",
         "enum": [
@@ -2530,6 +3059,19 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "LoggingStatusResponse": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "LoggingStatusResponse"
       },
       "Message": {
         "properties": {
@@ -2872,6 +3414,259 @@
         "title": "RecurrentRequestsPublic",
         "description": "List of RecurrentRequests for API responses."
       },
+      "RequestLogDetail": {
+        "properties": {
+          "log_id": {
+            "type": "string",
+            "title": "Log Id"
+          },
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "event_timestamp": {
+            "type": "string",
+            "title": "Event Timestamp"
+          },
+          "gateway_source": {
+            "type": "string",
+            "title": "Gateway Source"
+          },
+          "customer_id": {
+            "type": "string",
+            "title": "Customer Id"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "service_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Id"
+          },
+          "service_enrollment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Enrollment Id"
+          },
+          "user_request": {
+            "$ref": "#/components/schemas/UserRequestInfo"
+          },
+          "gateway_request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GatewayRequestInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "upstream_response": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UpstreamResponseInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "usage_event": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UsageEventInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SanitizedErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "log_id",
+          "event_id",
+          "event_timestamp",
+          "gateway_source",
+          "customer_id",
+          "user_id",
+          "user_request"
+        ],
+        "title": "RequestLogDetail",
+        "description": "Full request log detail including bodies and headers."
+      },
+      "RequestLogListItem": {
+        "properties": {
+          "log_id": {
+            "type": "string",
+            "title": "Log Id"
+          },
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "event_timestamp": {
+            "type": "string",
+            "title": "Event Timestamp"
+          },
+          "gateway_source": {
+            "type": "string",
+            "title": "Gateway Source"
+          },
+          "customer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Id"
+          },
+          "service_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Id"
+          },
+          "service_enrollment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Enrollment Id"
+          },
+          "user_request_method": {
+            "type": "string",
+            "title": "User Request Method"
+          },
+          "user_request_path": {
+            "type": "string",
+            "title": "User Request Path"
+          },
+          "upstream_response_status_code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upstream Response Status Code"
+          },
+          "upstream_response_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upstream Response Time Ms"
+          },
+          "error_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Source"
+          },
+          "error_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "log_id",
+          "event_id",
+          "event_timestamp",
+          "gateway_source",
+          "user_request_method",
+          "user_request_path"
+        ],
+        "title": "RequestLogListItem",
+        "description": "Lightweight request log item for list/pagination views."
+      },
+      "RequestLogListResponse": {
+        "properties": {
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          },
+          "skip": {
+            "type": "integer",
+            "title": "Skip"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RequestLogListItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_count",
+          "skip",
+          "limit",
+          "items"
+        ],
+        "title": "RequestLogListResponse",
+        "description": "Paginated list of request log items."
+      },
       "ResolveCandidate": {
         "properties": {
           "service_id": {
@@ -3011,6 +3806,25 @@
         ],
         "title": "ResolveResponse",
         "description": "Dry-run result: candidate services, strategy, optional pre-pick."
+      },
+      "SanitizedErrorInfo": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "request_id"
+        ],
+        "title": "SanitizedErrorInfo",
+        "description": "Customer-safe error summary \u2014 no internal details (#882)."
       },
       "SecretOwnerTypeEnum": {
         "type": "string",
@@ -3772,6 +4586,108 @@
         ],
         "title": "SwitchRoutingResponse",
         "description": "Response from ``POST /aliases/{id}/switch``."
+      },
+      "UpstreamResponseInfo": {
+        "properties": {
+          "status_code": {
+            "type": "integer",
+            "title": "Status Code"
+          },
+          "headers": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headers"
+          },
+          "body": {
+            "title": "Body"
+          },
+          "time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status_code"
+        ],
+        "title": "UpstreamResponseInfo",
+        "description": "Response received from the upstream service."
+      },
+      "UsageEventInfo": {
+        "properties": {
+          "customer_charge": {
+            "type": "string",
+            "title": "Customer Charge"
+          },
+          "usage_metrics": {
+            "type": "string",
+            "title": "Usage Metrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_charge",
+          "usage_metrics"
+        ],
+        "title": "UsageEventInfo",
+        "description": "Linked usage/billing event data."
+      },
+      "UserRequestInfo": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "headers": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headers"
+          },
+          "body": {
+            "title": "Body"
+          },
+          "content_type": {
+            "type": "string",
+            "title": "Content Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "path",
+          "content_type"
+        ],
+        "title": "UserRequestInfo",
+        "description": "User's original request details."
       },
       "ValidationError": {
         "properties": {

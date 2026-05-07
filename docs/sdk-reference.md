@@ -17,6 +17,7 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
         - secrets
         - aliases
         - recurrent_requests
+        - request_logs
 
 ## AsyncClient
 
@@ -31,6 +32,7 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
         - secrets
         - aliases
         - recurrent_requests
+        - request_logs
 
 ## Resources
 
@@ -67,6 +69,12 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
 ### RecurrentRequests
 
 ::: unitysvc.recurrent_requests.RecurrentRequests
+    options:
+      show_root_heading: true
+
+### RequestLogs
+
+::: unitysvc.request_logs.RequestLogs
     options:
       show_root_heading: true
 

@@ -55,6 +55,7 @@ if TYPE_CHECKING:
     from .enrollments import Enrollments
     from .groups import Groups
     from .recurrent_requests import RecurrentRequests
+    from .request_logs import RequestLogs
     from .secrets import Secrets
     from .services import Services
 
@@ -127,6 +128,7 @@ class Client:
         self._enrollments: Enrollments | None = None
         self._groups: Groups | None = None
         self._recurrent_requests: RecurrentRequests | None = None
+        self._request_logs: RequestLogs | None = None
         self._secrets: Secrets | None = None
         self._services: Services | None = None
 
@@ -219,6 +221,14 @@ class Client:
 
             self._recurrent_requests = RecurrentRequests(self._client)
         return self._recurrent_requests
+
+    @property
+    def request_logs(self) -> RequestLogs:
+        if self._request_logs is None:
+            from .request_logs import RequestLogs
+
+            self._request_logs = RequestLogs(self._client)
+        return self._request_logs
 
     @property
     def secrets(self) -> Secrets:
