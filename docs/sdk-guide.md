@@ -45,6 +45,7 @@ with Client.from_env() as client:
 | `client.secrets`            | `/v1/customer/secrets/*`                |
 | `client.aliases`            | `/v1/customer/aliases/*`                |
 | `client.recurrent_requests` | `/v1/customer/recurrent-requests/*`     |
+| `client.request_logs`       | `/v1/customer/request-logs/*`           |
 
 ## `AsyncClient`
 
@@ -244,6 +245,99 @@ client.recurrent_requests.update(request_id, {...})
 client.recurrent_requests.trigger(request_id)
 client.recurrent_requests.delete(request_id)
 ```
+
+## `request_logs`
+
+Request logging is **opt-in per user**. Until you call
+`client.request_logs.start()`, gateway dispatches are not persisted
+to the customer-facing log — neither `list()` nor `get()` will see
+them. Once started, all subsequent dispatches are recorded until you
+call `stop()`. Both toggle calls are idempotent.
+
+```python
+# Toggle
+client.request_logs.start()  # enable persistence
+client.request_logs.stop()   # disable; already-stored rows remain visible
+```
+
+```python
+# Paginated listing (lightweight columns — no bodies)
+page = client.request_logs.list(
+    skip=0,
+    limit=50,
+    service_id=None,             # UUID — filter to one service
+    service_enrollment_id=None,  # UUID — filter to one enrollment
+    status_min=None,             # int — min upstream status (e.g. 400)
+    status_max=None,             # int — max upstream status
+    start_time=None,             # datetime — inclusive lower bound
+    end_time=None,               # datetime — inclusive upper bound
+    user_request_path=None,      # str — path-prefix filter
+    error_source=None,           # "gateway" or "upstream"
+    error_type=None,             # str — filter by error type
+    gateway_source=None,         # "apisix" or "backend"
+)
+print(page.total_count, len(page.items))
+
+# Full detail of one row (includes request + response bodies, with
+# upstream identity / credentials redacted server-side).
+detail = client.request_logs.get(page.items[0].log_id)
+```
+
+The default time window when both `start_time` and `end_time` are
+omitted is the last 24 hours. Use `start_time=datetime.now(UTC) - timedelta(hours=1)`
+to narrow further; combined with a `service_id` filter this is the
+fastest way to verify that a specific dispatch was recorded.
+
+### Common patterns
+
+**Verify a dispatch was logged**
+
+```python
+import datetime as dt
+
+t0 = dt.datetime.now(dt.timezone.utc)
+client.request_logs.start()
+client.services.dispatch(svc_id, json={"messages": [...]})
+
+# Brief settle window (Kafka → ClickHouse pipeline is async)
+import time; time.sleep(2)
+
+page = client.request_logs.list(service_id=svc_id, start_time=t0)
+assert page.total_count >= 1
+```
+
+**Inspect a 5xx**
+
+```python
+errs = client.request_logs.list(
+    status_min=500,
+    status_max=599,
+    error_source="upstream",
+)
+for row in errs.items:
+    detail = client.request_logs.get(row.log_id)
+    print(detail.upstream_response.status_code, detail.error)
+```
+
+**Async**
+
+```python
+async with AsyncClient.from_env() as client:
+    await client.request_logs.start()
+    await client.services.dispatch(svc_id, json={"messages": [...]})
+    page = await client.request_logs.list(service_id=svc_id, limit=10)
+```
+
+### Notes
+
+- **Auth.** Both API key and JWT (frontend session) reach the same
+  routes. The SDK uses your API key.
+- **Idempotency.** `start()` and `stop()` are safe to call repeatedly;
+  the route reconciles state and returns the post-call value.
+- **Privacy.** `get(log_id)` returns server-side-redacted bodies —
+  upstream-identifying response headers and credentials are stripped
+  before the response leaves the backend (see
+  [unitysvc#881](https://github.com/unitysvc/unitysvc/pull/881)).
 
 ## Errors
 

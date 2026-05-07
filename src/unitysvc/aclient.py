@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from .aenrollments import AsyncEnrollments
     from .agroups import AsyncGroups
     from .arecurrent_requests import AsyncRecurrentRequests
+    from .arequest_logs import AsyncRequestLogs
     from .asecrets import AsyncSecrets
     from .aservices import AsyncServices
 
@@ -98,6 +99,7 @@ class AsyncClient:
         self._enrollments: AsyncEnrollments | None = None
         self._groups: AsyncGroups | None = None
         self._recurrent_requests: AsyncRecurrentRequests | None = None
+        self._request_logs: AsyncRequestLogs | None = None
         self._secrets: AsyncSecrets | None = None
         self._services: AsyncServices | None = None
 
@@ -179,6 +181,14 @@ class AsyncClient:
 
             self._recurrent_requests = AsyncRecurrentRequests(self._client)
         return self._recurrent_requests
+
+    @property
+    def request_logs(self) -> AsyncRequestLogs:
+        if self._request_logs is None:
+            from .arequest_logs import AsyncRequestLogs
+
+            self._request_logs = AsyncRequestLogs(self._client)
+        return self._request_logs
 
     @property
     def secrets(self) -> AsyncSecrets:

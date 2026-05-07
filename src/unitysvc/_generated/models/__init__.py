@@ -9,8 +9,11 @@ from .customer_enrollment_parameters_type_0 import CustomerEnrollmentParametersT
 from .customer_enrollment_service_type_0 import CustomerEnrollmentServiceType0
 from .customer_enrollments_response import CustomerEnrollmentsResponse
 from .gateway_kind import GatewayKind
+from .gateway_request_info import GatewayRequestInfo
+from .gateway_request_info_headers_type_0 import GatewayRequestInfoHeadersType0
 from .group_type_enum import GroupTypeEnum
 from .http_validation_error import HTTPValidationError
+from .logging_status_response import LoggingStatusResponse
 from .message import Message
 from .recurrent_request_create import RecurrentRequestCreate
 from .recurrent_request_create_body_template_type_0 import RecurrentRequestCreateBodyTemplateType0
@@ -26,11 +29,15 @@ from .recurrent_request_update_body_template_type_0 import RecurrentRequestUpdat
 from .recurrent_request_update_request_headers_type_0 import RecurrentRequestUpdateRequestHeadersType0
 from .recurrent_request_update_schedule_type_0 import RecurrentRequestUpdateScheduleType0
 from .recurrent_requests_public import RecurrentRequestsPublic
+from .request_log_detail import RequestLogDetail
+from .request_log_list_item import RequestLogListItem
+from .request_log_list_response import RequestLogListResponse
 from .resolve_candidate import ResolveCandidate
 from .resolve_request import ResolveRequest
 from .resolve_request_routing_key_type_0 import ResolveRequestRoutingKeyType0
 from .resolve_response import ResolveResponse
 from .resolve_response_routing_strategy_type_0 import ResolveResponseRoutingStrategyType0
+from .sanitized_error_info import SanitizedErrorInfo
 from .secret_owner_type_enum import SecretOwnerTypeEnum
 from .secret_public import SecretPublic
 from .secret_update import SecretUpdate
@@ -57,6 +64,11 @@ from .service_group_list_response import ServiceGroupListResponse
 from .service_group_summary import ServiceGroupSummary
 from .service_summary import ServiceSummary
 from .switch_routing_response import SwitchRoutingResponse
+from .upstream_response_info import UpstreamResponseInfo
+from .upstream_response_info_headers_type_0 import UpstreamResponseInfoHeadersType0
+from .usage_event_info import UsageEventInfo
+from .user_request_info import UserRequestInfo
+from .user_request_info_headers_type_0 import UserRequestInfoHeadersType0
 from .validation_error import ValidationError
 
 __all__ = (
@@ -69,8 +81,11 @@ __all__ = (
     "CustomerEnrollmentServiceType0",
     "CustomerEnrollmentsResponse",
     "GatewayKind",
+    "GatewayRequestInfo",
+    "GatewayRequestInfoHeadersType0",
     "GroupTypeEnum",
     "HTTPValidationError",
+    "LoggingStatusResponse",
     "Message",
     "RecurrentRequestCreate",
     "RecurrentRequestCreateBodyTemplateType0",
@@ -86,11 +101,15 @@ __all__ = (
     "RecurrentRequestUpdateBodyTemplateType0",
     "RecurrentRequestUpdateRequestHeadersType0",
     "RecurrentRequestUpdateScheduleType0",
+    "RequestLogDetail",
+    "RequestLogListItem",
+    "RequestLogListResponse",
     "ResolveCandidate",
     "ResolveRequest",
     "ResolveRequestRoutingKeyType0",
     "ResolveResponse",
     "ResolveResponseRoutingStrategyType0",
+    "SanitizedErrorInfo",
     "SecretOwnerTypeEnum",
     "SecretPublic",
     "SecretsPublic",
@@ -117,5 +136,10 @@ __all__ = (
     "ServiceGroupSummary",
     "ServiceSummary",
     "SwitchRoutingResponse",
+    "UpstreamResponseInfo",
+    "UpstreamResponseInfoHeadersType0",
+    "UsageEventInfo",
+    "UserRequestInfo",
+    "UserRequestInfoHeadersType0",
     "ValidationError",
 )
