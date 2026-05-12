@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from ._http import unwrap
+from ._streaming import AsyncStreamingResponse, build_stream_kwargs
 from .agroups import _http_dispatch_async
 
 if TYPE_CHECKING:
@@ -52,6 +53,31 @@ class AsyncService:
         timeout: float | None = None,
     ) -> httpx.Response:
         return await self._parent.services.dispatch(
+            self._raw.id,
+            interface=interface,
+            enrollment=enrollment,
+            path=path,
+            method=method,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout,
+        )
+
+    async def stream(
+        self,
+        *,
+        interface: str | UUID | None = None,
+        enrollment: str | UUID | None = None,
+        path: str = "",
+        method: str = "POST",
+        json: Any = None,
+        data: Any = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+    ) -> AsyncStreamingResponse:
+        """See :meth:`AsyncServices.stream`."""
+        return await self._parent.services.stream(
             self._raw.id,
             interface=interface,
             enrollment=enrollment,
@@ -169,6 +195,40 @@ class AsyncServices:
             headers=headers,
             timeout=timeout,
         )
+
+    async def stream(
+        self,
+        service_id: str | UUID,
+        *,
+        interface: str | UUID | None = None,
+        enrollment: str | UUID | None = None,
+        path: str = "",
+        method: str = "POST",
+        json: Any = None,
+        data: Any = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+    ) -> AsyncStreamingResponse:
+        """Async sibling of :meth:`unitysvc.services.Services.stream`.
+
+        Usage::
+
+            async with await aclient.services.stream(sid, json={...}) as r:
+                async for event in r.iter_events():
+                    ...
+        """
+        iface = await self._pick_interface(service_id, interface=interface, enrollment=enrollment)
+        base_url = iface.base_url if isinstance(iface.base_url, str) else None
+        url, kwargs = build_stream_kwargs(
+            token=getattr(self._client, "token", None),
+            base_url=base_url,
+            path=path,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout,
+        )
+        return AsyncStreamingResponse(self._client.get_async_httpx_client(), method, url, kwargs)
 
     async def schedule(
         self,

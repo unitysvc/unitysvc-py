@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from ._http import unwrap
+from ._streaming import AsyncStreamingResponse, build_stream_kwargs
 
 if TYPE_CHECKING:
     import httpx
@@ -65,6 +66,27 @@ class AsyncGroup:
         timeout: float | None = None,
     ) -> httpx.Response:
         return await self._parent.groups.dispatch(
+            self._raw.name,
+            path=path,
+            method=method,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout,
+        )
+
+    async def stream(
+        self,
+        *,
+        path: str = "",
+        method: str = "POST",
+        json: Any = None,
+        data: Any = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+    ) -> AsyncStreamingResponse:
+        """See :meth:`AsyncGroups.stream`."""
+        return await self._parent.groups.stream(
             self._raw.name,
             path=path,
             method=method,
@@ -189,6 +211,49 @@ class AsyncGroups:
             headers=headers,
             timeout=timeout,
         )
+
+
+    async def stream(
+        self,
+        name: str,
+        *,
+        path: str = "",
+        method: str = "POST",
+        json: Any = None,
+        data: Any = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+    ) -> AsyncStreamingResponse:
+        """Async sibling of :meth:`unitysvc.groups.Groups.stream`.
+
+        ``stream()`` is async only because it must resolve the group
+        first; the returned object is an ``async with``-able streaming
+        response::
+
+            async with await aclient.groups.stream(name, json={...}) as r:
+                async for event in r.iter_events():
+                    ...
+        """
+        from ._generated.models.access_interface import AccessInterface
+
+        group = await self.get(name)
+        iface = group.interface
+        if not isinstance(iface, AccessInterface):
+            raise ValueError(
+                f"Group {name!r} has no user-facing interface configured — "
+                f"call service.stream() on a member service instead."
+            )
+        base_url = iface.base_url if isinstance(iface.base_url, str) else None
+        url, kwargs = build_stream_kwargs(
+            token=getattr(self._client, "token", None),
+            base_url=base_url,
+            path=path,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout,
+        )
+        return AsyncStreamingResponse(self._client.get_async_httpx_client(), method, url, kwargs)
 
 
 async def _http_dispatch_async(

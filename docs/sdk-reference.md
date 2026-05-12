@@ -78,6 +78,21 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
     options:
       show_root_heading: true
 
+### Streaming responses
+
+`Services.stream()` / `Groups.stream()` (and async siblings) return
+these context-managed wrappers. See the [Streaming
+section](sdk-guide.md#streaming-responses-sse-ndjson) of the SDK
+guide for usage.
+
+::: unitysvc._streaming
+    options:
+      members:
+        - StreamEvent
+        - StreamingResponse
+        - AsyncStreamingResponse
+      show_root_heading: false
+
 ### Resolve (dry-run primitive)
 
 ::: unitysvc.resolve
