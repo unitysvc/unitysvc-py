@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from ._http import unwrap
+from ._streaming import StreamingResponse, build_stream_kwargs
 
 if TYPE_CHECKING:
     import httpx
@@ -108,6 +109,27 @@ class Group:
         convenience that fills in the group's slug.
         """
         return self._parent.groups.dispatch(
+            self._raw.name,
+            path=path,
+            method=method,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout,
+        )
+
+    def stream(
+        self,
+        *,
+        path: str = "",
+        method: str = "POST",
+        json: Any = None,
+        data: Any = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+    ) -> StreamingResponse:
+        """Open a streaming HTTP request. See :meth:`Groups.stream`."""
+        return self._parent.groups.stream(
             self._raw.name,
             path=path,
             method=method,
@@ -307,6 +329,60 @@ class Groups:
             headers=headers,
             timeout=timeout,
         )
+
+    # ------------------------------------------------------------------
+    # Stream
+    # ------------------------------------------------------------------
+    def stream(
+        self,
+        name: str,
+        *,
+        path: str = "",
+        method: str = "POST",
+        json: Any = None,
+        data: Any = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+    ) -> StreamingResponse:
+        """Open a streaming HTTP request through the group-level interface.
+
+        Same interface-resolution and URL composition as :meth:`dispatch`,
+        but returns a context-managed :class:`StreamingResponse` so the
+        caller can iterate the body lazily (SSE / NDJSON / chunks) via
+        ``iter_events()`` / ``iter_bytes()`` / ``iter_lines()``.
+
+        Setting the upstream-protocol ``stream`` flag in the request
+        body (e.g. ``json={"stream": True}`` for OpenAI-style APIs) is
+        the caller's job — orthogonal to whether the SDK iterates lazily.
+
+        Example::
+
+            with client.groups.stream(name, json={..., "stream": True}) as r:
+                for event in r.iter_events():
+                    if event.kind == "done":
+                        break
+                    handle(event.parsed)
+        """
+        from ._generated.models.access_interface import AccessInterface
+
+        group = self.get(name)
+        iface = group.interface
+        if not isinstance(iface, AccessInterface):
+            raise ValueError(
+                f"Group {name!r} has no user-facing interface configured — "
+                f"call service.stream() on a member service instead."
+            )
+        base_url = iface.base_url if isinstance(iface.base_url, str) else None
+        url, kwargs = build_stream_kwargs(
+            token=getattr(self._client, "token", None),
+            base_url=base_url,
+            path=path,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout,
+        )
+        return StreamingResponse(self._client.get_httpx_client(), method, url, kwargs)
 
 
 def _http_dispatch(

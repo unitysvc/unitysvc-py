@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from ._http import unwrap
+from ._streaming import StreamingResponse, build_stream_kwargs
 from .groups import _http_dispatch
 
 if TYPE_CHECKING:
@@ -88,6 +89,31 @@ class Service:
     ) -> httpx.Response:
         """Send a one-shot request. See :meth:`Services.dispatch`."""
         return self._parent.services.dispatch(
+            self._raw.id,
+            interface=interface,
+            enrollment=enrollment,
+            path=path,
+            method=method,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout,
+        )
+
+    def stream(
+        self,
+        *,
+        interface: str | UUID | None = None,
+        enrollment: str | UUID | None = None,
+        path: str = "",
+        method: str = "POST",
+        json: Any = None,
+        data: Any = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+    ) -> StreamingResponse:
+        """Open a streaming HTTP request. See :meth:`Services.stream`."""
+        return self._parent.services.stream(
             self._raw.id,
             interface=interface,
             enrollment=enrollment,
@@ -279,6 +305,62 @@ class Services:
             headers=headers,
             timeout=timeout,
         )
+
+    # ------------------------------------------------------------------
+    # Stream
+    # ------------------------------------------------------------------
+    def stream(
+        self,
+        service_id: str | UUID,
+        *,
+        interface: str | UUID | None = None,
+        enrollment: str | UUID | None = None,
+        path: str = "",
+        method: str = "POST",
+        json: Any = None,
+        data: Any = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+    ) -> StreamingResponse:
+        """Open a streaming HTTP request through the resolved service interface.
+
+        Sibling to :meth:`dispatch` — same interface resolution, auth,
+        and URL composition; the difference is that the response body
+        is consumed lazily via :class:`StreamingResponse`. Use for
+        SSE / NDJSON / chunked LLM responses where buffering the full
+        body before yielding chunks would defeat the streaming UX.
+
+        The upstream-protocol ``stream`` flag (e.g. ``json={"stream": True}``
+        for OpenAI-compatible APIs) is orthogonal — set it in the body
+        if the upstream requires it. ``stream()`` controls only how
+        the SDK consumes the response.
+
+        Example::
+
+            with client.services.stream(svc_id, json={..., "stream": True}) as r:
+                print(r.status_code)
+                for event in r.iter_events():
+                    if event.kind == "done":
+                        break
+                    handle(event.parsed)
+
+        Args: same as :meth:`dispatch`.
+
+        Returns:
+            A :class:`StreamingResponse` context manager.
+        """
+        iface = self._pick_interface(service_id, interface=interface, enrollment=enrollment)
+        base_url = iface.base_url if isinstance(iface.base_url, str) else None
+        url, kwargs = build_stream_kwargs(
+            token=getattr(self._client, "token", None),
+            base_url=base_url,
+            path=path,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout,
+        )
+        return StreamingResponse(self._client.get_httpx_client(), method, url, kwargs)
 
     # ------------------------------------------------------------------
     # Schedule (recurrent dispatch)
