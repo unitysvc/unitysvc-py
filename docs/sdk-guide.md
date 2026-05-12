@@ -130,6 +130,98 @@ Field access on a `Service` is forwarded to the underlying record,
 so `svc.id`, `svc.name`, `svc.display_name`, etc. all work as on
 the raw response.
 
+## Streaming responses (SSE / NDJSON)
+
+`dispatch()` buffers the full response body before returning, which
+defeats streaming UX for LLM SSE and similar protocols. For those,
+use the sibling `stream()` methods — same auth and interface
+resolution, but the body is consumed lazily.
+
+```python
+with client.services.stream(
+    svc_id,
+    json={"messages": [...], "stream": True},   # upstream-protocol flag
+) as r:
+    print(r.status_code, r.headers)             # available before iteration
+    for event in r.iter_events():
+        if event.kind == "done":
+            break
+        handle(event.parsed)
+```
+
+The same surface is available at the group level
+(`client.groups.stream(name, ...)`) and on the active-record
+wrappers (`svc.stream(...)`, `grp.stream(...)`).
+
+### Two flags to keep distinct
+
+|                                  | Concern         | What it does                                  |
+|----------------------------------|-----------------|-----------------------------------------------|
+| `json={"stream": True}`          | Upstream        | Tells the provider to emit SSE / NDJSON       |
+| Calling `.stream()` vs `.dispatch()` | SDK         | Tells the SDK to iterate, not buffer          |
+
+They're orthogonal — most LLM calls need both. `dispatch()` with the
+upstream flag still works (whole SSE body in `r.text`); `stream()`
+without the upstream flag still works (you just iterate over a
+one-shot non-streaming response).
+
+### Event taxonomy
+
+`iter_events()` discriminates on `Content-Type`:
+
+| `event.kind` | When                                     | `event.parsed`        | `event.raw`           |
+|--------------|------------------------------------------|-----------------------|-----------------------|
+| `"sse"`      | `text/event-stream`, one per `data:` frame | `dict` (or `str` fallback) | raw frame bytes  |
+| `"done"`     | SSE `data: [DONE]` sentinel               | `None`                | `b"[DONE]"`           |
+| `"ndjson"`   | `application/x-ndjson` / `application/jsonl`, per line | `dict` | raw line bytes      |
+| `"line"`     | any `text/*`, per line                    | `None`                | bytes; `event.text` is the decoded string |
+| `"bytes"`    | anything else                             | `None`                | raw chunk bytes       |
+
+SSE frames split across TCP chunks (a frame's bytes arriving in two
+`iter_bytes()` deliveries) are reassembled at the parser layer
+before they reach you — no buffering on the caller's side is
+necessary.
+
+If you need lower-level access, `iter_bytes()` and `iter_lines()`
+are also available on the streaming response and pass straight
+through to `httpx`.
+
+### Errors and end-of-stream
+
+- Body terminates cleanly → iteration stops naturally.
+- SSE `[DONE]` arrives → a final `event.kind == "done"` is yielded,
+  then iteration stops (any frames after `[DONE]` are discarded).
+- Connection drops mid-stream → `httpx.ReadError` (or similar) is
+  raised to the caller from inside `iter_events()`. Retry policy is
+  the caller's call.
+- HTTP 4xx/5xx with a streaming-shaped body → the context manager
+  enters successfully; inspect `r.status_code` and decide whether
+  to iterate (this matches `httpx.stream()` behavior).
+
+### Async
+
+```python
+async with AsyncClient.from_env() as client:
+    async with await client.services.stream(svc_id, json={...}) as r:
+        async for event in r.iter_events():
+            ...
+```
+
+Note the `await` before `client.services.stream(...)` on the async
+side — interface resolution is async, so the call that constructs
+the streaming response is itself awaitable. The returned object is
+then used with `async with`.
+
+### Out of scope
+
+- **WebSocket** dispatch — different protocol; not provided.
+- **gRPC** — different framing; use `grpcio` directly.
+- **Auto-injection** of the upstream `stream` body flag — the SDK
+  doesn't know the upstream's field name (OpenAI uses `stream`,
+  others differ); set it yourself.
+- **Built-in retry on mid-stream errors** — surfaces the exception
+  for the caller to handle.
+
 ## `enrollments`
 
 Enrollments record "I've opted into this service with these
