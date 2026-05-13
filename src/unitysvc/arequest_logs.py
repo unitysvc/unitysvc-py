@@ -27,10 +27,19 @@ class AsyncRequestLogs:
     def __init__(self, client: AuthenticatedClient) -> None:
         self._client = client
 
-    async def start(self) -> LoggingStatusResponse:
+    async def start(
+        self, *, truncate_long_message: bool | None = None
+    ) -> LoggingStatusResponse:
+        """See :meth:`unitysvc.request_logs.RequestLogs.start`."""
         from ._generated.api.customer import customer_start_request_logging
+        from ._generated.types import UNSET
 
-        return unwrap(await customer_start_request_logging.asyncio_detailed(client=self._client))
+        return unwrap(
+            await customer_start_request_logging.asyncio_detailed(
+                client=self._client,
+                truncate_long_message=truncate_long_message if truncate_long_message is not None else UNSET,
+            )
+        )
 
     async def stop(self) -> LoggingStatusResponse:
         from ._generated.api.customer import customer_stop_request_logging

@@ -77,9 +77,19 @@ def sync_detailed(
 
      Get details of a single service visible to the customer.
 
-    Returns 404 for inactive, unlisted, or non-public services
-    rather than leaking existence — the customer-visible set
-    matches what ``GET /customer/groups/{id}/services`` returns.
+    Hot path: read from ``service_mview`` for active + public services.
+
+    Cold path: if the mview misses, fall back to a base-tables query
+    that matches ``status = 'deprecated' AND visibility = 'public'``.
+    This enables statement / invoice back-reference URLs to keep
+    rendering after a service has been deprecated (the service still
+    exists in the base tables; only the mview filters it out). See
+    unitysvc#1027.
+
+    Returns 404 for non-public services, or for statuses other than
+    ``active`` / ``deprecated`` — the visible set is intentionally
+    narrow so the endpoint doesn't leak the existence of unlisted
+    or draft services.
 
     Args:
         service_id (UUID):
@@ -118,9 +128,19 @@ def sync(
 
      Get details of a single service visible to the customer.
 
-    Returns 404 for inactive, unlisted, or non-public services
-    rather than leaking existence — the customer-visible set
-    matches what ``GET /customer/groups/{id}/services`` returns.
+    Hot path: read from ``service_mview`` for active + public services.
+
+    Cold path: if the mview misses, fall back to a base-tables query
+    that matches ``status = 'deprecated' AND visibility = 'public'``.
+    This enables statement / invoice back-reference URLs to keep
+    rendering after a service has been deprecated (the service still
+    exists in the base tables; only the mview filters it out). See
+    unitysvc#1027.
+
+    Returns 404 for non-public services, or for statuses other than
+    ``active`` / ``deprecated`` — the visible set is intentionally
+    narrow so the endpoint doesn't leak the existence of unlisted
+    or draft services.
 
     Args:
         service_id (UUID):
@@ -154,9 +174,19 @@ async def asyncio_detailed(
 
      Get details of a single service visible to the customer.
 
-    Returns 404 for inactive, unlisted, or non-public services
-    rather than leaking existence — the customer-visible set
-    matches what ``GET /customer/groups/{id}/services`` returns.
+    Hot path: read from ``service_mview`` for active + public services.
+
+    Cold path: if the mview misses, fall back to a base-tables query
+    that matches ``status = 'deprecated' AND visibility = 'public'``.
+    This enables statement / invoice back-reference URLs to keep
+    rendering after a service has been deprecated (the service still
+    exists in the base tables; only the mview filters it out). See
+    unitysvc#1027.
+
+    Returns 404 for non-public services, or for statuses other than
+    ``active`` / ``deprecated`` — the visible set is intentionally
+    narrow so the endpoint doesn't leak the existence of unlisted
+    or draft services.
 
     Args:
         service_id (UUID):
@@ -193,9 +223,19 @@ async def asyncio(
 
      Get details of a single service visible to the customer.
 
-    Returns 404 for inactive, unlisted, or non-public services
-    rather than leaking existence — the customer-visible set
-    matches what ``GET /customer/groups/{id}/services`` returns.
+    Hot path: read from ``service_mview`` for active + public services.
+
+    Cold path: if the mview misses, fall back to a base-tables query
+    that matches ``status = 'deprecated' AND visibility = 'public'``.
+    This enables statement / invoice back-reference URLs to keep
+    rendering after a service has been deprecated (the service still
+    exists in the base tables; only the mview filters it out). See
+    unitysvc#1027.
+
+    Returns 404 for non-public services, or for statuses other than
+    ``active`` / ``deprecated`` — the visible set is intentionally
+    narrow so the endpoint doesn't leak the existence of unlisted
+    or draft services.
 
     Args:
         service_id (UUID):

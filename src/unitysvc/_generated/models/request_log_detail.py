@@ -9,7 +9,6 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.gateway_request_info import GatewayRequestInfo
     from ..models.sanitized_error_info import SanitizedErrorInfo
     from ..models.upstream_response_info import UpstreamResponseInfo
     from ..models.usage_event_info import UsageEventInfo
@@ -21,7 +20,21 @@ T = TypeVar("T", bound="RequestLogDetail")
 
 @_attrs_define
 class RequestLogDetail:
-    """Full request log detail including bodies and headers."""
+    """Customer-facing request log detail (#1032 / #882).
+
+    Includes the customer's own request and the upstream response —
+    the two pieces a customer needs to debug their own traffic.
+    Deliberately omits ``gateway_request`` (transformed body, upstream
+    URL, seller's upstream credentials) since exposing it would leak
+    the seller's upstream identity and credential material to customers.
+
+    Bodies are returned truncated to the inline cap by default. When
+    ``truncate_long_message=false`` and the body was stored in full
+    (``complete`` mode at write-time), the detail endpoint fetches the
+    full body from S3 and substitutes it into the response — the
+    shape stays the same.
+
+    """
 
     log_id: str
     event_id: str
@@ -33,14 +46,12 @@ class RequestLogDetail:
     """ User's original request details. """
     service_id: None | str | Unset = UNSET
     service_enrollment_id: None | str | Unset = UNSET
-    gateway_request: GatewayRequestInfo | None | Unset = UNSET
     upstream_response: None | Unset | UpstreamResponseInfo = UNSET
     usage_event: None | Unset | UsageEventInfo = UNSET
     error: None | SanitizedErrorInfo | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.gateway_request_info import GatewayRequestInfo
         from ..models.sanitized_error_info import SanitizedErrorInfo
         from ..models.upstream_response_info import UpstreamResponseInfo
         from ..models.usage_event_info import UsageEventInfo
@@ -71,14 +82,6 @@ class RequestLogDetail:
             service_enrollment_id = UNSET
         else:
             service_enrollment_id = self.service_enrollment_id
-
-        gateway_request: dict[str, Any] | None | Unset
-        if isinstance(self.gateway_request, Unset):
-            gateway_request = UNSET
-        elif isinstance(self.gateway_request, GatewayRequestInfo):
-            gateway_request = self.gateway_request.to_dict()
-        else:
-            gateway_request = self.gateway_request
 
         upstream_response: dict[str, Any] | None | Unset
         if isinstance(self.upstream_response, Unset):
@@ -121,8 +124,6 @@ class RequestLogDetail:
             field_dict["service_id"] = service_id
         if service_enrollment_id is not UNSET:
             field_dict["service_enrollment_id"] = service_enrollment_id
-        if gateway_request is not UNSET:
-            field_dict["gateway_request"] = gateway_request
         if upstream_response is not UNSET:
             field_dict["upstream_response"] = upstream_response
         if usage_event is not UNSET:
@@ -134,7 +135,6 @@ class RequestLogDetail:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.gateway_request_info import GatewayRequestInfo
         from ..models.sanitized_error_info import SanitizedErrorInfo
         from ..models.upstream_response_info import UpstreamResponseInfo
         from ..models.usage_event_info import UsageEventInfo
@@ -172,23 +172,6 @@ class RequestLogDetail:
             return cast(None | str | Unset, data)
 
         service_enrollment_id = _parse_service_enrollment_id(d.pop("service_enrollment_id", UNSET))
-
-        def _parse_gateway_request(data: object) -> GatewayRequestInfo | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, dict):
-                    raise TypeError()
-                gateway_request_type_0 = GatewayRequestInfo.from_dict(data)
-
-                return gateway_request_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(GatewayRequestInfo | None | Unset, data)
-
-        gateway_request = _parse_gateway_request(d.pop("gateway_request", UNSET))
 
         def _parse_upstream_response(data: object) -> None | Unset | UpstreamResponseInfo:
             if data is None:
@@ -251,7 +234,6 @@ class RequestLogDetail:
             user_request=user_request,
             service_id=service_id,
             service_enrollment_id=service_enrollment_id,
-            gateway_request=gateway_request,
             upstream_response=upstream_response,
             usage_event=usage_event,
             error=error,

@@ -9,8 +9,6 @@ from .customer_enrollment_parameters_type_0 import CustomerEnrollmentParametersT
 from .customer_enrollment_service_type_0 import CustomerEnrollmentServiceType0
 from .customer_enrollments_response import CustomerEnrollmentsResponse
 from .gateway_kind import GatewayKind
-from .gateway_request_info import GatewayRequestInfo
-from .gateway_request_info_headers_type_0 import GatewayRequestInfoHeadersType0
 from .group_type_enum import GroupTypeEnum
 from .http_validation_error import HTTPValidationError
 from .logging_status_response import LoggingStatusResponse
@@ -81,8 +79,6 @@ __all__ = (
     "CustomerEnrollmentServiceType0",
     "CustomerEnrollmentsResponse",
     "GatewayKind",
-    "GatewayRequestInfo",
-    "GatewayRequestInfoHeadersType0",
     "GroupTypeEnum",
     "HTTPValidationError",
     "LoggingStatusResponse",

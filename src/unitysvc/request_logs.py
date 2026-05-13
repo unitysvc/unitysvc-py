@@ -43,16 +43,44 @@ class RequestLogs:
     # ------------------------------------------------------------------
     # Toggle
     # ------------------------------------------------------------------
-    def start(self) -> LoggingStatusResponse:
+    def start(
+        self, *, truncate_long_message: bool | None = None
+    ) -> LoggingStatusResponse:
         """Enable request logging for the authenticated user.
 
         Subsequent gateway dispatches will be persisted and visible via
         :meth:`list` / :meth:`get`. Idempotent — safe to call when
         logging is already on.
+
+        Args:
+            truncate_long_message: Picks the storage mode.
+
+                * ``True`` → ``truncated``: 8 KB inline preview is
+                  stored, no S3 upload. The listing endpoint serves
+                  the preview; :meth:`get` returns the same preview
+                  (full body is not preserved).
+                * ``False`` → ``complete``: full request / response
+                  bodies are uploaded to S3 so :meth:`get` can return
+                  the full payload. The listing endpoint still
+                  returns only the preview to keep paging cheap.
+                * ``None`` (default) → preserve the user's existing
+                  ``preference.logging`` mode if it's already
+                  ``truncated`` or ``complete``; otherwise fall back
+                  to ``truncated``. Use this when the frontend has
+                  already set the preference via ``PATCH /users/me``
+                  and you just want to flip the gateway on. SDK
+                  scripts that don't manage preferences should pass
+                  ``True`` or ``False`` explicitly.
         """
         from ._generated.api.customer import customer_start_request_logging
+        from ._generated.types import UNSET
 
-        return unwrap(customer_start_request_logging.sync_detailed(client=self._client))
+        return unwrap(
+            customer_start_request_logging.sync_detailed(
+                client=self._client,
+                truncate_long_message=truncate_long_message if truncate_long_message is not None else UNSET,
+            )
+        )
 
     def stop(self) -> LoggingStatusResponse:
         """Disable request logging for the authenticated user.
@@ -144,3 +172,5 @@ def _or_unset(value: T | None) -> T | Unset:
     """Map ``None`` to ``UNSET`` so the generated client omits the query
     parameter entirely instead of sending ``?param=None``."""
     return UNSET if value is None else value
+
+

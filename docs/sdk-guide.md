@@ -348,9 +348,22 @@ call `stop()`. Both toggle calls are idempotent.
 
 ```python
 # Toggle
-client.request_logs.start()  # enable persistence
-client.request_logs.stop()   # disable; already-stored rows remain visible
+client.request_logs.start()                        # preserve existing preference
+client.request_logs.start(truncate_long_message=True)   # force truncated mode
+client.request_logs.start(truncate_long_message=False)  # force complete (S3) mode
+client.request_logs.stop()                         # disable; stored rows remain visible
 ```
+
+`truncate_long_message=True` selects the **truncated** storage mode:
+the backend keeps an 8 KB inline preview per request / response and
+skips the S3 upload. `False` switches to **complete** mode, where
+the full body is uploaded to S3 so `get(log_id)` can return the
+original payload. The default `None` tells the backend to preserve
+the user's existing `preference.logging` mode (falling back to
+truncated if there isn't one) — useful when the frontend already
+set the preference and the SDK is just flipping logging on.
+In all modes the listing endpoint serves only the preview to keep
+paging cheap; the mode you pick decides what `get()` returns.
 
 ```python
 # Paginated listing (lightweight columns — no bodies)
