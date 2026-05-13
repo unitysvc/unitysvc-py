@@ -1938,6 +1938,24 @@
         "operationId": "customer-start_request_logging",
         "parameters": [
           {
+            "name": "truncate_long_message",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Picks the mode. ``True`` \u2192 ``truncated`` (8 KB inline preview, no S3). ``False`` \u2192 ``complete`` (full body uploaded to S3 for retrieval via the detail endpoint). ``None`` (default) \u2192 preserve the user's existing ``preference.logging.enabled`` if it's already ``truncated`` or ``complete``; fall back to ``truncated`` otherwise.\n\nTwo intended caller shapes:\n\n- **Frontend**: sets ``preference.logging`` via   ``PATCH /users/me`` (composing with ``expire_at`` etc.),   then calls /start with no param to flip the gateway on   using the just-stored mode.\n- **SDK / scripts**: pass ``True`` or ``False``   explicitly \u2014 the SDK has no concept of the customer's   stored preference, so it picks the mode per call.",
+              "title": "Truncate Long Message"
+            },
+            "description": "Picks the mode. ``True`` \u2192 ``truncated`` (8 KB inline preview, no S3). ``False`` \u2192 ``complete`` (full body uploaded to S3 for retrieval via the detail endpoint). ``None`` (default) \u2192 preserve the user's existing ``preference.logging.enabled`` if it's already ``truncated`` or ``complete``; fall back to ``truncated`` otherwise.\n\nTwo intended caller shapes:\n\n- **Frontend**: sets ``preference.logging`` via   ``PATCH /users/me`` (composing with ``expire_at`` etc.),   then calls /start with no param to flip the gateway on   using the just-stored mode.\n- **SDK / scripts**: pass ``True`` or ``False``   explicitly \u2014 the SDK has no concept of the customer's   stored preference, so it picks the mode per call."
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -2538,7 +2556,7 @@
           "customer-services"
         ],
         "summary": "Get Service",
-        "description": "Get details of a single service visible to the customer.\n\nReturns 404 for inactive, unlisted, or non-public services\nrather than leaking existence \u2014 the customer-visible set\nmatches what ``GET /customer/groups/{id}/services`` returns.",
+        "description": "Get details of a single service visible to the customer.\n\nHot path: read from ``service_mview`` for active + public services.\n\nCold path: if the mview misses, fall back to a base-tables query\nthat matches ``status = 'deprecated' AND visibility = 'public'``.\nThis enables statement / invoice back-reference URLs to keep\nrendering after a service has been deprecated (the service still\nexists in the base tables; only the mview filters it out). See\nunitysvc#1027.\n\nReturns 404 for non-public services, or for statuses other than\n``active`` / ``deprecated`` \u2014 the visible set is intentionally\nnarrow so the endpoint doesn't leak the existence of unlisted\nor draft services.",
         "operationId": "customer-services-get_service",
         "parameters": [
           {
@@ -3000,42 +3018,6 @@
         "title": "GatewayKind",
         "description": "Short-form gateway selector for ``ResolveRequest.gateway``.\n\nCustomer-facing shorthand \u2014 maps to the ``<NAME>_GATEWAY_BASE_URL``\nsettings template internally. ``api`` covers HTTP services (LLM,\nuptime monitors, generic APIs); ``s3`` and ``smtp`` cover storage\nand email relay."
       },
-      "GatewayRequestInfo": {
-        "properties": {
-          "method": {
-            "type": "string",
-            "title": "Method"
-          },
-          "url": {
-            "type": "string",
-            "title": "Url"
-          },
-          "headers": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Headers"
-          },
-          "body": {
-            "title": "Body"
-          }
-        },
-        "type": "object",
-        "required": [
-          "method",
-          "url"
-        ],
-        "title": "GatewayRequestInfo",
-        "description": "Gateway-transformed request sent to upstream."
-      },
       "GroupTypeEnum": {
         "type": "string",
         "enum": [
@@ -3465,16 +3447,6 @@
           "user_request": {
             "$ref": "#/components/schemas/UserRequestInfo"
           },
-          "gateway_request": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/GatewayRequestInfo"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "upstream_response": {
             "anyOf": [
               {
@@ -3517,7 +3489,7 @@
           "user_request"
         ],
         "title": "RequestLogDetail",
-        "description": "Full request log detail including bodies and headers."
+        "description": "Customer-facing request log detail (#1032 / #882).\n\nIncludes the customer's own request and the upstream response \u2014\nthe two pieces a customer needs to debug their own traffic.\nDeliberately omits ``gateway_request`` (transformed body, upstream\nURL, seller's upstream credentials) since exposing it would leak\nthe seller's upstream identity and credential material to customers.\n\nBodies are returned truncated to the inline cap by default. When\n``truncate_long_message=false`` and the body was stored in full\n(``complete`` mode at write-time), the detail endpoint fetches the\nfull body from S3 and substitutes it into the response \u2014 the\nshape stays the same."
       },
       "RequestLogListItem": {
         "properties": {

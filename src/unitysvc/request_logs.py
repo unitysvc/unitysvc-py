@@ -51,15 +51,31 @@ class RequestLogs:
         logging is already on.
 
         Args:
-            truncate_long_message: When ``True`` (the default), the
-                backend truncates oversized request / response bodies
-                before persisting, keeping only the head of the
-                payload in the listing columns. The full untruncated
-                body remains available via :meth:`get` for logs where
-                the backend stored it. Pass ``False`` to opt out of
-                truncation entirely.
+            truncate_long_message: Picks the storage mode.
+
+                * ``True`` (default) → ``truncated``: 8 KB inline
+                  preview is stored, no S3 upload. The listing
+                  endpoint serves the preview; :meth:`get` returns
+                  the same preview (full body is not preserved).
+                * ``False`` → ``complete``: full request / response
+                  bodies are uploaded to S3 so :meth:`get` can return
+                  the full payload. The listing endpoint still
+                  returns only the preview to keep paging cheap.
+
+                The SDK pins this per call because it has no view of
+                the user's stored ``preference.logging`` (which the
+                frontend manages); the backend's "preserve existing
+                preference" behavior (``None``) is intentionally not
+                exposed here.
         """
-        return _start_via_httpx(self._client, truncate_long_message=truncate_long_message)
+        from ._generated.api.customer import customer_start_request_logging
+
+        return unwrap(
+            customer_start_request_logging.sync_detailed(
+                client=self._client,
+                truncate_long_message=truncate_long_message,
+            )
+        )
 
     def stop(self) -> LoggingStatusResponse:
         """Disable request logging for the authenticated user.
@@ -153,60 +169,3 @@ def _or_unset(value: T | None) -> T | Unset:
     return UNSET if value is None else value
 
 
-def _build_start_response(httpx_response: object) -> LoggingStatusResponse:
-    """Mimic the generated ``Response[T]`` shape so :func:`unwrap` can handle it."""
-    from http import HTTPStatus
-
-    from ._generated.models.http_validation_error import HTTPValidationError
-    from ._generated.models.logging_status_response import LoggingStatusResponse
-    from ._generated.types import Response
-
-    status_code = httpx_response.status_code  # type: ignore[attr-defined]
-    parsed: object | None = None
-    if status_code == 200:
-        parsed = LoggingStatusResponse.from_dict(httpx_response.json())  # type: ignore[attr-defined]
-    elif status_code == 422:
-        parsed = HTTPValidationError.from_dict(httpx_response.json())  # type: ignore[attr-defined]
-    response = Response(
-        status_code=HTTPStatus(status_code),
-        content=httpx_response.content,  # type: ignore[attr-defined]
-        headers=httpx_response.headers,  # type: ignore[attr-defined]
-        parsed=parsed,
-    )
-    return unwrap(response)
-
-
-def _start_via_httpx(
-    low_level_client: AuthenticatedClient,
-    *,
-    truncate_long_message: bool,
-) -> LoggingStatusResponse:
-    """Sync POST ``/request-logs/start`` with the ``truncate_long_message`` query param.
-
-    The generated client doesn't (yet) expose this query parameter,
-    so this helper sends the call through the same authenticated
-    httpx session and reconstructs a generated-style ``Response``
-    object for :func:`unwrap`.
-    """
-    httpx_client = low_level_client.get_httpx_client()
-    httpx_response = httpx_client.request(
-        "POST",
-        "/request-logs/start",
-        params={"truncate_long_message": "true" if truncate_long_message else "false"},
-    )
-    return _build_start_response(httpx_response)
-
-
-async def _start_via_httpx_async(
-    low_level_client: AuthenticatedClient,
-    *,
-    truncate_long_message: bool,
-) -> LoggingStatusResponse:
-    """Async sibling of :func:`_start_via_httpx`."""
-    httpx_client = low_level_client.get_async_httpx_client()
-    httpx_response = await httpx_client.request(
-        "POST",
-        "/request-logs/start",
-        params={"truncate_long_message": "true" if truncate_long_message else "false"},
-    )
-    return _build_start_response(httpx_response)

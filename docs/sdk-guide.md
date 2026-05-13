@@ -353,12 +353,13 @@ client.request_logs.start(truncate_long_message=False)  # opt out of truncation
 client.request_logs.stop()   # disable; already-stored rows remain visible
 ```
 
-`start(truncate_long_message=True)` (the default) tells the backend
-to truncate oversized request / response bodies before storage; the
-listing endpoint always serves the truncated form, and `get(log_id)`
-returns the full untruncated body when the backend still has it.
-Pass `False` only when you specifically need full bodies preserved
-verbatim at the cost of storage.
+`start(truncate_long_message=True)` (the default) selects the
+**truncated** storage mode: the backend keeps an 8 KB inline preview
+per request / response and skips the S3 upload. `start(truncate_long_message=False)`
+switches to **complete** mode, where the full body is uploaded to S3
+so `get(log_id)` can return the original payload. In both modes the
+listing endpoint serves only the preview to keep paging cheap; the
+mode you pick decides what `get()` will return.
 
 ```python
 # Paginated listing (lightweight columns — no bodies)

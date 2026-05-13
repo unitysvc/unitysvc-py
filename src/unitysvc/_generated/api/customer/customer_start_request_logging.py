@@ -13,6 +13,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
+    truncate_long_message: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -23,9 +24,21 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
+    params: dict[str, Any] = {}
+
+    json_truncate_long_message: bool | None | Unset
+    if isinstance(truncate_long_message, Unset):
+        json_truncate_long_message = UNSET
+    else:
+        json_truncate_long_message = truncate_long_message
+    params["truncate_long_message"] = json_truncate_long_message
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/request-logs/start",
+        "params": params,
     }
 
     _kwargs["headers"] = headers
@@ -65,6 +78,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
+    truncate_long_message: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | LoggingStatusResponse]:
@@ -73,6 +87,19 @@ def sync_detailed(
      Enable request logging for the authenticated user.
 
     Args:
+        truncate_long_message (bool | None | Unset): Picks the mode. ``True`` → ``truncated`` (8
+            KB inline preview, no S3). ``False`` → ``complete`` (full body uploaded to S3 for
+            retrieval via the detail endpoint). ``None`` (default) → preserve the user's existing
+            ``preference.logging.enabled`` if it's already ``truncated`` or ``complete``; fall back to
+            ``truncated`` otherwise.
+
+            Two intended caller shapes:
+
+            - **Frontend**: sets ``preference.logging`` via   ``PATCH /users/me`` (composing with
+            ``expire_at`` etc.),   then calls /start with no param to flip the gateway on   using the
+            just-stored mode.
+            - **SDK / scripts**: pass ``True`` or ``False``   explicitly — the SDK has no concept of
+            the customer's   stored preference, so it picks the mode per call.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -85,6 +112,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
+        truncate_long_message=truncate_long_message,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -99,6 +127,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
+    truncate_long_message: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | LoggingStatusResponse | None:
@@ -107,6 +136,19 @@ def sync(
      Enable request logging for the authenticated user.
 
     Args:
+        truncate_long_message (bool | None | Unset): Picks the mode. ``True`` → ``truncated`` (8
+            KB inline preview, no S3). ``False`` → ``complete`` (full body uploaded to S3 for
+            retrieval via the detail endpoint). ``None`` (default) → preserve the user's existing
+            ``preference.logging.enabled`` if it's already ``truncated`` or ``complete``; fall back to
+            ``truncated`` otherwise.
+
+            Two intended caller shapes:
+
+            - **Frontend**: sets ``preference.logging`` via   ``PATCH /users/me`` (composing with
+            ``expire_at`` etc.),   then calls /start with no param to flip the gateway on   using the
+            just-stored mode.
+            - **SDK / scripts**: pass ``True`` or ``False``   explicitly — the SDK has no concept of
+            the customer's   stored preference, so it picks the mode per call.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -120,6 +162,7 @@ def sync(
 
     return sync_detailed(
         client=client,
+        truncate_long_message=truncate_long_message,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -128,6 +171,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
+    truncate_long_message: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | LoggingStatusResponse]:
@@ -136,6 +180,19 @@ async def asyncio_detailed(
      Enable request logging for the authenticated user.
 
     Args:
+        truncate_long_message (bool | None | Unset): Picks the mode. ``True`` → ``truncated`` (8
+            KB inline preview, no S3). ``False`` → ``complete`` (full body uploaded to S3 for
+            retrieval via the detail endpoint). ``None`` (default) → preserve the user's existing
+            ``preference.logging.enabled`` if it's already ``truncated`` or ``complete``; fall back to
+            ``truncated`` otherwise.
+
+            Two intended caller shapes:
+
+            - **Frontend**: sets ``preference.logging`` via   ``PATCH /users/me`` (composing with
+            ``expire_at`` etc.),   then calls /start with no param to flip the gateway on   using the
+            just-stored mode.
+            - **SDK / scripts**: pass ``True`` or ``False``   explicitly — the SDK has no concept of
+            the customer's   stored preference, so it picks the mode per call.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -148,6 +205,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
+        truncate_long_message=truncate_long_message,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -160,6 +218,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
+    truncate_long_message: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | LoggingStatusResponse | None:
@@ -168,6 +227,19 @@ async def asyncio(
      Enable request logging for the authenticated user.
 
     Args:
+        truncate_long_message (bool | None | Unset): Picks the mode. ``True`` → ``truncated`` (8
+            KB inline preview, no S3). ``False`` → ``complete`` (full body uploaded to S3 for
+            retrieval via the detail endpoint). ``None`` (default) → preserve the user's existing
+            ``preference.logging.enabled`` if it's already ``truncated`` or ``complete``; fall back to
+            ``truncated`` otherwise.
+
+            Two intended caller shapes:
+
+            - **Frontend**: sets ``preference.logging`` via   ``PATCH /users/me`` (composing with
+            ``expire_at`` etc.),   then calls /start with no param to flip the gateway on   using the
+            just-stored mode.
+            - **SDK / scripts**: pass ``True`` or ``False``   explicitly — the SDK has no concept of
+            the customer's   stored preference, so it picks the mode per call.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -182,6 +254,7 @@ async def asyncio(
     return (
         await asyncio_detailed(
             client=client,
+            truncate_long_message=truncate_long_message,
             authorization=authorization,
             x_role_id=x_role_id,
         )
