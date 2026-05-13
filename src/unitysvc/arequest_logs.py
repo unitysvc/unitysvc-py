@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ._http import unwrap
-from .request_logs import _or_unset
+from .request_logs import _or_unset, _start_via_httpx_async
 
 if TYPE_CHECKING:
     from ._generated.client import AuthenticatedClient
@@ -27,10 +27,11 @@ class AsyncRequestLogs:
     def __init__(self, client: AuthenticatedClient) -> None:
         self._client = client
 
-    async def start(self) -> LoggingStatusResponse:
-        from ._generated.api.customer import customer_start_request_logging
-
-        return unwrap(await customer_start_request_logging.asyncio_detailed(client=self._client))
+    async def start(self, *, truncate_long_message: bool = True) -> LoggingStatusResponse:
+        """See :meth:`unitysvc.request_logs.RequestLogs.start`."""
+        return await _start_via_httpx_async(
+            self._client, truncate_long_message=truncate_long_message
+        )
 
     async def stop(self) -> LoggingStatusResponse:
         from ._generated.api.customer import customer_stop_request_logging
