@@ -24,16 +24,25 @@ def _capturing_transport(captured: list[httpx.Request]) -> httpx.MockTransport:
     return httpx.MockTransport(handler)
 
 
-def test_start_default_passes_truncate_long_message_true() -> None:
+def test_start_default_omits_truncate_long_message() -> None:
+    """Default ``None`` → no query param sent, backend preserves the user's preference."""
     captured: list[httpx.Request] = []
     with Client(api_key="svcpass_test") as client:
-        # Inject a mock transport into the low-level client's httpx session.
         client._client.get_httpx_client()._transport = _capturing_transport(captured)
         result = client.request_logs.start()
 
     assert result.enabled is True
     assert len(captured) == 1
     assert captured[0].url.path.endswith("/request-logs/start")
+    assert "truncate_long_message" not in captured[0].url.params
+
+
+def test_start_truncate_true_passes_true() -> None:
+    captured: list[httpx.Request] = []
+    with Client(api_key="svcpass_test") as client:
+        client._client.get_httpx_client()._transport = _capturing_transport(captured)
+        client.request_logs.start(truncate_long_message=True)
+
     assert captured[0].url.params.get("truncate_long_message") == "true"
 
 
