@@ -158,7 +158,7 @@ class TestWrappedTargetChain:
 
     def test_logged_complete(self, fake_client: Client) -> None:
         svc = _FakeWrappable("p/svc-id", fake_client)
-        wrapped = svc.logged(complete=True)
+        wrapped = svc.logged(_complete=True)
         assert wrapped.path == "l/p/svc-id?_complete="
 
     def test_cached_default(self, fake_client: Client) -> None:
@@ -169,12 +169,12 @@ class TestWrappedTargetChain:
 
     def test_cached_with_ttl(self, fake_client: Client) -> None:
         svc = _FakeWrappable("p/svc-id", fake_client)
-        wrapped = svc.cached(ttl="1h")
+        wrapped = svc.cached(_ttl="1h")
         assert wrapped.path == "m/p/svc-id?_ttl=1h"
 
     def test_cached_with_renew(self, fake_client: Client) -> None:
         svc = _FakeWrappable("p/svc-id", fake_client)
-        wrapped = svc.cached(ttl="60s", renew=True)
+        wrapped = svc.cached(_ttl="60s", _renew=True)
         assert wrapped.path.startswith("m/p/svc-id?")
         assert "_ttl=60s" in wrapped.path
         assert "_renew=" in wrapped.path
@@ -195,7 +195,7 @@ class TestWrappedTargetChain:
     def test_chain_logged_then_cached(self, fake_client: Client) -> None:
         # Chaining produces nested WrappedTargets.
         svc = _FakeWrappable("p/svc-id", fake_client)
-        wrapped = svc.logged().cached(ttl="1h")
+        wrapped = svc.logged().cached(_ttl="1h")
         assert isinstance(wrapped, WrappedTarget)
         # Cached wraps the already-logged path: m/l/p/svc-id?_ttl=1h
         assert wrapped.path == "m/l/p/svc-id?_ttl=1h"
@@ -203,14 +203,14 @@ class TestWrappedTargetChain:
     def test_chain_cached_then_logged(self, fake_client: Client) -> None:
         # Order changes the on-wire URL but not the on-gateway behaviour.
         svc = _FakeWrappable("p/svc-id", fake_client)
-        wrapped = svc.cached(ttl="1h").logged()
+        wrapped = svc.cached(_ttl="1h").logged()
         assert wrapped.path == "l/m/p/svc-id?_ttl=1h"
 
     def test_chain_with_failover_secondary_is_wrapped(self, fake_client: Client) -> None:
         # Compose secondaries with their own wrappers.
         primary = _FakeWrappable("p/a", fake_client)
         backup = _FakeWrappable("p/b", fake_client)
-        wrapped = primary.with_failover(backup.cached(ttl="5m"))
+        wrapped = primary.with_failover(backup.cached(_ttl="5m"))
         # The failover_to value is the inner wrapped path, urlencoded.
         assert wrapped.path.startswith("f/p/a?_else=")
         # Encoded form of "m/p/b?_ttl=5m"
@@ -221,21 +221,21 @@ class TestWrappedTargetChain:
         with pytest.raises(ValueError, match="requires exactly one"):
             svc.delayed()
         with pytest.raises(ValueError, match="requires exactly one"):
-            svc.delayed(at="2026-01-01", in_="5s")
+            svc.delayed(_at="2026-01-01", _in="5s")
 
     def test_delayed_at(self, fake_client: Client) -> None:
         svc = _FakeWrappable("p/svc-id", fake_client)
-        wrapped = svc.delayed(at="2026-06-01T10:00:00Z")
+        wrapped = svc.delayed(_at="2026-06-01T10:00:00Z")
         assert wrapped.path == "d/p/svc-id?_at=2026-06-01T10%3A00%3A00Z"
 
     def test_delayed_in(self, fake_client: Client) -> None:
         svc = _FakeWrappable("p/svc-id", fake_client)
-        wrapped = svc.delayed(in_="5s")
+        wrapped = svc.delayed(_in="5s")
         assert wrapped.path == "d/p/svc-id?_in=5s"
 
     def test_recurrent(self, fake_client: Client) -> None:
         svc = _FakeWrappable("p/svc-id", fake_client)
-        wrapped = svc.recurrent(every="5m")
+        wrapped = svc.recurrent(_every="5m")
         assert wrapped.path == "r/p/svc-id?_every=5m"
 
     def test_wrappedtarget_repr(self, fake_client: Client) -> None:
@@ -274,7 +274,7 @@ class TestWrappedTargetDispatch:
         with Client(api_key="svcpass_test", api_base_url="http://localhost:9080") as client:
             captured = _capture_url_via_mock_transport(client)
             svc = _FakeWrappable("p/svc-id", client)
-            wrapped = svc.cached(ttl="1h").logged()
+            wrapped = svc.cached(_ttl="1h").logged()
             wrapped.dispatch(json={"hi": "there"})
             assert captured["url"].startswith("http://localhost:9080/l/m/p/svc-id?")
             assert "_ttl=1h" in captured["url"]

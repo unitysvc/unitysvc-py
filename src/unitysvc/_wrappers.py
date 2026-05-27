@@ -169,34 +169,39 @@ class _Wrappable:
     # ------------------------------------------------------------------
     # Wrapper builders — each returns a new WrappedTarget
     # ------------------------------------------------------------------
-    def logged(self, *, complete: bool = False) -> WrappedTarget:
+    def logged(self, *, _complete: bool = False) -> WrappedTarget:
         """Wrap the call in ``/l/`` request-log capture.
 
-        ``complete=True`` escalates to full request/response capture
-        with S3 overflow for bodies > 8 KB.
+        ``_complete=True`` escalates to full request/response capture
+        with S3 overflow for bodies > 8 KB. Maps 1:1 to the URL
+        spelling ``?_complete``; same name on both sides removes the
+        SDK-vs-URL translation step.
         """
-        log_value: LogValue = "complete" if complete else True
+        log_value: LogValue = "complete" if _complete else True
         return WrappedTarget(
             build_wrapped_path(self.path, log=log_value),
             self._get_client(),
         )
 
-    def cached(self, *, ttl: str | None = None, renew: bool = False) -> WrappedTarget:
+    def cached(self, *, _ttl: str | None = None, _renew: bool = False) -> WrappedTarget:
         """Wrap the call in ``/m/`` Redis-backed memoization.
 
-        ``ttl`` accepts the gateway's duration syntax (``"60s"``,
+        ``_ttl`` accepts the gateway's duration syntax (``"60s"``,
         ``"5m"``, ``"1h"``, ``"1d"``). Defaults to 1 h on the gateway
         if omitted; max 7 d.
 
-        ``renew=True`` forces a fresh upstream call and overwrites any
-        cached entry.
+        ``_renew=True`` forces a fresh upstream call and overwrites
+        any cached entry.
+
+        Kwarg names match the URL spelling (``?_ttl=…``, ``?_renew``)
+        for 1:1 documentation symmetry.
         """
         return WrappedTarget(
             build_wrapped_path(
                 self.path,
                 cache=True,
-                cache_ttl=ttl,
-                cache_renew=renew,
+                cache_ttl=_ttl,
+                cache_renew=_renew,
             ),
             self._get_client(),
         )
@@ -208,7 +213,7 @@ class _Wrappable:
         secondary's path. ``secondary`` is any :class:`_Wrappable` —
         another Service, Alias, Group, Broadcast, Chain, or
         WrappedTarget (compose secondaries with wrappers of their
-        own: ``svc.with_failover(other.cached(ttl="1h"))``).
+        own: ``svc.with_failover(other.cached(_ttl="1h"))``).
         """
         return WrappedTarget(
             build_wrapped_path(self.path, failover_to=secondary.path),
@@ -231,42 +236,44 @@ class _Wrappable:
     def delayed(
         self,
         *,
-        at: str | None = None,
-        in_: str | None = None,
+        _at: str | None = None,
+        _in: str | None = None,
     ) -> WrappedTarget:
         """Wrap the call in ``/d/`` (delayed / scheduled firing).
 
-        Either ``at`` (absolute ISO-8601) or ``in_`` (duration like
-        ``"5s"``) — not both. The gateway returns 202 + a schedule
-        id; customers manage the schedule via the schedules
-        namespace (when it lands).
+        Either ``_at`` (absolute ISO-8601) or ``_in`` (duration like
+        ``"5s"``) — not both. Kwarg names match the URL spelling
+        (``?_at`` / ``?_in``). The gateway returns 202 + a schedule
+        id; customers manage the schedule via the schedules namespace
+        (when it lands).
 
         **Gateway-side support pending** (see unitysvc/unitysvc#1126).
         SDK constructs the path; calls fail until the gateway lands.
         """
-        if (at is None) == (in_ is None):
-            raise ValueError("delayed() requires exactly one of `at=<iso-8601>` or `in_=<duration>`")
+        if (_at is None) == (_in is None):
+            raise ValueError("delayed() requires exactly one of `_at=<iso-8601>` or `_in=<duration>`")
         query: dict[str, str] = {}
-        if at is not None:
-            query["_at"] = at
-        if in_ is not None:
-            query["_in"] = in_
+        if _at is not None:
+            query["_at"] = _at
+        if _in is not None:
+            query["_in"] = _in
         path = "d/" + self.path.lstrip("/")
         if query:
             path = f"{path}?{urlencode(query)}"
         return WrappedTarget(path, self._get_client())
 
-    def recurrent(self, *, every: str) -> WrappedTarget:
+    def recurrent(self, *, _every: str) -> WrappedTarget:
         """Wrap the call in ``/r/`` (recurrent firing).
 
-        ``every`` is a duration (``"5m"``, ``"1h"``). The gateway
-        executes inline once and registers the schedule; subsequent
-        firings happen via the scheduled-task worker.
+        ``_every`` is a duration (``"5m"``, ``"1h"``) — matches the
+        URL spelling ``?_every=…``. The gateway executes inline once
+        and registers the schedule; subsequent firings happen via
+        the scheduled-task worker.
 
         **Gateway-side support pending** (see unitysvc/unitysvc#1125).
         SDK constructs the path; calls fail until the gateway lands.
         """
-        path = "r/" + self.path.lstrip("/") + f"?_every={every}"
+        path = "r/" + self.path.lstrip("/") + f"?_every={_every}"
         return WrappedTarget(path, self._get_client())
 
     # ------------------------------------------------------------------
