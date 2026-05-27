@@ -187,6 +187,82 @@ class Client:
         return self._services
 
     # ------------------------------------------------------------------
+    # Dispatch (low-level escape hatch for paths with wrapper primitives)
+    # ------------------------------------------------------------------
+    def dispatch(
+        self,
+        path: str,
+        *,
+        method: str = "POST",
+        json: object = None,
+        data: object = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+    ) -> httpx.Response:
+        """Send a request to a gateway-relative path.
+
+        The typed resource API + fluent wrappers is the recommended
+        way to call resources the SDK models:
+
+        - ``client.services.dispatch(svc_id, ...)`` — interface-aware
+          dispatch for a Service.
+        - ``svc.cached(ttl="1h").logged().dispatch(json=body)`` —
+          fluent composition of wrapper primitives on a Service.
+
+        ``client.dispatch`` is the lower-level escape hatch for paths
+        the typed API doesn't construct:
+
+        - Paths the customer has built themselves, possibly with
+          wrapper primitives already in them
+          (``client.dispatch("l/p/<id>?_complete=", json=body)``).
+        - Future route primitives the SDK doesn't yet have typed
+          methods for.
+
+        ``path`` must be gateway-relative (no scheme, no leading
+        slash) — e.g. ``"p/<service-id>"``, ``"a/<alias-id>"``,
+        ``"g/<group>"``, ``"l/p/<service-id>"``. To construct wrapped
+        paths programmatically without the fluent API, use
+        :func:`unitysvc._wrappers.build_wrapped_path`.
+
+        Resolves the gateway base URL from ``api_base_url`` (set via
+        the constructor or ``UNITYSVC_API_BASE_URL`` env var) and
+        falls back to deriving it from the control-plane base
+        (stripping the trailing ``/v1``) when not explicitly set.
+        Raises ``ValueError`` when neither is resolvable.
+        """
+        from .groups import _http_dispatch
+
+        gateway_root = self.api_base_url
+        if not gateway_root:
+            # Derive from the control-plane base URL by stripping the
+            # ``/v1`` suffix. ``https://api.unitysvc.com/v1`` →
+            # ``https://api.unitysvc.com``. Same host in the
+            # all-in-one deployment shape; split deployments must
+            # set ``api_base_url`` (or ``UNITYSVC_API_BASE_URL``)
+            # explicitly.
+            stripped = self._base_url.rstrip("/")
+            if stripped.endswith("/v1"):
+                stripped = stripped[: -len("/v1")]
+            gateway_root = stripped
+        if not gateway_root:
+            raise ValueError(
+                "Cannot resolve gateway base URL. Set api_base_url= on "
+                "the Client constructor or UNITYSVC_API_BASE_URL in the "
+                "environment."
+            )
+
+        return _http_dispatch(
+            self._client,
+            base_url=gateway_root,
+            path=path,
+            method=method,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout,
+        )
+
+    # ------------------------------------------------------------------
     # Resolve (one-shot primitive, not a resource namespace)
     # ------------------------------------------------------------------
     def resolve(

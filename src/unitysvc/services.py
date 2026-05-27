@@ -25,6 +25,7 @@ from uuid import UUID
 
 from ._http import unwrap
 from ._streaming import StreamingResponse, build_stream_kwargs
+from ._wrappers import _Wrappable
 from .groups import _http_dispatch
 
 if TYPE_CHECKING:
@@ -39,7 +40,7 @@ if TYPE_CHECKING:
     from .enrollments import Enrollment
 
 
-class Service:
+class Service(_Wrappable):
     """Active-record wrapper around a service.
 
     Forwards field access (``svc.id``, ``svc.name``,
@@ -53,6 +54,15 @@ class Service:
     - :meth:`dispatch` — send a one-shot request through the picked
       interface.
     - :meth:`schedule` — register a recurring dispatch.
+
+    Inherits from :class:`~unitysvc._wrappers._Wrappable`, so the
+    gateway-native wrapper primitives are available as chainable
+    methods: ``svc.logged()``, ``svc.cached(ttl="1h")``,
+    ``svc.with_failover(other_svc)``, ``svc.with_tee(audit_svc)``,
+    ``svc.delayed(in_="5s")``, ``svc.recurrent(every="5m")``. Each
+    returns a :class:`~unitysvc._wrappers.WrappedTarget` that can be
+    dispatched directly or handed to another resource's
+    ``add_target`` / ``add_step`` as the stored target path.
 
     Returned by :meth:`Services.get` and as items inside the page
     returned by :meth:`Groups.services`.
@@ -70,6 +80,15 @@ class Service:
     def __repr__(self) -> str:
         raw = object.__getattribute__(self, "_raw")
         return f"<Service id={raw.id!r} name={raw.name!r}>"
+
+    # _Wrappable interface — provides the wrapper-primitive methods.
+    @property
+    def path(self) -> str:
+        """Gateway-relative path for this service: ``p/<id>``."""
+        return f"p/{object.__getattribute__(self, '_raw').id}"
+
+    def _get_client(self) -> Client:
+        return object.__getattribute__(self, "_parent")
 
     def interfaces(self) -> list[AccessInterface]:
         """List access interfaces for this service. See :meth:`Services.interfaces`."""
@@ -160,13 +179,9 @@ class Service:
         :class:`~unitysvc.enrollments.Enrollment` ready for
         ``.refresh()`` / ``.cancel()``.
         """
-        return self._parent.enrollments.create(
-            service_id=self._raw.id, parameters=parameters
-        )
+        return self._parent.enrollments.create(service_id=self._raw.id, parameters=parameters)
 
-    def required_secrets(
-        self, *, interface: str | UUID | None = None
-    ) -> list[str]:
+    def required_secrets(self, *, interface: str | UUID | None = None) -> list[str]:
         """Customer secrets the picked interface requires for dispatch.
 
         These are secret *names* (e.g. ``"OPENAI_API_KEY"``) that must
@@ -179,14 +194,10 @@ class Service:
         :meth:`dispatch` would default to (auto-pick rule). Pass
         ``interface="<name>"`` to inspect a specific kind.
         """
-        iface = self._parent.services._pick_interface(
-            self._raw.id, interface=interface, enrollment=None
-        )
+        iface = self._parent.services._pick_interface(self._raw.id, interface=interface, enrollment=None)
         return list(iface.customer_secrets_needed or [])
 
-    def optional_secrets(
-        self, *, interface: str | UUID | None = None
-    ) -> list[Any]:
+    def optional_secrets(self, *, interface: str | UUID | None = None) -> list[Any]:
         """Customer secrets the picked interface can use but doesn't require.
 
         Each entry is a ``{"name": str, "default": str}`` mapping —
@@ -194,9 +205,7 @@ class Service:
         hasn't set ``name``. See :meth:`required_secrets` for the
         interface-resolution rule.
         """
-        iface = self._parent.services._pick_interface(
-            self._raw.id, interface=interface, enrollment=None
-        )
+        iface = self._parent.services._pick_interface(self._raw.id, interface=interface, enrollment=None)
         return list(iface.customer_secrets_optional or [])
 
 
@@ -279,6 +288,13 @@ class Services:
         Upstream 4xx/5xx responses are returned as-is; the caller is
         responsible for inspecting ``.status_code``.
 
+        For wrapper primitives (log, cache, failover, tee), use the
+        fluent API on the active-record :class:`Service` instead:
+        ``svc.cached(ttl="1h").logged().dispatch(json=body)``. The
+        fluent API doesn't carry the interface / enrollment selection
+        logic this method does — use this when you need that
+        specifically, the fluent API when you don't.
+
         Args:
             service_id: Service UUID.
             interface: Optional interface selector — name or UUID. Required
@@ -295,6 +311,8 @@ class Services:
         """
         iface = self._pick_interface(service_id, interface=interface, enrollment=enrollment)
         base_url = iface.base_url if isinstance(iface.base_url, str) else None
+        if base_url is None:
+            raise ValueError("Interface has no resolved base_url; cannot dispatch.")
         return _http_dispatch(
             self._client,
             base_url=base_url,
