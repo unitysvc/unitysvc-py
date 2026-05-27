@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Any
 
 from ._http import unwrap
 from ._streaming import StreamingResponse, build_stream_kwargs
+from ._wrappers import LogValue, apply_wrappers
 
 if TYPE_CHECKING:
     import httpx
@@ -278,6 +279,11 @@ class Groups:
         data: Any = None,
         headers: dict[str, str] | None = None,
         timeout: float | None = None,
+        log: LogValue = False,
+        cache_ttl: str | None = None,
+        cache_renew: bool = False,
+        failover_to: str | None = None,
+        tee_to: str | None = None,
     ) -> httpx.Response:
         """Send an HTTP request through the group's gateway interface.
 
@@ -299,6 +305,9 @@ class Groups:
             data: Raw request body (bytes / str / form).
             headers: Extra headers merged on top of the auth header.
             timeout: Per-request timeout in seconds.
+            log / cache_ttl / cache_renew / failover_to / tee_to:
+                Gateway-native wrapper primitives — see
+                :mod:`unitysvc._wrappers` for the full contract.
 
         Returns:
             The raw ``httpx.Response`` from the gateway. Upstream
@@ -319,6 +328,17 @@ class Groups:
                 f"call service.dispatch() on a member service instead."
             )
         base_url = iface.base_url if isinstance(iface.base_url, str) else None
+        if base_url is None:
+            raise ValueError(f"Group {name!r} has no resolved base_url; cannot dispatch.")
+        base_url, path = apply_wrappers(
+            base_url,
+            path,
+            log=log,
+            cache_ttl=cache_ttl,
+            cache_renew=cache_renew,
+            failover_to=failover_to,
+            tee_to=tee_to,
+        )
         return _http_dispatch(
             self._client,
             base_url=base_url,

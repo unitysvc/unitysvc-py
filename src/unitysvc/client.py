@@ -51,6 +51,7 @@ from ._generated.client import AuthenticatedClient as _LowLevelClient
 
 if TYPE_CHECKING:
     from ._generated.models.resolve_response import ResolveResponse
+    from ._wrappers import LogValue
     from .aliases import Aliases
     from .enrollments import Enrollments
     from .groups import Groups
@@ -185,6 +186,101 @@ class Client:
 
             self._services = Services(self._client, parent=self)
         return self._services
+
+    # ------------------------------------------------------------------
+    # Dispatch (low-level escape hatch for paths with wrapper primitives)
+    # ------------------------------------------------------------------
+    def dispatch(
+        self,
+        path: str,
+        *,
+        method: str = "POST",
+        json: object = None,
+        data: object = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+        log: LogValue = False,
+        cache_ttl: str | None = None,
+        cache_renew: bool = False,
+        failover_to: str | None = None,
+        tee_to: str | None = None,
+    ) -> httpx.Response:
+        """Send a request to a gateway-relative path.
+
+        The typed dispatch methods (``client.services.dispatch``,
+        ``client.groups.dispatch``, …) are the recommended way to call
+        a resource the SDK already models — they resolve the right
+        interface and apply auth. ``client.dispatch`` is the
+        lower-level escape hatch for cases the typed methods can't
+        express:
+
+        - Paths the customer has constructed themselves, possibly with
+          wrapper primitives already in them
+          (``client.dispatch("l/p/<id>?_complete", json=body)``).
+        - Compositions across resource types where the typed method
+          doesn't fit the shape.
+        - Future route primitives the SDK doesn't yet have typed
+          methods for.
+
+        ``path`` must be gateway-relative (no scheme, no leading
+        slash) — e.g. ``"p/<service-id>"``, ``"a/<alias-id>"``,
+        ``"g/<group>"``, ``"l/p/<service-id>"``.
+
+        Wrapper kwargs (``log``, ``cache_ttl``, ``cache_renew``,
+        ``failover_to``, ``tee_to``) stack ON TOP of any primitives
+        already in ``path``. See :mod:`unitysvc._wrappers` for the
+        full contract.
+
+        Resolves the gateway base URL from ``api_base_url`` (set via
+        the constructor or ``UNITYSVC_API_BASE_URL`` env var) and
+        falls back to deriving it from the control-plane base
+        (stripping the trailing ``/v1``) when not explicitly set.
+        Raises ``ValueError`` when neither is resolvable.
+        """
+        from ._wrappers import apply_wrappers
+        from .groups import _http_dispatch
+
+        gateway_root = self.api_base_url
+        if not gateway_root:
+            # Derive from the control-plane base URL by stripping the
+            # ``/v1`` suffix. ``https://api.unitysvc.com/v1`` →
+            # ``https://api.unitysvc.com``. Same host in the
+            # all-in-one deployment shape; split deployments must
+            # set ``api_base_url`` (or ``UNITYSVC_API_BASE_URL``)
+            # explicitly.
+            stripped = self._base_url.rstrip("/")
+            if stripped.endswith("/v1"):
+                stripped = stripped[: -len("/v1")]
+            gateway_root = stripped
+        if not gateway_root:
+            raise ValueError(
+                "Cannot resolve gateway base URL. Set api_base_url= on "
+                "the Client constructor or UNITYSVC_API_BASE_URL in the "
+                "environment."
+            )
+
+        # apply_wrappers takes (base_url, path); we pass the gateway
+        # root as base_url and the customer's path as the sub-path so
+        # wrapper segments insert between the host and the path.
+        base_url, wrapped_path = apply_wrappers(
+            gateway_root,
+            path,
+            log=log,
+            cache_ttl=cache_ttl,
+            cache_renew=cache_renew,
+            failover_to=failover_to,
+            tee_to=tee_to,
+        )
+        return _http_dispatch(
+            self._client,
+            base_url=base_url,
+            path=wrapped_path,
+            method=method,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout,
+        )
 
     # ------------------------------------------------------------------
     # Resolve (one-shot primitive, not a resource namespace)
