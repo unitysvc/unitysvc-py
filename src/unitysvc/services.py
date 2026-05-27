@@ -25,7 +25,7 @@ from uuid import UUID
 
 from ._http import unwrap
 from ._streaming import StreamingResponse, build_stream_kwargs
-from ._wrappers import LogValue, apply_wrappers
+from ._wrappers import _Wrappable
 from .groups import _http_dispatch
 
 if TYPE_CHECKING:
@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from .enrollments import Enrollment
 
 
-class Service:
+class Service(_Wrappable):
     """Active-record wrapper around a service.
 
     Forwards field access (``svc.id``, ``svc.name``,
@@ -54,6 +54,15 @@ class Service:
     - :meth:`dispatch` — send a one-shot request through the picked
       interface.
     - :meth:`schedule` — register a recurring dispatch.
+
+    Inherits from :class:`~unitysvc._wrappers._Wrappable`, so the
+    gateway-native wrapper primitives are available as chainable
+    methods: ``svc.logged()``, ``svc.cached(ttl="1h")``,
+    ``svc.with_failover(other_svc)``, ``svc.with_tee(audit_svc)``,
+    ``svc.delayed(in_="5s")``, ``svc.recurrent(every="5m")``. Each
+    returns a :class:`~unitysvc._wrappers.WrappedTarget` that can be
+    dispatched directly or handed to another resource's
+    ``add_target`` / ``add_step`` as the stored target path.
 
     Returned by :meth:`Services.get` and as items inside the page
     returned by :meth:`Groups.services`.
@@ -71,6 +80,15 @@ class Service:
     def __repr__(self) -> str:
         raw = object.__getattribute__(self, "_raw")
         return f"<Service id={raw.id!r} name={raw.name!r}>"
+
+    # _Wrappable interface — provides the wrapper-primitive methods.
+    @property
+    def path(self) -> str:
+        """Gateway-relative path for this service: ``p/<id>``."""
+        return f"p/{object.__getattribute__(self, '_raw').id}"
+
+    def _get_client(self) -> Client:
+        return object.__getattribute__(self, "_parent")
 
     def interfaces(self) -> list[AccessInterface]:
         """List access interfaces for this service. See :meth:`Services.interfaces`."""
@@ -262,11 +280,6 @@ class Services:
         data: Any = None,
         headers: dict[str, str] | None = None,
         timeout: float | None = None,
-        log: LogValue = False,
-        cache_ttl: str | None = None,
-        cache_renew: bool = False,
-        failover_to: str | None = None,
-        tee_to: str | None = None,
     ) -> httpx.Response:
         """Send an HTTP request to the service through its gateway interface.
 
@@ -274,6 +287,13 @@ class Services:
         POSTs to its ``base_url`` using the client's svcpass API key.
         Upstream 4xx/5xx responses are returned as-is; the caller is
         responsible for inspecting ``.status_code``.
+
+        For wrapper primitives (log, cache, failover, tee), use the
+        fluent API on the active-record :class:`Service` instead:
+        ``svc.cached(ttl="1h").logged().dispatch(json=body)``. The
+        fluent API doesn't carry the interface / enrollment selection
+        logic this method does — use this when you need that
+        specifically, the fluent API when you don't.
 
         Args:
             service_id: Service UUID.
@@ -288,32 +308,11 @@ class Services:
             json / data: Request body (mutually exclusive).
             headers: Extra headers merged on top of the auth header.
             timeout: Per-request timeout in seconds.
-            log: Per-call request-log opt-in (``True`` or ``"complete"``).
-                See :mod:`unitysvc._wrappers` for the full kwarg
-                contract shared with ``groups.dispatch`` and
-                ``client.dispatch``.
-            cache_ttl: Cache the response for the given duration
-                (``"60s"`` / ``"5m"`` / ``"1h"``). ``None`` (default)
-                disables caching.
-            cache_renew: Force a fresh upstream + overwrite the cache.
-            failover_to: Gateway-relative secondary path for the
-                ``/f/`` failover wrapper.
-            tee_to: Gateway-relative secondary path for the ``/t/``
-                fire-and-forget tee wrapper.
         """
         iface = self._pick_interface(service_id, interface=interface, enrollment=enrollment)
         base_url = iface.base_url if isinstance(iface.base_url, str) else None
         if base_url is None:
             raise ValueError("Interface has no resolved base_url; cannot dispatch.")
-        base_url, path = apply_wrappers(
-            base_url,
-            path,
-            log=log,
-            cache_ttl=cache_ttl,
-            cache_renew=cache_renew,
-            failover_to=failover_to,
-            tee_to=tee_to,
-        )
         return _http_dispatch(
             self._client,
             base_url=base_url,

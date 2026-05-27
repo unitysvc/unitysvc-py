@@ -1,6 +1,6 @@
 """Helpers for the gateway-native wrapper primitives (#1129, #1135).
 
-Four URL-prefix wrappers compose freely at the front of any gateway path:
+Six URL-prefix wrappers compose freely at the front of any gateway path:
 
 ``/l/`` log
     Per-call request-log capture. ``log=True`` → ``/l/``;
@@ -8,46 +8,61 @@ Four URL-prefix wrappers compose freely at the front of any gateway path:
     S3 overflow for bodies > 8 KB).
 
 ``/m/`` memoize
-    Customer-scoped Redis cache. ``cache_ttl="1h"`` → ``/m/?_ttl=1h``;
-    ``cache_renew=True`` adds ``?_renew`` to force a fresh upstream
-    call. Default TTL 1h; max 7d.
+    Customer-scoped Redis cache. ``cached(ttl="1h")`` → ``/m/?_ttl=1h``;
+    ``renew=True`` adds ``?_renew`` to force a fresh upstream call.
+    Default TTL 1h; max 7d.
 
 ``/f/`` failover
     On primary 5xx / 429 / timeout, retry the secondary.
-    ``failover_to="p/<id>"`` → ``/f/?_else=p/<id>``. Secondary MUST be
-    a gateway-relative path; external URLs raise ``ValueError``.
+    ``with_failover(secondary)`` → ``/f/?_else=<secondary.path>``.
 
 ``/t/`` tee
-    Fire-and-forget copy to a secondary listing. ``tee_to="p/<id>"`` →
-    ``/t/?_to=p/<id>``. Same relative-path constraint as ``/f/``.
+    Fire-and-forget copy to a secondary listing.
+    ``with_tee(secondary)`` → ``/t/?_to=<secondary.path>``.
 
-URL order has no semantic effect — the gateway applies wrappers at
-fixed pipeline phases. Stacking is unlimited; we always emit them in
-``l m f t`` order for predictable URLs but the customer's order in the
-URL doesn't change behavior either.
+``/d/`` delayed *(gateway-side pending)*
+    Schedule a one-shot future firing.
 
-This module exposes two helpers:
+``/r/`` recurrent *(gateway-side pending)*
+    Schedule a recurring firing.
 
-- :func:`build_wrapped_path` — pure string transformation; takes a
-  base gateway path and the wrapper kwargs, returns the wrapped path
-  (prefix + query). No URL parsing.
-- :func:`apply_wrappers` — convenience for SDK call sites that hold a
-  full URL (``https://api.unitysvc.com/p/<id>``) and want to inject
-  wrapper segments between the host and the path. Returns
-  ``(gateway_root, wrapped_path)`` ready to feed to ``_http_dispatch``.
+This module exposes the fluent API and the underlying string helpers
+that both build it and the customer escape hatch (`client.dispatch`).
+
+Fluent API entry points:
+
+- :class:`_Wrappable` — mixin providing the wrapper builder methods.
+  Mixed into Service, Group, and (via inheritance) WrappedTarget.
+  Any class with a ``path`` property + ``_get_client()`` becomes
+  composable.
+- :class:`WrappedTarget` — the return type of every wrapper builder
+  method. Holds a gateway path with one or more wrappers applied;
+  supports chaining (same wrapper methods on it) and direct dispatch.
+
+Underlying string helpers (used by the fluent API and exposed for
+power users who want to construct paths themselves):
+
+- :func:`build_wrapped_path` — pure string transformation: take a
+  base path and wrapper config, return the wrapped path.
+- :func:`_check_relative` — validator rejecting external URLs in
+  secondary-path values.
 """
 
 from __future__ import annotations
 
-from typing import Any, Literal
-from urllib.parse import urlencode, urlparse
+from typing import TYPE_CHECKING, Any, Literal
+from urllib.parse import urlencode
 
-# Type alias for the ``log`` kwarg's domain.
+if TYPE_CHECKING:
+    import httpx
+
+    from .client import Client
+
 LogValue = bool | Literal["complete"]
 
 
 def _check_relative(value: str, kwarg_name: str) -> None:
-    """Reject external URLs in ``failover_to`` / ``tee_to`` at SDK call time.
+    """Reject external URLs in secondary-path kwargs at SDK call time.
 
     Same constraint the gateway enforces — secondaries must be
     gateway-relative paths so billing, auth, and composition all work.
@@ -67,6 +82,7 @@ def build_wrapped_path(
     base_path: str,
     *,
     log: LogValue = False,
+    cache: bool = False,
     cache_ttl: str | None = None,
     cache_renew: bool = False,
     failover_to: str | None = None,
@@ -74,11 +90,17 @@ def build_wrapped_path(
 ) -> str:
     """Prepend wrapper segments + append wrapper-controlled query params.
 
-    Returns the input unchanged when no wrapper kwargs are set, so
+    Returns the input unchanged when no wrapper config is set, so
     callers can blindly pass through without checking. Wrappers are
-    emitted in ``l m f t`` order — but URL order has no semantic
-    effect at the gateway, so callers stacking their own primitives
-    on top (``base_path="l/p/foo"``) just get more layers prepended.
+    emitted in ``l m f t`` order — but the gateway treats URL order
+    as cosmetic, so a customer chaining ``svc.cached().logged()``
+    sees the SAME on-wire behaviour as ``svc.logged().cached()``.
+    The internal canonical form is deterministic, which makes path
+    comparison stable across the SDK.
+
+    ``cache=True`` triggers the ``/m/`` prefix even when no TTL is
+    set (gateway uses its default). ``cache_ttl`` / ``cache_renew``
+    also imply the prefix.
     """
     prefix_parts: list[str] = []
     query: dict[str, str] = {}
@@ -87,9 +109,10 @@ def build_wrapped_path(
         if log == "complete":
             # Presence-only convention: ``?_complete`` with empty value.
             query["_complete"] = ""
-    if cache_ttl is not None:
+    if cache or cache_ttl is not None or cache_renew:
         prefix_parts.append("m")
-        query["_ttl"] = cache_ttl
+        if cache_ttl is not None:
+            query["_ttl"] = cache_ttl
         if cache_renew:
             query["_renew"] = ""
     if failover_to is not None:
@@ -105,106 +128,211 @@ def build_wrapped_path(
     if prefix_parts:
         path = "/".join(prefix_parts) + ("/" + path if path else "/")
     if query:
-        # urlencode("_complete=") produces "_complete=" which the
-        # gateway treats as presence (any non-nil value is enough).
         path = f"{path}?{urlencode(query)}"
     return path
 
 
-def has_wrappers(
-    *,
-    log: LogValue,
-    cache_ttl: str | None,
-    cache_renew: bool,
-    failover_to: str | None,
-    tee_to: str | None,
-) -> bool:
-    """``True`` iff any wrapper kwarg is set to a non-default value."""
-    return bool(log) or cache_ttl is not None or cache_renew or failover_to is not None or tee_to is not None
+class _Wrappable:
+    """Mixin that gives a resource the fluent wrapper-builder methods.
 
+    Implementing classes (Service, Group, WrappedTarget, future
+    Alias/Broadcast/Chain active records) must provide:
 
-def apply_wrappers(
-    base_url: str,
-    path: str,
-    *,
-    log: LogValue = False,
-    cache_ttl: str | None = None,
-    cache_renew: bool = False,
-    failover_to: str | None = None,
-    tee_to: str | None = None,
-) -> tuple[str, str]:
-    """Split a full gateway URL + optional sub-path; apply wrappers.
+    - ``path`` — the gateway-relative path representing this resource
+      (no leading slash, no scheme). For Service that's ``"p/<id>"``;
+      for Alias ``"a/<id>"``; for WrappedTarget the stored wrapped
+      string.
+    - ``_get_client()`` — return the :class:`Client` instance used to
+      construct WrappedTarget children and to dispatch.
 
-    Used by ``services.dispatch`` / ``groups.dispatch`` where
-    ``base_url`` is the resolved interface URL (e.g.,
-    ``https://api.unitysvc.com/p/<id>``) and ``path`` is an optional
-    sub-path. Wrapper segments need to land between the host and the
-    ``p/<id>`` portion; this helper does the parse, applies the
-    transformation, and returns ``(gateway_root, wrapped_path)`` ready
-    to feed back through ``_http_dispatch``.
+    The wrapper-builder methods (:meth:`logged`, :meth:`cached`,
+    :meth:`with_failover`, :meth:`with_tee`, :meth:`delayed`,
+    :meth:`recurrent`) all return :class:`WrappedTarget`, so chaining
+    is unbounded:
 
-    Fast path: when no wrapper kwargs are set, returns
-    ``(base_url, path)`` unchanged so the call site doesn't pay for a
-    URL parse on every dispatch.
+        svc.cached(ttl="1h").logged().with_failover(backup).dispatch(json=body)
+
+    ``with_failover`` and ``with_tee`` accept any :class:`_Wrappable`
+    as the secondary — Service, Alias, Group, Broadcast, Chain, or
+    another WrappedTarget — so customers compose across resource
+    types without thinking about URL syntax.
     """
-    if not has_wrappers(
-        log=log,
-        cache_ttl=cache_ttl,
-        cache_renew=cache_renew,
-        failover_to=failover_to,
-        tee_to=tee_to,
-    ):
-        return base_url, path
 
-    parsed = urlparse(base_url)
-    gateway_root = f"{parsed.scheme}://{parsed.netloc}"
-    base_path = parsed.path.lstrip("/")
-    if path:
-        if base_path:
-            base_path = f"{base_path.rstrip('/')}/{path.lstrip('/')}"
-        else:
-            base_path = path.lstrip("/")
-    wrapped = build_wrapped_path(
-        base_path,
-        log=log,
-        cache_ttl=cache_ttl,
-        cache_renew=cache_renew,
-        failover_to=failover_to,
-        tee_to=tee_to,
-    )
-    return gateway_root, wrapped
+    # Subclasses implement these two.
+    @property
+    def path(self) -> str:
+        raise NotImplementedError
+
+    def _get_client(self) -> Client:
+        raise NotImplementedError
+
+    # ------------------------------------------------------------------
+    # Wrapper builders — each returns a new WrappedTarget
+    # ------------------------------------------------------------------
+    def logged(self, *, complete: bool = False) -> WrappedTarget:
+        """Wrap the call in ``/l/`` request-log capture.
+
+        ``complete=True`` escalates to full request/response capture
+        with S3 overflow for bodies > 8 KB.
+        """
+        log_value: LogValue = "complete" if complete else True
+        return WrappedTarget(
+            build_wrapped_path(self.path, log=log_value),
+            self._get_client(),
+        )
+
+    def cached(self, *, ttl: str | None = None, renew: bool = False) -> WrappedTarget:
+        """Wrap the call in ``/m/`` Redis-backed memoization.
+
+        ``ttl`` accepts the gateway's duration syntax (``"60s"``,
+        ``"5m"``, ``"1h"``, ``"1d"``). Defaults to 1 h on the gateway
+        if omitted; max 7 d.
+
+        ``renew=True`` forces a fresh upstream call and overwrites any
+        cached entry.
+        """
+        return WrappedTarget(
+            build_wrapped_path(
+                self.path,
+                cache=True,
+                cache_ttl=ttl,
+                cache_renew=renew,
+            ),
+            self._get_client(),
+        )
+
+    def with_failover(self, secondary: _Wrappable) -> WrappedTarget:
+        """Wrap the call in ``/f/`` failover to ``secondary``.
+
+        On primary 5xx / 429 / timeout, the gateway retries the
+        secondary's path. ``secondary`` is any :class:`_Wrappable` —
+        another Service, Alias, Group, Broadcast, Chain, or
+        WrappedTarget (compose secondaries with wrappers of their
+        own: ``svc.with_failover(other.cached(ttl="1h"))``).
+        """
+        return WrappedTarget(
+            build_wrapped_path(self.path, failover_to=secondary.path),
+            self._get_client(),
+        )
+
+    def with_tee(self, secondary: _Wrappable) -> WrappedTarget:
+        """Wrap the call in ``/t/`` fire-and-forget tee.
+
+        The primary's response is returned transparently to the
+        customer; the secondary fires asynchronously and its outcome
+        is discarded (the audit row in ``request_logs`` survives).
+        ``secondary`` is any :class:`_Wrappable`.
+        """
+        return WrappedTarget(
+            build_wrapped_path(self.path, tee_to=secondary.path),
+            self._get_client(),
+        )
+
+    def delayed(
+        self,
+        *,
+        at: str | None = None,
+        in_: str | None = None,
+    ) -> WrappedTarget:
+        """Wrap the call in ``/d/`` (delayed / scheduled firing).
+
+        Either ``at`` (absolute ISO-8601) or ``in_`` (duration like
+        ``"5s"``) — not both. The gateway returns 202 + a schedule
+        id; customers manage the schedule via the schedules
+        namespace (when it lands).
+
+        **Gateway-side support pending** (see unitysvc/unitysvc#1126).
+        SDK constructs the path; calls fail until the gateway lands.
+        """
+        if (at is None) == (in_ is None):
+            raise ValueError("delayed() requires exactly one of `at=<iso-8601>` or `in_=<duration>`")
+        query: dict[str, str] = {}
+        if at is not None:
+            query["_at"] = at
+        if in_ is not None:
+            query["_in"] = in_
+        path = "d/" + self.path.lstrip("/")
+        if query:
+            path = f"{path}?{urlencode(query)}"
+        return WrappedTarget(path, self._get_client())
+
+    def recurrent(self, *, every: str) -> WrappedTarget:
+        """Wrap the call in ``/r/`` (recurrent firing).
+
+        ``every`` is a duration (``"5m"``, ``"1h"``). The gateway
+        executes inline once and registers the schedule; subsequent
+        firings happen via the scheduled-task worker.
+
+        **Gateway-side support pending** (see unitysvc/unitysvc#1125).
+        SDK constructs the path; calls fail until the gateway lands.
+        """
+        path = "r/" + self.path.lstrip("/") + f"?_every={every}"
+        return WrappedTarget(path, self._get_client())
+
+    # ------------------------------------------------------------------
+    # Dispatch — implemented by ``WrappedTarget`` (generic) and by
+    # individual resource classes (Service, Group) with their own
+    # routing nuances (interface selection, etc.).
+    # ------------------------------------------------------------------
 
 
-# Common kwarg signature exported so callers can re-type their
-# dispatch methods without duplicating annotations.
-_WRAPPER_KWARGS_DOC = """\
-log: Per-call request-log opt-in. ``True`` → ``/l/`` (force-log this
-    request); ``"complete"`` → ``/l/?_complete`` (full body capture
-    with S3 overflow for bodies > 8 KB). Default ``False`` (no wrap).
-cache_ttl: TTL for the ``/m/`` memoize wrapper, e.g. ``"60s"``,
-    ``"5m"``, ``"1h"``, ``"1d"``. ``None`` (default) disables caching.
-    Max 7d enforced by the gateway.
-cache_renew: When ``True``, ``/m/`` forces a fresh upstream call and
-    overwrites any cached entry. No effect when ``cache_ttl`` is not
-    set.
-failover_to: Gateway-relative secondary path (e.g.
-    ``"p/<service-id>"``) for the ``/f/`` failover wrapper. On
-    primary 5xx / 429 / timeout the gateway retries this path and
-    returns its response. External URLs raise ``ValueError``.
-tee_to: Gateway-relative secondary path for ``/t/`` fire-and-forget
-    tee. The primary's response is returned transparently; the
-    secondary fires asynchronously via ngx.timer.at. External URLs
-    raise ``ValueError``.
-"""
+class WrappedTarget(_Wrappable):
+    """A gateway-relative path with zero or more wrappers applied.
 
+    Returned by every :class:`_Wrappable` wrapper-builder method.
+    Two things you do with one:
 
-# Helper for type-stub generation / introspection; not part of the
-# public API.
-def _wrapper_kwargs_for(_obj: Any) -> dict[str, Any]:
-    return {
-        "log": False,
-        "cache_ttl": None,
-        "cache_renew": False,
-        "failover_to": None,
-        "tee_to": None,
-    }
+    1. **Dispatch directly** — ``wrapped.dispatch(json=body)`` sends
+       a request through the wrapper stack.
+    2. **Hand to another resource** — ``alias.add_target(wrapped)``
+       stores ``wrapped.path`` as the target's address. The wrapper
+       primitives in the stored path fire on every invocation of
+       the alias (gateway-side support tracked in
+       unitysvc/unitysvc#1137).
+
+    Same wrapper-builder methods on it as on bare resources, so
+    customers chain freely: ``svc.cached(ttl="1h").logged()`` and
+    ``svc.cached(ttl="1h").logged().with_failover(backup)`` are both
+    valid.
+    """
+
+    __slots__ = ("_path", "_client")
+
+    def __init__(self, path: str, client: Client) -> None:
+        self._path = path
+        self._client = client
+
+    @property
+    def path(self) -> str:
+        return self._path
+
+    def _get_client(self) -> Client:
+        return self._client
+
+    def __repr__(self) -> str:
+        return f"<WrappedTarget path={self._path!r}>"
+
+    def dispatch(
+        self,
+        *,
+        method: str = "POST",
+        json: Any = None,
+        data: Any = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+    ) -> httpx.Response:
+        """Send a request through this wrapped path.
+
+        Generic dispatch — uses :meth:`Client.dispatch` directly with
+        ``self.path``. For interface-aware dispatch on a Service
+        (multi-enrollment selection), call ``Service.dispatch`` on
+        the underlying Service instead.
+        """
+        return self._client.dispatch(
+            self._path,
+            method=method,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout,
+        )

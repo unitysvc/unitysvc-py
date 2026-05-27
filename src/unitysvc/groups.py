@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, Any
 
 from ._http import unwrap
 from ._streaming import StreamingResponse, build_stream_kwargs
-from ._wrappers import LogValue, apply_wrappers
+from ._wrappers import _Wrappable
 
 if TYPE_CHECKING:
     import httpx
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     from .services import Service
 
 
-class Group:
+class Group(_Wrappable):
     """Active-record wrapper around a service group.
 
     Forwards field access (``grp.name``, ``grp.routing_policy``,
@@ -51,6 +51,12 @@ class Group:
 
     - :meth:`services` — list member services of this group.
     - :meth:`dispatch` — HTTP-POST through the group-level interface.
+
+    Inherits from :class:`~unitysvc._wrappers._Wrappable`, so the
+    gateway-native wrapper primitives are available as chainable
+    methods: ``grp.logged()``, ``grp.cached(ttl="1h")``,
+    ``grp.with_failover(other_grp)``, etc. — see :class:`Service`
+    for the full list.
 
     Cheap to construct: holds only references to the raw record and
     the parent client. Returned by :meth:`Groups.get`,
@@ -72,6 +78,15 @@ class Group:
     def __repr__(self) -> str:
         raw = object.__getattribute__(self, "_raw")
         return f"<Group name={raw.name!r}>"
+
+    # _Wrappable interface — provides the wrapper-primitive methods.
+    @property
+    def path(self) -> str:
+        """Gateway-relative path for this group: ``g/<name>``."""
+        return f"g/{object.__getattribute__(self, '_raw').name}"
+
+    def _get_client(self) -> Client:
+        return object.__getattribute__(self, "_parent")
 
     def services(
         self,
@@ -279,11 +294,6 @@ class Groups:
         data: Any = None,
         headers: dict[str, str] | None = None,
         timeout: float | None = None,
-        log: LogValue = False,
-        cache_ttl: str | None = None,
-        cache_renew: bool = False,
-        failover_to: str | None = None,
-        tee_to: str | None = None,
     ) -> httpx.Response:
         """Send an HTTP request through the group's gateway interface.
 
@@ -295,6 +305,10 @@ class Groups:
         parameter is needed because groups have at most one
         user-facing interface.
 
+        For wrapper primitives, use the fluent API on the
+        active-record :class:`Group`:
+        ``grp.cached(ttl="1h").dispatch(json=body)``.
+
         Args:
             name: Group slug.
             path: Optional sub-path appended to ``interface.base_url``
@@ -305,9 +319,6 @@ class Groups:
             data: Raw request body (bytes / str / form).
             headers: Extra headers merged on top of the auth header.
             timeout: Per-request timeout in seconds.
-            log / cache_ttl / cache_renew / failover_to / tee_to:
-                Gateway-native wrapper primitives — see
-                :mod:`unitysvc._wrappers` for the full contract.
 
         Returns:
             The raw ``httpx.Response`` from the gateway. Upstream
@@ -330,15 +341,6 @@ class Groups:
         base_url = iface.base_url if isinstance(iface.base_url, str) else None
         if base_url is None:
             raise ValueError(f"Group {name!r} has no resolved base_url; cannot dispatch.")
-        base_url, path = apply_wrappers(
-            base_url,
-            path,
-            log=log,
-            cache_ttl=cache_ttl,
-            cache_renew=cache_renew,
-            failover_to=failover_to,
-            tee_to=tee_to,
-        )
         return _http_dispatch(
             self._client,
             base_url=base_url,
