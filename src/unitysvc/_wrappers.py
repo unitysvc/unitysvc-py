@@ -8,8 +8,8 @@ Six URL-prefix wrappers compose freely at the front of any gateway path:
     S3 overflow for bodies > 8 KB).
 
 ``/m/`` memoize
-    Customer-scoped Redis cache. ``cached(ttl="1h")`` → ``/m/?_ttl=1h``;
-    ``renew=True`` adds ``?_renew`` to force a fresh upstream call.
+    Customer-scoped Redis cache. ``cached(_ttl="1h")`` → ``/m/?_ttl=1h``;
+    ``_renew=True`` adds ``?_renew`` to force a fresh upstream call.
     Default TTL 1h; max 7d.
 
 ``/f/`` failover
@@ -150,7 +150,7 @@ class _Wrappable:
     :meth:`recurrent`) all return :class:`WrappedTarget`, so chaining
     is unbounded:
 
-        svc.cached(ttl="1h").logged().with_failover(backup).dispatch(json=body)
+        svc.cached(_ttl="1h").logged().with_failover(backup).dispatch(json=body)
 
     ``with_failover`` and ``with_tee`` accept any :class:`_Wrappable`
     as the secondary — Service, Alias, Group, Broadcast, Chain, or
@@ -298,8 +298,8 @@ class WrappedTarget(_Wrappable):
        unitysvc/unitysvc#1137).
 
     Same wrapper-builder methods on it as on bare resources, so
-    customers chain freely: ``svc.cached(ttl="1h").logged()`` and
-    ``svc.cached(ttl="1h").logged().with_failover(backup)`` are both
+    customers chain freely: ``svc.cached(_ttl="1h").logged()`` and
+    ``svc.cached(_ttl="1h").logged().with_failover(backup)`` are both
     valid.
     """
 
