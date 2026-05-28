@@ -851,7 +851,7 @@
           "customer-groups"
         ],
         "summary": "List Groups",
-        "description": "List service groups visible to the customer as a single flat list.\n\nMerges two kinds of rows into one ``CustomerGroupView`` shape:\n\n- **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)\n  \u2014 active platform groups with at least one service. Excludes\n  draft/archived/private groups, empty nodes, and seller-owned\n  groups. ``member_count`` comes from the cached ``num_services``.\n  Ordered with ``misc`` groups last, then by ``sort_order``, then\n  alphabetically by name \u2014 matching the marketplace browse order.\n- **Own collections** (``owner_type=\"customer\"``, ``editable=True``)\n  \u2014 the customer's own ``ServiceCollection`` rows. ``member_count``\n  is counted live.\n\nThe ``owner`` filter narrows this: ``system`` returns platform\ngroups only, ``own`` returns collections only, ``all`` (default)\nreturns both (platform first, then collections).",
+        "description": "List service groups visible to the customer as a ``{data, count}``\nenvelope.\n\nMerges two kinds of rows into one ``CustomerGroupView`` shape under\n``data`` (``count`` is ``len(data)``):\n\n- **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)\n  \u2014 active platform groups with at least one service. Excludes\n  draft/archived/private groups, empty nodes, and seller-owned\n  groups. ``member_count`` comes from the cached ``num_services``.\n  Ordered with ``misc`` groups last, then by ``sort_order``, then\n  alphabetically by name \u2014 matching the marketplace browse order.\n- **Own collections** (``owner_type=\"customer\"``, ``editable=True``)\n  \u2014 the customer's own ``ServiceCollection`` rows. ``member_count``\n  is counted live.\n\nThe ``owner`` filter narrows this: ``system`` returns platform\ngroups only, ``own`` returns collections only, ``all`` (default)\nreturns both (platform first, then collections).",
         "operationId": "customer-groups-list_groups",
         "parameters": [
           {
@@ -924,11 +924,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CustomerGroupView"
-                  },
-                  "title": "Response Customer-Groups-List Groups"
+                  "$ref": "#/components/schemas/CustomerGroupListResponse"
                 }
               }
             }
@@ -3613,6 +3609,28 @@
         ],
         "title": "CustomerGroupDetail",
         "description": "Unified detail shape for a single group from /customer/groups \u2014 a\nread-only platform group or the customer's own editable collection.\nSame fields for both; type-specific fields are null for the other type."
+      },
+      "CustomerGroupListResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/CustomerGroupView"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "CustomerGroupListResponse",
+        "description": "Envelope for the unified groups list. ``data`` items are\n``CustomerGroupView`` (platform + own); ``count`` is len(data)."
       },
       "CustomerGroupView": {
         "properties": {

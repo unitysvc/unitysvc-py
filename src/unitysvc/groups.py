@@ -213,7 +213,8 @@ class Groups:
 
         Returns platform groups plus the customer's own editable
         collections. The visible set is small and bounded — the
-        endpoint is not paginated and now returns a flat list.
+        endpoint is not paginated and returns a ``{data, count}``
+        envelope.
 
         ``owner`` narrows the server-side result set: ``"all"``
         (platform + own, default), ``"system"`` (platform only), or
@@ -232,11 +233,12 @@ class Groups:
                 owner=owner,
             )
         )
-        items = list(raw)
+        data = [Group(item, parent=self._parent) for item in raw.data]
+        count = raw.count
         if name is not None:
-            items = [item for item in items if name in item.name]
-        data = [Group(item, parent=self._parent) for item in items]
-        return GroupListPage(data=data, count=len(data))
+            data = [g for g in data if name in g.name]
+            count = len(data)
+        return GroupListPage(data=data, count=count)
 
     def get(self, name: str) -> Group:
         """Get a single group by its slug name."""

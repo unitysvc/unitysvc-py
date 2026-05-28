@@ -6,7 +6,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.customer_group_view import CustomerGroupView
+from ...models.customer_group_list_response import CustomerGroupListResponse
 from ...models.http_validation_error import HTTPValidationError
 from ...types import UNSET, Response, Unset
 
@@ -50,14 +50,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | list[CustomerGroupView] | None:
+) -> CustomerGroupListResponse | HTTPValidationError | None:
     if response.status_code == 200:
-        response_200 = []
-        _response_200 = response.json()
-        for response_200_item_data in _response_200:
-            response_200_item = CustomerGroupView.from_dict(response_200_item_data)
-
-            response_200.append(response_200_item)
+        response_200 = CustomerGroupListResponse.from_dict(response.json())
 
         return response_200
 
@@ -74,7 +69,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | list[CustomerGroupView]]:
+) -> Response[CustomerGroupListResponse | HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -90,12 +85,14 @@ def sync_detailed(
     owner: str | Unset = "all",
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | list[CustomerGroupView]]:
+) -> Response[CustomerGroupListResponse | HTTPValidationError]:
     r"""List Groups
 
-     List service groups visible to the customer as a single flat list.
+     List service groups visible to the customer as a ``{data, count}``
+    envelope.
 
-    Merges two kinds of rows into one ``CustomerGroupView`` shape:
+    Merges two kinds of rows into one ``CustomerGroupView`` shape under
+    ``data`` (``count`` is ``len(data)``):
 
     - **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)
       — active platform groups with at least one service. Excludes
@@ -123,7 +120,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | list[CustomerGroupView]]
+        Response[CustomerGroupListResponse | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
@@ -147,12 +144,14 @@ def sync(
     owner: str | Unset = "all",
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | list[CustomerGroupView] | None:
+) -> CustomerGroupListResponse | HTTPValidationError | None:
     r"""List Groups
 
-     List service groups visible to the customer as a single flat list.
+     List service groups visible to the customer as a ``{data, count}``
+    envelope.
 
-    Merges two kinds of rows into one ``CustomerGroupView`` shape:
+    Merges two kinds of rows into one ``CustomerGroupView`` shape under
+    ``data`` (``count`` is ``len(data)``):
 
     - **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)
       — active platform groups with at least one service. Excludes
@@ -180,7 +179,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | list[CustomerGroupView]
+        CustomerGroupListResponse | HTTPValidationError
     """
 
     return sync_detailed(
@@ -199,12 +198,14 @@ async def asyncio_detailed(
     owner: str | Unset = "all",
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | list[CustomerGroupView]]:
+) -> Response[CustomerGroupListResponse | HTTPValidationError]:
     r"""List Groups
 
-     List service groups visible to the customer as a single flat list.
+     List service groups visible to the customer as a ``{data, count}``
+    envelope.
 
-    Merges two kinds of rows into one ``CustomerGroupView`` shape:
+    Merges two kinds of rows into one ``CustomerGroupView`` shape under
+    ``data`` (``count`` is ``len(data)``):
 
     - **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)
       — active platform groups with at least one service. Excludes
@@ -232,7 +233,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | list[CustomerGroupView]]
+        Response[CustomerGroupListResponse | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
@@ -254,12 +255,14 @@ async def asyncio(
     owner: str | Unset = "all",
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | list[CustomerGroupView] | None:
+) -> CustomerGroupListResponse | HTTPValidationError | None:
     r"""List Groups
 
-     List service groups visible to the customer as a single flat list.
+     List service groups visible to the customer as a ``{data, count}``
+    envelope.
 
-    Merges two kinds of rows into one ``CustomerGroupView`` shape:
+    Merges two kinds of rows into one ``CustomerGroupView`` shape under
+    ``data`` (``count`` is ``len(data)``):
 
     - **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)
       — active platform groups with at least one service. Excludes
@@ -287,7 +290,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | list[CustomerGroupView]
+        CustomerGroupListResponse | HTTPValidationError
     """
 
     return (

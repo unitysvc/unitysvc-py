@@ -136,11 +136,12 @@ class AsyncGroups:
                 owner=owner,
             )
         )
-        items = list(raw)
+        data = [AsyncGroup(item, parent=self._parent) for item in raw.data]
+        count = raw.count
         if name is not None:
-            items = [item for item in items if name in item.name]
-        data = [AsyncGroup(item, parent=self._parent) for item in items]
-        return AsyncGroupListPage(data=data, count=len(data))
+            data = [g for g in data if name in g.name]
+            count = len(data)
+        return AsyncGroupListPage(data=data, count=count)
 
     async def get(self, name: str) -> AsyncGroup:
         from ._generated.api.customer_groups import customer_groups_get_group

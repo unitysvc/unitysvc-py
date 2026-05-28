@@ -1,9 +1,9 @@
 """Unit tests for :class:`unitysvc.groups.Groups`.
 
 Exercises the customer service-collections surface against a mocked
-``httpx`` transport: the new flat ``list`` shape, the client-side
-``name`` filter, and a ``create`` round-trip. Mirrors the
-``httpx.MockTransport`` harness used by ``test_request_logs.py``.
+``httpx`` transport: the ``{data, count}`` envelope ``list`` shape,
+the client-side ``name`` filter, and a ``create`` round-trip. Mirrors
+the ``httpx.MockTransport`` harness used by ``test_request_logs.py``.
 """
 
 from __future__ import annotations
@@ -31,22 +31,22 @@ def _group_view(name: str, *, owner_type: str = "platform", editable: bool = Fal
 def _list_transport(payload: list[dict], captured: list[httpx.Request]) -> httpx.MockTransport:
     def handler(request: httpx.Request) -> httpx.Response:
         captured.append(request)
-        return httpx.Response(200, json=payload)
+        return httpx.Response(200, json={"data": payload, "count": len(payload)})
 
     return httpx.MockTransport(handler)
 
 
 # ---------------------------------------------------------------------------
-# list — flat list shape + owner param + client-side name filter
+# list — {data, count} envelope + owner param + client-side name filter
 # ---------------------------------------------------------------------------
-def test_list_returns_flat_list_wrapped_in_page() -> None:
+def test_list_returns_envelope_wrapped_in_page() -> None:
     payload = [_group_view("llm"), _group_view("embeddings")]
     captured: list[httpx.Request] = []
     with Client(api_key="svcpass_test") as client:
         client._client.get_httpx_client()._transport = _list_transport(payload, captured)
         page = client.groups.list()
 
-    # Flat array → still wrapped as {data, count} for back-compat.
+    # {data, count} envelope → wrapped as GroupListPage{data, count}.
     assert page.count == 2
     assert {g.name for g in page.data} == {"llm", "embeddings"}
     assert captured[0].url.path.endswith("/groups")
@@ -106,7 +106,7 @@ def test_create_round_trip() -> None:
 
 
 @pytest.mark.asyncio
-async def test_async_list_returns_flat_list() -> None:
+async def test_async_list_returns_envelope() -> None:
     payload = [_group_view("llm")]
     captured: list[httpx.Request] = []
     async with AsyncClient(api_key="svcpass_test") as client:

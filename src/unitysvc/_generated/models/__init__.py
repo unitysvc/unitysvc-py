@@ -10,6 +10,7 @@ from .customer_enrollment_service_type_0 import CustomerEnrollmentServiceType0
 from .customer_enrollments_response import CustomerEnrollmentsResponse
 from .customer_group_detail import CustomerGroupDetail
 from .customer_group_detail_routing_policy_type_0 import CustomerGroupDetailRoutingPolicyType0
+from .customer_group_list_response import CustomerGroupListResponse
 from .customer_group_view import CustomerGroupView
 from .gateway_kind import GatewayKind
 from .group_type_enum import GroupTypeEnum
@@ -86,6 +87,7 @@ __all__ = (
     "CustomerEnrollmentsResponse",
     "CustomerGroupDetail",
     "CustomerGroupDetailRoutingPolicyType0",
+    "CustomerGroupListResponse",
     "CustomerGroupView",
     "GatewayKind",
     "GroupTypeEnum",
