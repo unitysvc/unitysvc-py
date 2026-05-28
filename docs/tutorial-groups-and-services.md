@@ -1,11 +1,13 @@
-# Tutorial: Browse groups, dispatch services, enroll for BYOK
+# Tutorial: Browse groups, dispatch services, enroll, build collections
 
-This tutorial walks through the customer SDK's four main verbs:
+This tutorial walks through the customer SDK's main verbs:
 
 1. **Browse** a service group and its member services
 2. **Dispatch** a one-shot request through a service's interface
 3. **Enroll** in a service with your own upstream credentials (BYOK)
 4. **Schedule** a recurring dispatch
+5. **Create** your own collection — a customer-curated group of
+   subscribed services, addressable at `/g/<name>`
 
 We'll use a hypothetical `llm` group throughout. Adjust names to
 match what's actually configured on your account.
@@ -219,6 +221,101 @@ client.recurrent_requests.delete(sched.id)       # stop and remove
 Scheduled requests inherit the same auth (your API key) and
 interface resolution as one-shot dispatch. Per-service limits on
 minimum / maximum interval and cron usage are enforced server-side.
+
+---
+
+## 5. Create and manage your own collection
+
+The groups you browse in section 1 are **platform** groups —
+admin-curated, read-only. You can also create your **own** groups,
+called *collections*: editable, customer-curated catalogs of services
+you're subscribed to, addressable at `/g/<your-collection-name>` just
+like a platform group. The common use case is pointing a third-party
+tool (LiteLLM, LangChain, an IDE plugin) at a single base URL whose
+`/models` endpoint returns exactly the set you picked.
+
+Both kinds show up in `client.groups.list()`. Each row carries an
+`owner_type` (`"platform"` or `"customer"`) and an `editable` flag, so
+you can tell yours apart and filter with `owner=`:
+
+```python
+# Everything you can see (default):
+client.groups.list()                 # owner="all"
+# Just the platform catalogue:
+client.groups.list(owner="system")
+# Just your own editable collections:
+mine = client.groups.list(owner="own")
+for row in mine.data:
+    print(row.name, row.owner_type, row.editable, row.member_count)
+```
+
+### Create a collection and add members
+
+`create` returns the new collection as a `Group`. Members must be
+services you're subscribed to (you have an active enrollment) — adding
+an unsubscribed service is rejected. A collection holds up to 20
+members.
+
+```python
+coll = client.groups.create(
+    name="my-llms",                  # the /g/<name> slug; lowercase, [a-z0-9_-]
+    display_name="My LLMs",
+)
+
+# Add a subscribed service. The optional routing_key OVERRIDES the
+# service's native model id so you can expose uniform names across
+# providers — here OpenAI's gpt-4o is surfaced to your apps as
+# "fast-gpt".
+client.groups.add_member(
+    coll.id,
+    service_id=openai_gpt4o_service_id,
+    routing_key={"model": "fast-gpt"},
+)
+# Omit routing_key to keep the service's native model id.
+client.groups.add_member(coll.id, service_id=claude_service_id)
+
+# Inspect membership:
+for m in client.groups.members(coll.id):
+    print(m.service_id, m.routing_key)
+```
+
+Management methods are **UUID-keyed** — pass the collection's `id`
+(`coll.id`), not its slug. (The slug is reserved for the `/g/<name>`
+dispatch path.)
+
+### Dispatch against your collection
+
+Hitting `/g/my-llms` routes to a member by matching the request's
+`model` field against each member's effective routing key (your
+override, or the service's native id):
+
+```python
+mine = client.groups.get(coll.id)     # resolvable by id or name
+
+# Routes to the member whose routing key is {"model": "fast-gpt"}:
+resp = mine.dispatch(json={"model": "fast-gpt", "messages": [...]})
+
+# No `model` field → the gateway picks across all members
+# (weighted by each service's access-interface weights).
+resp = mine.dispatch(json={"messages": [...]})
+```
+
+If two members share the same `model` routing key, the gateway
+load-balances across them. An unknown `model` returns a 404 listing
+the collection's available ids. The collection's `/models` endpoint
+returns the deduplicated set of those ids, so an OpenAI-compatible
+client pointed at the collection sees exactly your curated names.
+
+### Update / remove
+
+```python
+client.groups.update(coll.id, display_name="My Production LLMs")
+client.groups.remove_member(coll.id, service_id=claude_service_id)
+client.groups.delete(coll.id)
+```
+
+Only your own collections are editable — `update` / `delete` /
+member changes on a platform group return 403.
 
 ---
 

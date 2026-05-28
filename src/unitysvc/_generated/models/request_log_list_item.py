@@ -28,6 +28,7 @@ class RequestLogListItem:
     upstream_response_time_ms: float | None | Unset = UNSET
     error_source: None | str | Unset = UNSET
     error_type: None | str | Unset = UNSET
+    recurrent_request_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -85,6 +86,12 @@ class RequestLogListItem:
         else:
             error_type = self.error_type
 
+        recurrent_request_id: None | str | Unset
+        if isinstance(self.recurrent_request_id, Unset):
+            recurrent_request_id = UNSET
+        else:
+            recurrent_request_id = self.recurrent_request_id
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -111,6 +118,8 @@ class RequestLogListItem:
             field_dict["error_source"] = error_source
         if error_type is not UNSET:
             field_dict["error_type"] = error_type
+        if recurrent_request_id is not UNSET:
+            field_dict["recurrent_request_id"] = recurrent_request_id
 
         return field_dict
 
@@ -194,6 +203,15 @@ class RequestLogListItem:
 
         error_type = _parse_error_type(d.pop("error_type", UNSET))
 
+        def _parse_recurrent_request_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        recurrent_request_id = _parse_recurrent_request_id(d.pop("recurrent_request_id", UNSET))
+
         request_log_list_item = cls(
             log_id=log_id,
             event_id=event_id,
@@ -208,6 +226,7 @@ class RequestLogListItem:
             upstream_response_time_ms=upstream_response_time_ms,
             error_source=error_source,
             error_type=error_type,
+            recurrent_request_id=recurrent_request_id,
         )
 
         request_log_list_item.additional_properties = d

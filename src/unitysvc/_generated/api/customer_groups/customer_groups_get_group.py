@@ -6,8 +6,8 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.customer_group_detail import CustomerGroupDetail
 from ...models.http_validation_error import HTTPValidationError
-from ...models.service_group_detail import ServiceGroupDetail
 from ...types import UNSET, Response, Unset
 
 
@@ -37,9 +37,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | ServiceGroupDetail | None:
+) -> CustomerGroupDetail | HTTPValidationError | None:
     if response.status_code == 200:
-        response_200 = ServiceGroupDetail.from_dict(response.json())
+        response_200 = CustomerGroupDetail.from_dict(response.json())
 
         return response_200
 
@@ -56,7 +56,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | ServiceGroupDetail]:
+) -> Response[CustomerGroupDetail | HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -71,14 +71,27 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | ServiceGroupDetail]:
-    """Get Group
+) -> Response[CustomerGroupDetail | HTTPValidationError]:
+    r"""Get Group
 
-     Get metadata for a single visible group, looked up by name.
+     Get a single group from the unified surface, by name or UUID.
 
-    Returns 404 for hidden groups (draft, seller-owned, empty) —
-    existence is not leaked. Member services are fetched separately
-    via ``GET /customer/groups/{name}/services``.
+    Both kinds resolve to one unified ``CustomerGroupDetail`` shape:
+
+    1. If ``name`` parses as a UUID that maps to one of the customer's
+       own collections, return the collection
+       (``owner_type=\"customer\"``, ``editable=True``, ``enabled`` set,
+       ``group_type=\"collection\"``; interface / routing_policy null).
+    2. Otherwise resolve a visible platform group by ``id`` or ``name``
+       and return it (``owner_type=\"platform\"``, ``editable=False``,
+       with embedded interface / routing policy; ``enabled`` null).
+       Both ``id`` and ``name`` are returned in the shape, so platform
+       groups are addressable by either; ``name`` is the stable handle
+       that survives admin recreations.
+
+    Collections are UUID-keyed (their slug is reserved for the future
+    ``/g/<name>`` dispatch path). Returns 404 for anything outside the
+    customer-visible set — existence is not leaked.
 
     Args:
         name (str):
@@ -90,7 +103,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ServiceGroupDetail]
+        Response[CustomerGroupDetail | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
@@ -112,14 +125,27 @@ def sync(
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | ServiceGroupDetail | None:
-    """Get Group
+) -> CustomerGroupDetail | HTTPValidationError | None:
+    r"""Get Group
 
-     Get metadata for a single visible group, looked up by name.
+     Get a single group from the unified surface, by name or UUID.
 
-    Returns 404 for hidden groups (draft, seller-owned, empty) —
-    existence is not leaked. Member services are fetched separately
-    via ``GET /customer/groups/{name}/services``.
+    Both kinds resolve to one unified ``CustomerGroupDetail`` shape:
+
+    1. If ``name`` parses as a UUID that maps to one of the customer's
+       own collections, return the collection
+       (``owner_type=\"customer\"``, ``editable=True``, ``enabled`` set,
+       ``group_type=\"collection\"``; interface / routing_policy null).
+    2. Otherwise resolve a visible platform group by ``id`` or ``name``
+       and return it (``owner_type=\"platform\"``, ``editable=False``,
+       with embedded interface / routing policy; ``enabled`` null).
+       Both ``id`` and ``name`` are returned in the shape, so platform
+       groups are addressable by either; ``name`` is the stable handle
+       that survives admin recreations.
+
+    Collections are UUID-keyed (their slug is reserved for the future
+    ``/g/<name>`` dispatch path). Returns 404 for anything outside the
+    customer-visible set — existence is not leaked.
 
     Args:
         name (str):
@@ -131,7 +157,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ServiceGroupDetail
+        CustomerGroupDetail | HTTPValidationError
     """
 
     return sync_detailed(
@@ -148,14 +174,27 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | ServiceGroupDetail]:
-    """Get Group
+) -> Response[CustomerGroupDetail | HTTPValidationError]:
+    r"""Get Group
 
-     Get metadata for a single visible group, looked up by name.
+     Get a single group from the unified surface, by name or UUID.
 
-    Returns 404 for hidden groups (draft, seller-owned, empty) —
-    existence is not leaked. Member services are fetched separately
-    via ``GET /customer/groups/{name}/services``.
+    Both kinds resolve to one unified ``CustomerGroupDetail`` shape:
+
+    1. If ``name`` parses as a UUID that maps to one of the customer's
+       own collections, return the collection
+       (``owner_type=\"customer\"``, ``editable=True``, ``enabled`` set,
+       ``group_type=\"collection\"``; interface / routing_policy null).
+    2. Otherwise resolve a visible platform group by ``id`` or ``name``
+       and return it (``owner_type=\"platform\"``, ``editable=False``,
+       with embedded interface / routing policy; ``enabled`` null).
+       Both ``id`` and ``name`` are returned in the shape, so platform
+       groups are addressable by either; ``name`` is the stable handle
+       that survives admin recreations.
+
+    Collections are UUID-keyed (their slug is reserved for the future
+    ``/g/<name>`` dispatch path). Returns 404 for anything outside the
+    customer-visible set — existence is not leaked.
 
     Args:
         name (str):
@@ -167,7 +206,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ServiceGroupDetail]
+        Response[CustomerGroupDetail | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
@@ -187,14 +226,27 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | ServiceGroupDetail | None:
-    """Get Group
+) -> CustomerGroupDetail | HTTPValidationError | None:
+    r"""Get Group
 
-     Get metadata for a single visible group, looked up by name.
+     Get a single group from the unified surface, by name or UUID.
 
-    Returns 404 for hidden groups (draft, seller-owned, empty) —
-    existence is not leaked. Member services are fetched separately
-    via ``GET /customer/groups/{name}/services``.
+    Both kinds resolve to one unified ``CustomerGroupDetail`` shape:
+
+    1. If ``name`` parses as a UUID that maps to one of the customer's
+       own collections, return the collection
+       (``owner_type=\"customer\"``, ``editable=True``, ``enabled`` set,
+       ``group_type=\"collection\"``; interface / routing_policy null).
+    2. Otherwise resolve a visible platform group by ``id`` or ``name``
+       and return it (``owner_type=\"platform\"``, ``editable=False``,
+       with embedded interface / routing policy; ``enabled`` null).
+       Both ``id`` and ``name`` are returned in the shape, so platform
+       groups are addressable by either; ``name`` is the stable handle
+       that survives admin recreations.
+
+    Collections are UUID-keyed (their slug is reserved for the future
+    ``/g/<name>`` dispatch path). Returns 404 for anything outside the
+    customer-visible set — existence is not leaked.
 
     Args:
         name (str):
@@ -206,7 +258,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ServiceGroupDetail
+        CustomerGroupDetail | HTTPValidationError
     """
 
     return (

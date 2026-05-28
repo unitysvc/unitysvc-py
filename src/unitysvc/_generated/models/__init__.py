@@ -8,6 +8,10 @@ from .customer_enrollment_create_response import CustomerEnrollmentCreateRespons
 from .customer_enrollment_parameters_type_0 import CustomerEnrollmentParametersType0
 from .customer_enrollment_service_type_0 import CustomerEnrollmentServiceType0
 from .customer_enrollments_response import CustomerEnrollmentsResponse
+from .customer_group_detail import CustomerGroupDetail
+from .customer_group_detail_routing_policy_type_0 import CustomerGroupDetailRoutingPolicyType0
+from .customer_group_list_response import CustomerGroupListResponse
+from .customer_group_view import CustomerGroupView
 from .gateway_kind import GatewayKind
 from .group_type_enum import GroupTypeEnum
 from .http_validation_error import HTTPValidationError
@@ -50,16 +54,19 @@ from .service_alias_update import ServiceAliasUpdate
 from .service_alias_update_request_routing_key_type_0 import ServiceAliasUpdateRequestRoutingKeyType0
 from .service_alias_update_routing_key_override_type_0 import ServiceAliasUpdateRoutingKeyOverrideType0
 from .service_aliases_public import ServiceAliasesPublic
+from .service_collection_create import ServiceCollectionCreate
+from .service_collection_member_create import ServiceCollectionMemberCreate
+from .service_collection_member_create_routing_key_type_0 import ServiceCollectionMemberCreateRoutingKeyType0
+from .service_collection_member_public import ServiceCollectionMemberPublic
+from .service_collection_member_public_routing_key_type_0 import ServiceCollectionMemberPublicRoutingKeyType0
+from .service_collection_public import ServiceCollectionPublic
+from .service_collection_update import ServiceCollectionUpdate
 from .service_detail import ServiceDetail
 from .service_detail_list_price_type_0 import ServiceDetailListPriceType0
 from .service_enrollment_create import ServiceEnrollmentCreate
 from .service_enrollment_create_parameters_type_0 import ServiceEnrollmentCreateParametersType0
 from .service_enrollment_create_recurrence_schedule_type_0 import ServiceEnrollmentCreateRecurrenceScheduleType0
 from .service_enrollment_status_enum import ServiceEnrollmentStatusEnum
-from .service_group_detail import ServiceGroupDetail
-from .service_group_detail_routing_policy_type_0 import ServiceGroupDetailRoutingPolicyType0
-from .service_group_list_response import ServiceGroupListResponse
-from .service_group_summary import ServiceGroupSummary
 from .service_summary import ServiceSummary
 from .switch_routing_response import SwitchRoutingResponse
 from .upstream_response_info import UpstreamResponseInfo
@@ -78,6 +85,10 @@ __all__ = (
     "CustomerEnrollmentParametersType0",
     "CustomerEnrollmentServiceType0",
     "CustomerEnrollmentsResponse",
+    "CustomerGroupDetail",
+    "CustomerGroupDetailRoutingPolicyType0",
+    "CustomerGroupListResponse",
+    "CustomerGroupView",
     "GatewayKind",
     "GroupTypeEnum",
     "HTTPValidationError",
@@ -120,16 +131,19 @@ __all__ = (
     "ServiceAliasUpdate",
     "ServiceAliasUpdateRequestRoutingKeyType0",
     "ServiceAliasUpdateRoutingKeyOverrideType0",
+    "ServiceCollectionCreate",
+    "ServiceCollectionMemberCreate",
+    "ServiceCollectionMemberCreateRoutingKeyType0",
+    "ServiceCollectionMemberPublic",
+    "ServiceCollectionMemberPublicRoutingKeyType0",
+    "ServiceCollectionPublic",
+    "ServiceCollectionUpdate",
     "ServiceDetail",
     "ServiceDetailListPriceType0",
     "ServiceEnrollmentCreate",
     "ServiceEnrollmentCreateParametersType0",
     "ServiceEnrollmentCreateRecurrenceScheduleType0",
     "ServiceEnrollmentStatusEnum",
-    "ServiceGroupDetail",
-    "ServiceGroupDetailRoutingPolicyType0",
-    "ServiceGroupListResponse",
-    "ServiceGroupSummary",
     "ServiceSummary",
     "SwitchRoutingResponse",
     "UpstreamResponseInfo",

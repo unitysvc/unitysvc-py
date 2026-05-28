@@ -28,6 +28,7 @@ def _get_kwargs(
     error_source: None | str | Unset = UNSET,
     error_type: None | str | Unset = UNSET,
     gateway_source: None | str | Unset = UNSET,
+    recurrent_request_id: None | Unset | UUID = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -122,6 +123,15 @@ def _get_kwargs(
         json_gateway_source = gateway_source
     params["gateway_source"] = json_gateway_source
 
+    json_recurrent_request_id: None | str | Unset
+    if isinstance(recurrent_request_id, Unset):
+        json_recurrent_request_id = UNSET
+    elif isinstance(recurrent_request_id, UUID):
+        json_recurrent_request_id = str(recurrent_request_id)
+    else:
+        json_recurrent_request_id = recurrent_request_id
+    params["recurrent_request_id"] = json_recurrent_request_id
+
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
@@ -179,6 +189,7 @@ def sync_detailed(
     error_source: None | str | Unset = UNSET,
     error_type: None | str | Unset = UNSET,
     gateway_source: None | str | Unset = UNSET,
+    recurrent_request_id: None | Unset | UUID = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | RequestLogListResponse]:
@@ -200,6 +211,11 @@ def sync_detailed(
         error_source (None | str | Unset): Filter: 'gateway' or 'upstream'
         error_type (None | str | Unset): Filter by error type
         gateway_source (None | str | Unset): Filter: 'apisix' or 'backend'
+        recurrent_request_id (None | Unset | UUID): Filter to firings produced by a specific
+            RecurrentRequest (scheduled execution). When set, returns only rows whose ClickHouse
+            ``recurrent_request_id`` column matches this UUID — drives the 'View executions' drill-
+            down on the Scheduled Requests page. Pre-existing rows from before #1141 have an empty
+            ``recurrent_request_id`` and are naturally excluded.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -224,6 +240,7 @@ def sync_detailed(
         error_source=error_source,
         error_type=error_type,
         gateway_source=gateway_source,
+        recurrent_request_id=recurrent_request_id,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -250,6 +267,7 @@ def sync(
     error_source: None | str | Unset = UNSET,
     error_type: None | str | Unset = UNSET,
     gateway_source: None | str | Unset = UNSET,
+    recurrent_request_id: None | Unset | UUID = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | RequestLogListResponse | None:
@@ -271,6 +289,11 @@ def sync(
         error_source (None | str | Unset): Filter: 'gateway' or 'upstream'
         error_type (None | str | Unset): Filter by error type
         gateway_source (None | str | Unset): Filter: 'apisix' or 'backend'
+        recurrent_request_id (None | Unset | UUID): Filter to firings produced by a specific
+            RecurrentRequest (scheduled execution). When set, returns only rows whose ClickHouse
+            ``recurrent_request_id`` column matches this UUID — drives the 'View executions' drill-
+            down on the Scheduled Requests page. Pre-existing rows from before #1141 have an empty
+            ``recurrent_request_id`` and are naturally excluded.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -296,6 +319,7 @@ def sync(
         error_source=error_source,
         error_type=error_type,
         gateway_source=gateway_source,
+        recurrent_request_id=recurrent_request_id,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -316,6 +340,7 @@ async def asyncio_detailed(
     error_source: None | str | Unset = UNSET,
     error_type: None | str | Unset = UNSET,
     gateway_source: None | str | Unset = UNSET,
+    recurrent_request_id: None | Unset | UUID = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | RequestLogListResponse]:
@@ -337,6 +362,11 @@ async def asyncio_detailed(
         error_source (None | str | Unset): Filter: 'gateway' or 'upstream'
         error_type (None | str | Unset): Filter by error type
         gateway_source (None | str | Unset): Filter: 'apisix' or 'backend'
+        recurrent_request_id (None | Unset | UUID): Filter to firings produced by a specific
+            RecurrentRequest (scheduled execution). When set, returns only rows whose ClickHouse
+            ``recurrent_request_id`` column matches this UUID — drives the 'View executions' drill-
+            down on the Scheduled Requests page. Pre-existing rows from before #1141 have an empty
+            ``recurrent_request_id`` and are naturally excluded.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -361,6 +391,7 @@ async def asyncio_detailed(
         error_source=error_source,
         error_type=error_type,
         gateway_source=gateway_source,
+        recurrent_request_id=recurrent_request_id,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -385,6 +416,7 @@ async def asyncio(
     error_source: None | str | Unset = UNSET,
     error_type: None | str | Unset = UNSET,
     gateway_source: None | str | Unset = UNSET,
+    recurrent_request_id: None | Unset | UUID = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | RequestLogListResponse | None:
@@ -406,6 +438,11 @@ async def asyncio(
         error_source (None | str | Unset): Filter: 'gateway' or 'upstream'
         error_type (None | str | Unset): Filter by error type
         gateway_source (None | str | Unset): Filter: 'apisix' or 'backend'
+        recurrent_request_id (None | Unset | UUID): Filter to firings produced by a specific
+            RecurrentRequest (scheduled execution). When set, returns only rows whose ClickHouse
+            ``recurrent_request_id`` column matches this UUID — drives the 'View executions' drill-
+            down on the Scheduled Requests page. Pre-existing rows from before #1141 have an empty
+            ``recurrent_request_id`` and are naturally excluded.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -432,6 +469,7 @@ async def asyncio(
             error_source=error_source,
             error_type=error_type,
             gateway_source=gateway_source,
+            recurrent_request_id=recurrent_request_id,
             authorization=authorization,
             x_role_id=x_role_id,
         )
