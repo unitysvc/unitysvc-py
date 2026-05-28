@@ -22,7 +22,7 @@ class ResolveRequest:
 
     path: str
     """ Gateway request path without the gateway base URL — same shape as what ``service.dispatch(path=...)`` /
-    ``group.dispatch(path=...)`` produces. Examples: ``v1/chat/completions``, ``p/openai``, ``a/my-alias/foo``. """
+    ``group.dispatch(path=...)`` produces. Examples: ``v1/chat/completions``, ``openai``, ``a/my-alias/foo``. """
     routing_key: None | ResolveRequestRoutingKeyType0 | Unset = UNSET
     """ Optional routing key the gateway would match against interface ``routing_key`` rules (e.g. ``{'model':
     'gpt-4'}``). Omit to see every interface matching the path. """

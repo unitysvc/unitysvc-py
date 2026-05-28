@@ -48,6 +48,7 @@ class RequestLogDetail:
     service_enrollment_id: None | str | Unset = UNSET
     upstream_response: None | Unset | UpstreamResponseInfo = UNSET
     usage_event: None | Unset | UsageEventInfo = UNSET
+    recurrent_request_id: None | str | Unset = UNSET
     error: None | SanitizedErrorInfo | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -99,6 +100,12 @@ class RequestLogDetail:
         else:
             usage_event = self.usage_event
 
+        recurrent_request_id: None | str | Unset
+        if isinstance(self.recurrent_request_id, Unset):
+            recurrent_request_id = UNSET
+        else:
+            recurrent_request_id = self.recurrent_request_id
+
         error: dict[str, Any] | None | Unset
         if isinstance(self.error, Unset):
             error = UNSET
@@ -128,6 +135,8 @@ class RequestLogDetail:
             field_dict["upstream_response"] = upstream_response
         if usage_event is not UNSET:
             field_dict["usage_event"] = usage_event
+        if recurrent_request_id is not UNSET:
+            field_dict["recurrent_request_id"] = recurrent_request_id
         if error is not UNSET:
             field_dict["error"] = error
 
@@ -207,6 +216,15 @@ class RequestLogDetail:
 
         usage_event = _parse_usage_event(d.pop("usage_event", UNSET))
 
+        def _parse_recurrent_request_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        recurrent_request_id = _parse_recurrent_request_id(d.pop("recurrent_request_id", UNSET))
+
         def _parse_error(data: object) -> None | SanitizedErrorInfo | Unset:
             if data is None:
                 return data
@@ -236,6 +254,7 @@ class RequestLogDetail:
             service_enrollment_id=service_enrollment_id,
             upstream_response=upstream_response,
             usage_event=usage_event,
+            recurrent_request_id=recurrent_request_id,
             error=error,
         )
 

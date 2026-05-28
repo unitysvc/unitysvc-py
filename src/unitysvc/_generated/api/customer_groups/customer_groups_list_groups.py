@@ -6,14 +6,15 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.customer_group_view import CustomerGroupView
 from ...models.http_validation_error import HTTPValidationError
-from ...models.service_group_list_response import ServiceGroupListResponse
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
     name: None | str | Unset = UNSET,
+    owner: str | Unset = "all",
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -33,6 +34,8 @@ def _get_kwargs(
         json_name = name
     params["name"] = json_name
 
+    params["owner"] = owner
+
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
@@ -47,9 +50,14 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | ServiceGroupListResponse | None:
+) -> HTTPValidationError | list[CustomerGroupView] | None:
     if response.status_code == 200:
-        response_200 = ServiceGroupListResponse.from_dict(response.json())
+        response_200 = []
+        _response_200 = response.json()
+        for response_200_item_data in _response_200:
+            response_200_item = CustomerGroupView.from_dict(response_200_item_data)
+
+            response_200.append(response_200_item)
 
         return response_200
 
@@ -66,7 +74,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | ServiceGroupListResponse]:
+) -> Response[HTTPValidationError | list[CustomerGroupView]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -79,20 +87,34 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     name: None | str | Unset = UNSET,
+    owner: str | Unset = "all",
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | ServiceGroupListResponse]:
-    """List Groups
+) -> Response[HTTPValidationError | list[CustomerGroupView]]:
+    r"""List Groups
 
-     List active platform service groups visible to the customer.
+     List service groups visible to the customer as a single flat list.
 
-    Excludes draft/archived/private groups, empty nodes, and
-    seller-owned or customer-owned groups. Ordered with ``misc``
-    groups last, then by ``sort_order``, then alphabetically by name
-    — matching the marketplace browse order.
+    Merges two kinds of rows into one ``CustomerGroupView`` shape:
+
+    - **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)
+      — active platform groups with at least one service. Excludes
+      draft/archived/private groups, empty nodes, and seller-owned
+      groups. ``member_count`` comes from the cached ``num_services``.
+      Ordered with ``misc`` groups last, then by ``sort_order``, then
+      alphabetically by name — matching the marketplace browse order.
+    - **Own collections** (``owner_type=\"customer\"``, ``editable=True``)
+      — the customer's own ``ServiceCollection`` rows. ``member_count``
+      is counted live.
+
+    The ``owner`` filter narrows this: ``system`` returns platform
+    groups only, ``own`` returns collections only, ``all`` (default)
+    returns both (platform first, then collections).
 
     Args:
         name (None | str | Unset): Filter by name (partial match)
+        owner (str | Unset): Which rows to return: 'all' (platform + own), 'system' (platform
+            only), or 'own' (collections only). Default: 'all'.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -101,11 +123,12 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ServiceGroupListResponse]
+        Response[HTTPValidationError | list[CustomerGroupView]]
     """
 
     kwargs = _get_kwargs(
         name=name,
+        owner=owner,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -121,20 +144,34 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     name: None | str | Unset = UNSET,
+    owner: str | Unset = "all",
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | ServiceGroupListResponse | None:
-    """List Groups
+) -> HTTPValidationError | list[CustomerGroupView] | None:
+    r"""List Groups
 
-     List active platform service groups visible to the customer.
+     List service groups visible to the customer as a single flat list.
 
-    Excludes draft/archived/private groups, empty nodes, and
-    seller-owned or customer-owned groups. Ordered with ``misc``
-    groups last, then by ``sort_order``, then alphabetically by name
-    — matching the marketplace browse order.
+    Merges two kinds of rows into one ``CustomerGroupView`` shape:
+
+    - **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)
+      — active platform groups with at least one service. Excludes
+      draft/archived/private groups, empty nodes, and seller-owned
+      groups. ``member_count`` comes from the cached ``num_services``.
+      Ordered with ``misc`` groups last, then by ``sort_order``, then
+      alphabetically by name — matching the marketplace browse order.
+    - **Own collections** (``owner_type=\"customer\"``, ``editable=True``)
+      — the customer's own ``ServiceCollection`` rows. ``member_count``
+      is counted live.
+
+    The ``owner`` filter narrows this: ``system`` returns platform
+    groups only, ``own`` returns collections only, ``all`` (default)
+    returns both (platform first, then collections).
 
     Args:
         name (None | str | Unset): Filter by name (partial match)
+        owner (str | Unset): Which rows to return: 'all' (platform + own), 'system' (platform
+            only), or 'own' (collections only). Default: 'all'.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -143,12 +180,13 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ServiceGroupListResponse
+        HTTPValidationError | list[CustomerGroupView]
     """
 
     return sync_detailed(
         client=client,
         name=name,
+        owner=owner,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -158,20 +196,34 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     name: None | str | Unset = UNSET,
+    owner: str | Unset = "all",
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | ServiceGroupListResponse]:
-    """List Groups
+) -> Response[HTTPValidationError | list[CustomerGroupView]]:
+    r"""List Groups
 
-     List active platform service groups visible to the customer.
+     List service groups visible to the customer as a single flat list.
 
-    Excludes draft/archived/private groups, empty nodes, and
-    seller-owned or customer-owned groups. Ordered with ``misc``
-    groups last, then by ``sort_order``, then alphabetically by name
-    — matching the marketplace browse order.
+    Merges two kinds of rows into one ``CustomerGroupView`` shape:
+
+    - **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)
+      — active platform groups with at least one service. Excludes
+      draft/archived/private groups, empty nodes, and seller-owned
+      groups. ``member_count`` comes from the cached ``num_services``.
+      Ordered with ``misc`` groups last, then by ``sort_order``, then
+      alphabetically by name — matching the marketplace browse order.
+    - **Own collections** (``owner_type=\"customer\"``, ``editable=True``)
+      — the customer's own ``ServiceCollection`` rows. ``member_count``
+      is counted live.
+
+    The ``owner`` filter narrows this: ``system`` returns platform
+    groups only, ``own`` returns collections only, ``all`` (default)
+    returns both (platform first, then collections).
 
     Args:
         name (None | str | Unset): Filter by name (partial match)
+        owner (str | Unset): Which rows to return: 'all' (platform + own), 'system' (platform
+            only), or 'own' (collections only). Default: 'all'.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -180,11 +232,12 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ServiceGroupListResponse]
+        Response[HTTPValidationError | list[CustomerGroupView]]
     """
 
     kwargs = _get_kwargs(
         name=name,
+        owner=owner,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -198,20 +251,34 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     name: None | str | Unset = UNSET,
+    owner: str | Unset = "all",
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | ServiceGroupListResponse | None:
-    """List Groups
+) -> HTTPValidationError | list[CustomerGroupView] | None:
+    r"""List Groups
 
-     List active platform service groups visible to the customer.
+     List service groups visible to the customer as a single flat list.
 
-    Excludes draft/archived/private groups, empty nodes, and
-    seller-owned or customer-owned groups. Ordered with ``misc``
-    groups last, then by ``sort_order``, then alphabetically by name
-    — matching the marketplace browse order.
+    Merges two kinds of rows into one ``CustomerGroupView`` shape:
+
+    - **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)
+      — active platform groups with at least one service. Excludes
+      draft/archived/private groups, empty nodes, and seller-owned
+      groups. ``member_count`` comes from the cached ``num_services``.
+      Ordered with ``misc`` groups last, then by ``sort_order``, then
+      alphabetically by name — matching the marketplace browse order.
+    - **Own collections** (``owner_type=\"customer\"``, ``editable=True``)
+      — the customer's own ``ServiceCollection`` rows. ``member_count``
+      is counted live.
+
+    The ``owner`` filter narrows this: ``system`` returns platform
+    groups only, ``own`` returns collections only, ``all`` (default)
+    returns both (platform first, then collections).
 
     Args:
         name (None | str | Unset): Filter by name (partial match)
+        owner (str | Unset): Which rows to return: 'all' (platform + own), 'system' (platform
+            only), or 'own' (collections only). Default: 'all'.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -220,13 +287,14 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ServiceGroupListResponse
+        HTTPValidationError | list[CustomerGroupView]
     """
 
     return (
         await asyncio_detailed(
             client=client,
             name=name,
+            owner=owner,
             authorization=authorization,
             x_role_id=x_role_id,
         )

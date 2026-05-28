@@ -103,8 +103,9 @@ def sync_detailed(
 
      List customer-visible services that belong to a group.
 
-    The group is identified by its name (not UUID) so SDK scripts
-    keep working if an admin recreates the group with the same slug.
+    The group is addressable by id or name; both are returned in the
+    group detail shape. Names stay valid across admin recreations of a
+    group, so SDK scripts that use the name keep working.
     Mirrors the visibility rule used by the GraphQL
     ``resolve_group_services`` resolver for non-admin / non-seller
     callers: service must be ``status='active'`` and
@@ -163,8 +164,9 @@ def sync(
 
      List customer-visible services that belong to a group.
 
-    The group is identified by its name (not UUID) so SDK scripts
-    keep working if an admin recreates the group with the same slug.
+    The group is addressable by id or name; both are returned in the
+    group detail shape. Names stay valid across admin recreations of a
+    group, so SDK scripts that use the name keep working.
     Mirrors the visibility rule used by the GraphQL
     ``resolve_group_services`` resolver for non-admin / non-seller
     callers: service must be ``status='active'`` and
@@ -218,8 +220,9 @@ async def asyncio_detailed(
 
      List customer-visible services that belong to a group.
 
-    The group is identified by its name (not UUID) so SDK scripts
-    keep working if an admin recreates the group with the same slug.
+    The group is addressable by id or name; both are returned in the
+    group detail shape. Names stay valid across admin recreations of a
+    group, so SDK scripts that use the name keep working.
     Mirrors the visibility rule used by the GraphQL
     ``resolve_group_services`` resolver for non-admin / non-seller
     callers: service must be ``status='active'`` and
@@ -276,8 +279,9 @@ async def asyncio(
 
      List customer-visible services that belong to a group.
 
-    The group is identified by its name (not UUID) so SDK scripts
-    keep working if an admin recreates the group with the same slug.
+    The group is addressable by id or name; both are returned in the
+    group detail shape. Names stay valid across admin recreations of a
+    group, so SDK scripts that use the name keep working.
     Mirrors the visibility rule used by the GraphQL
     ``resolve_group_services`` resolver for non-admin / non-seller
     callers: service must be ``status='active'`` and

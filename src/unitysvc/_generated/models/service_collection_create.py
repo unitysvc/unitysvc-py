@@ -6,50 +6,28 @@ from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cas
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.group_type_enum import GroupTypeEnum, check_group_type_enum
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="ServiceGroupSummary")
+T = TypeVar("T", bound="ServiceCollectionCreate")
 
 
 @_attrs_define
-class ServiceGroupSummary:
-    """Customer-visible service group summary.
-
-    Identified by ``name`` rather than UUID — group UUIDs change when
-    admins recreate a group, so SDK scripts that hardcode UUIDs break
-    silently after a recreation. Names survive because admins reuse
-    the same slug.
-
-    Excludes internal platform configuration (``membership_rules``,
-    ``routing_policy``, ``user_access_interfaces``) — customers only
-    need the resolved ``base_url`` for gateway dispatch, not the raw
-    interface config.
-
-    """
+class ServiceCollectionCreate:
+    """Schema for creating a ServiceCollection."""
 
     name: str
-    display_name: str
-    group_type: GroupTypeEnum
-    """ Type of service group — derived from configuration, not set directly.
-
-    Derivation rules:
-    - No rules, no access interfaces → category (organizes descendants)
-    - Rules, no access interfaces → collection (curated set for browsing)
-    - Rules + access interfaces → group (has own API endpoint + routing)
-    - System-generated catch-all → misc """
-    service_count: int
+    display_name: None | str | Unset = UNSET
     description: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         name = self.name
 
-        display_name = self.display_name
-
-        group_type: str = self.group_type
-
-        service_count = self.service_count
+        display_name: None | str | Unset
+        if isinstance(self.display_name, Unset):
+            display_name = UNSET
+        else:
+            display_name = self.display_name
 
         description: None | str | Unset
         if isinstance(self.description, Unset):
@@ -62,11 +40,10 @@ class ServiceGroupSummary:
         field_dict.update(
             {
                 "name": name,
-                "display_name": display_name,
-                "group_type": group_type,
-                "service_count": service_count,
             }
         )
+        if display_name is not UNSET:
+            field_dict["display_name"] = display_name
         if description is not UNSET:
             field_dict["description"] = description
 
@@ -77,11 +54,14 @@ class ServiceGroupSummary:
         d = dict(src_dict)
         name = d.pop("name")
 
-        display_name = d.pop("display_name")
+        def _parse_display_name(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
 
-        group_type = check_group_type_enum(d.pop("group_type"))
-
-        service_count = d.pop("service_count")
+        display_name = _parse_display_name(d.pop("display_name", UNSET))
 
         def _parse_description(data: object) -> None | str | Unset:
             if data is None:
@@ -92,16 +72,14 @@ class ServiceGroupSummary:
 
         description = _parse_description(d.pop("description", UNSET))
 
-        service_group_summary = cls(
+        service_collection_create = cls(
             name=name,
             display_name=display_name,
-            group_type=group_type,
-            service_count=service_count,
             description=description,
         )
 
-        service_group_summary.additional_properties = d
-        return service_group_summary
+        service_collection_create.additional_properties = d
+        return service_collection_create
 
     @property
     def additional_keys(self) -> list[str]:

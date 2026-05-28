@@ -7,9 +7,12 @@ to the parent :class:`AsyncClient`.
 
 from __future__ import annotations
 
+import builtins
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
+from ._generated.types import UNSET as _UNSET
 from ._http import unwrap
 from ._streaming import AsyncStreamingResponse, build_stream_kwargs
 
@@ -17,8 +20,11 @@ if TYPE_CHECKING:
     import httpx
 
     from ._generated.client import AuthenticatedClient
-    from ._generated.models.service_group_detail import ServiceGroupDetail
-    from ._generated.models.service_group_summary import ServiceGroupSummary
+    from ._generated.models.customer_group_detail import CustomerGroupDetail
+    from ._generated.models.customer_group_view import CustomerGroupView
+    from ._generated.models.service_collection_member_public import (
+        ServiceCollectionMemberPublic,
+    )
     from .aclient import AsyncClient
     from .aservices import AsyncService
 
@@ -28,9 +34,7 @@ class AsyncGroup:
 
     __slots__ = ("_raw", "_parent")
 
-    def __init__(
-        self, raw: ServiceGroupDetail | ServiceGroupSummary, parent: AsyncClient
-    ) -> None:
+    def __init__(self, raw: CustomerGroupDetail | CustomerGroupView, parent: AsyncClient) -> None:
         object.__setattr__(self, "_raw", raw)
         object.__setattr__(self, "_parent", parent)
 
@@ -120,21 +124,23 @@ class AsyncGroups:
     async def list(
         self,
         *,
+        owner: str = "all",
         name: str | None = None,
     ) -> AsyncGroupListPage:
+        """See :meth:`unitysvc.groups.Groups.list`."""
         from ._generated.api.customer_groups import customer_groups_list_groups
-        from ._generated.types import UNSET
 
         raw = unwrap(
             await customer_groups_list_groups.asyncio_detailed(
                 client=self._client,
-                name=name if name is not None else UNSET,
+                owner=owner,
             )
         )
-        return AsyncGroupListPage(
-            data=[AsyncGroup(item, parent=self._parent) for item in raw.data],
-            count=raw.count,
-        )
+        items = list(raw)
+        if name is not None:
+            items = [item for item in items if name in item.name]
+        data = [AsyncGroup(item, parent=self._parent) for item in items]
+        return AsyncGroupListPage(data=data, count=len(data))
 
     async def get(self, name: str) -> AsyncGroup:
         from ._generated.api.customer_groups import customer_groups_get_group
@@ -149,6 +155,128 @@ class AsyncGroups:
 
     # Legacy alias — same rationale as the sync :class:`Groups` facade.
     get_by_name = get
+
+    # ------------------------------------------------------------------
+    # Collection management (customer-owned editable groups)
+    # ------------------------------------------------------------------
+    async def create(
+        self,
+        *,
+        name: str,
+        display_name: str | None = None,
+        description: str | None = None,
+    ) -> AsyncGroup:
+        """See :meth:`unitysvc.groups.Groups.create`."""
+        from ._generated.api.customer_groups import (
+            customer_groups_create_customer_group,
+        )
+        from ._generated.models.service_collection_create import ServiceCollectionCreate
+        from ._generated.types import UNSET
+
+        body = ServiceCollectionCreate(
+            name=name,
+            display_name=display_name if display_name is not None else UNSET,
+            description=description if description is not None else UNSET,
+        )
+        raw = unwrap(
+            await customer_groups_create_customer_group.asyncio_detailed(
+                client=self._client,
+                body=body,
+            )
+        )
+        return AsyncGroup(raw, parent=self._parent)
+
+    async def update(
+        self,
+        group_id: str | UUID,
+        *,
+        display_name: Any = _UNSET,
+        description: Any = _UNSET,
+        enabled: Any = _UNSET,
+    ) -> AsyncGroup:
+        """See :meth:`unitysvc.groups.Groups.update`."""
+        from ._generated.api.customer_groups import (
+            customer_groups_update_customer_group,
+        )
+        from ._generated.models.service_collection_update import ServiceCollectionUpdate
+
+        body = ServiceCollectionUpdate(
+            display_name=display_name,
+            description=description,
+            enabled=enabled,
+        )
+        raw = unwrap(
+            await customer_groups_update_customer_group.asyncio_detailed(
+                UUID(str(group_id)),
+                client=self._client,
+                body=body,
+            )
+        )
+        return AsyncGroup(raw, parent=self._parent)
+
+    async def delete(self, group_id: str | UUID) -> None:
+        """See :meth:`unitysvc.groups.Groups.delete`."""
+        from ._generated.api.customer_groups import (
+            customer_groups_delete_customer_group,
+        )
+
+        unwrap(
+            await customer_groups_delete_customer_group.asyncio_detailed(
+                UUID(str(group_id)),
+                client=self._client,
+            )
+        )
+
+    async def add_member(
+        self,
+        group_id: str | UUID,
+        *,
+        service_id: str | UUID,
+        routing_key: Any = None,
+        sort_order: int = 0,
+    ) -> ServiceCollectionMemberPublic:
+        """See :meth:`unitysvc.groups.Groups.add_member`."""
+        from ._generated.api.customer_groups import customer_groups_add_member
+        from ._generated.models.service_collection_member_create import (
+            ServiceCollectionMemberCreate,
+        )
+        from ._generated.types import UNSET
+
+        body = ServiceCollectionMemberCreate(
+            service_id=UUID(str(service_id)),
+            routing_key=routing_key if routing_key is not None else UNSET,
+            sort_order=sort_order,
+        )
+        return unwrap(
+            await customer_groups_add_member.asyncio_detailed(
+                UUID(str(group_id)),
+                client=self._client,
+                body=body,
+            )
+        )
+
+    async def members(self, group_id: str | UUID) -> builtins.list[ServiceCollectionMemberPublic]:
+        """See :meth:`unitysvc.groups.Groups.members`."""
+        from ._generated.api.customer_groups import customer_groups_list_members
+
+        return unwrap(
+            await customer_groups_list_members.asyncio_detailed(
+                UUID(str(group_id)),
+                client=self._client,
+            )
+        )
+
+    async def remove_member(self, group_id: str | UUID, service_id: str | UUID) -> None:
+        """See :meth:`unitysvc.groups.Groups.remove_member`."""
+        from ._generated.api.customer_groups import customer_groups_remove_member
+
+        unwrap(
+            await customer_groups_remove_member.asyncio_detailed(
+                UUID(str(group_id)),
+                UUID(str(service_id)),
+                client=self._client,
+            )
+        )
 
     async def services(
         self,
@@ -211,7 +339,6 @@ class AsyncGroups:
             headers=headers,
             timeout=timeout,
         )
-
 
     async def stream(
         self,

@@ -11,7 +11,7 @@
           "customer-aliases"
         ],
         "summary": "Create Alias",
-        "description": "Create a new URL alias for the current customer.\n\nIf ``is_routing`` is True (the default) and another alias is already\nrouting the same (name, request_routing_key), this one is created as\nnon-routing instead. Users can later switch routing via the\n``/aliases/{id}/switch`` endpoint.",
+        "description": "Create a new URL alias for the current customer.\n\nIf ``is_routing`` is True (the default) and another alias is already\nrouting the same (name, request_routing_key), this one is created as\nnon-routing instead. Users can later switch routing via the\n``/aliases/{id}/switch`` endpoint.\n\nPer-tier hard cap (#1063 / #1071 / #1083): when the customer's\nactive plan declares ``terms.aliases.max_allowed``, creating past\nthat cap returns 422 with an upgrade-prompt body. When\n``max_allowed`` is ``None`` (the default \u2014 most plans bill past\n``included`` rather than cap), creation is always allowed and the\nstatement worker bills any aliases above the included quota.\nSeat-scaling for Team subscriptions is applied by\n``enforce_quota_for_customer``. Unsubscribed customers have no\nquota \u2014 there's nothing to charge against either way.",
         "operationId": "customer-aliases-create_alias",
         "parameters": [
           {
@@ -851,7 +851,7 @@
           "customer-groups"
         ],
         "summary": "List Groups",
-        "description": "List active platform service groups visible to the customer.\n\nExcludes draft/archived/private groups, empty nodes, and\nseller-owned or customer-owned groups. Ordered with ``misc``\ngroups last, then by ``sort_order``, then alphabetically by name\n\u2014 matching the marketplace browse order.",
+        "description": "List service groups visible to the customer as a single flat list.\n\nMerges two kinds of rows into one ``CustomerGroupView`` shape:\n\n- **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)\n  \u2014 active platform groups with at least one service. Excludes\n  draft/archived/private groups, empty nodes, and seller-owned\n  groups. ``member_count`` comes from the cached ``num_services``.\n  Ordered with ``misc`` groups last, then by ``sort_order``, then\n  alphabetically by name \u2014 matching the marketplace browse order.\n- **Own collections** (``owner_type=\"customer\"``, ``editable=True``)\n  \u2014 the customer's own ``ServiceCollection`` rows. ``member_count``\n  is counted live.\n\nThe ``owner`` filter narrows this: ``system`` returns platform\ngroups only, ``own`` returns collections only, ``all`` (default)\nreturns both (platform first, then collections).",
         "operationId": "customer-groups-list_groups",
         "parameters": [
           {
@@ -871,6 +871,19 @@
               "title": "Name"
             },
             "description": "Filter by name (partial match)"
+          },
+          {
+            "name": "owner",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(all|system|own)$",
+              "description": "Which rows to return: 'all' (platform + own), 'system' (platform only), or 'own' (collections only).",
+              "default": "all",
+              "title": "Owner"
+            },
+            "description": "Which rows to return: 'all' (platform + own), 'system' (platform only), or 'own' (collections only)."
           },
           {
             "name": "authorization",
@@ -911,10 +924,241 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ServiceGroupListResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerGroupView"
+                  },
+                  "title": "Response Customer-Groups-List Groups"
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "customer-groups"
+        ],
+        "summary": "Create Customer Group",
+        "description": "Create a customer-owned service collection.\n\nCollections are the editable half of the unified ``/customer/groups``\nsurface: customer-curated catalogs addressable at ``/g/<name>``.\nPlatform groups remain read-only here. The ``name`` slug is unique\nper customer; a duplicate returns 409.",
+        "operationId": "customer-groups-create_customer_group",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceCollectionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerGroupView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{group_id}": {
+      "patch": {
+        "tags": [
+          "customer-groups"
+        ],
+        "summary": "Update Customer Group",
+        "description": "Update a customer-owned collection.\n\nOnly the customer's own collections are editable. Platform groups\nare addressable by id or name but read-only: a UUID mapping to a\nvisible platform group returns 403 (\"Platform groups are\nread-only\"); a UUID mapping to nothing visible returns 404.",
+        "operationId": "customer-groups-update_customer_group",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceCollectionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceCollectionPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "customer-groups"
+        ],
+        "summary": "Delete Customer Group",
+        "description": "Delete a customer-owned collection.\n\nOnly the customer's own collections can be deleted. Platform groups\nare addressable by id or name but read-only: a UUID mapping to a\nvisible platform group returns 403 (\"Platform groups are\nread-only\"); a UUID mapping to nothing visible returns 404.",
+        "operationId": "customer-groups-delete_customer_group",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -935,7 +1179,7 @@
           "customer-groups"
         ],
         "summary": "Get Group",
-        "description": "Get metadata for a single visible group, looked up by name.\n\nReturns 404 for hidden groups (draft, seller-owned, empty) \u2014\nexistence is not leaked. Member services are fetched separately\nvia ``GET /customer/groups/{name}/services``.",
+        "description": "Get a single group from the unified surface, by name or UUID.\n\nBoth kinds resolve to one unified ``CustomerGroupDetail`` shape:\n\n1. If ``name`` parses as a UUID that maps to one of the customer's\n   own collections, return the collection\n   (``owner_type=\"customer\"``, ``editable=True``, ``enabled`` set,\n   ``group_type=\"collection\"``; interface / routing_policy null).\n2. Otherwise resolve a visible platform group by ``id`` or ``name``\n   and return it (``owner_type=\"platform\"``, ``editable=False``,\n   with embedded interface / routing policy; ``enabled`` null).\n   Both ``id`` and ``name`` are returned in the shape, so platform\n   groups are addressable by either; ``name`` is the stable handle\n   that survives admin recreations.\n\nCollections are UUID-keyed (their slug is reserved for the future\n``/g/<name>`` dispatch path). Returns 404 for anything outside the\ncustomer-visible set \u2014 existence is not leaked.",
         "operationId": "customer-groups-get_group",
         "parameters": [
           {
@@ -986,7 +1230,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ServiceGroupDetail"
+                  "$ref": "#/components/schemas/CustomerGroupDetail"
                 }
               }
             }
@@ -1010,7 +1254,7 @@
           "customer-groups"
         ],
         "summary": "List Group Services",
-        "description": "List customer-visible services that belong to a group.\n\nThe group is identified by its name (not UUID) so SDK scripts\nkeep working if an admin recreates the group with the same slug.\nMirrors the visibility rule used by the GraphQL\n``resolve_group_services`` resolver for non-admin / non-seller\ncallers: service must be ``status='active'`` and\n``visibility='public'``. The group itself must be in the\ncustomer-visible set (active + platform + non-empty).\n\nUses keyset pagination on ``(created_at DESC, service_id DESC)``\nto match the seller ``services_list`` endpoint \u2014 clients echo\n``next_cursor`` back unchanged to fetch subsequent pages.",
+        "description": "List customer-visible services that belong to a group.\n\nThe group is addressable by id or name; both are returned in the\ngroup detail shape. Names stay valid across admin recreations of a\ngroup, so SDK scripts that use the name keep working.\nMirrors the visibility rule used by the GraphQL\n``resolve_group_services`` resolver for non-admin / non-seller\ncallers: service must be ``status='active'`` and\n``visibility='public'``. The group itself must be in the\ncustomer-visible set (active + platform + non-empty).\n\nUses keyset pagination on ``(created_at DESC, service_id DESC)``\nto match the seller ``services_list`` endpoint \u2014 clients echo\n``next_cursor`` back unchanged to fetch subsequent pages.",
         "operationId": "customer-groups-list_group_services",
         "parameters": [
           {
@@ -1115,6 +1359,249 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{group_id}/members": {
+      "get": {
+        "tags": [
+          "customer-groups"
+        ],
+        "summary": "List Members",
+        "description": "List the member services of a customer-owned collection.",
+        "operationId": "customer-groups-list_members",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceCollectionMemberPublic"
+                  },
+                  "title": "Response Customer-Groups-List Members"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "customer-groups"
+        ],
+        "summary": "Add Member",
+        "description": "Add a subscribed service to a customer-owned collection.\n\nThe service must be one the customer has an active enrollment for\n(the same subscription predicate the gateway uses). Collections are\ncapped at ``MAX_MEMBERS_PER_COLLECTION`` members.",
+        "operationId": "customer-groups-add_member",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceCollectionMemberCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceCollectionMemberPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{group_id}/members/{service_id}": {
+      "delete": {
+        "tags": [
+          "customer-groups"
+        ],
+        "summary": "Remove Member",
+        "description": "Remove a service from a customer-owned collection.",
+        "operationId": "customer-groups-remove_member",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "service_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Service Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -1869,6 +2356,25 @@
               "title": "Gateway Source"
             },
             "description": "Filter: 'apisix' or 'backend'"
+          },
+          {
+            "name": "recurrent_request_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter to firings produced by a specific RecurrentRequest (scheduled execution). When set, returns only rows whose ClickHouse ``recurrent_request_id`` column matches this UUID \u2014 drives the 'View executions' drill-down on the Scheduled Requests page. Pre-existing rows from before #1141 have an empty ``recurrent_request_id`` and are naturally excluded.",
+              "title": "Recurrent Request Id"
+            },
+            "description": "Filter to firings produced by a specific RecurrentRequest (scheduled execution). When set, returns only rows whose ClickHouse ``recurrent_request_id`` column matches this UUID \u2014 drives the 'View executions' drill-down on the Scheduled Requests page. Pre-existing rows from before #1141 have an empty ``recurrent_request_id`` and are naturally excluded."
           },
           {
             "name": "authorization",
@@ -3008,6 +3514,152 @@
         "title": "CustomerEnrollmentsResponse",
         "description": "Paginated list of the caller's enrollments."
       },
+      "CustomerGroupDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "owner_type": {
+            "type": "string",
+            "title": "Owner Type"
+          },
+          "editable": {
+            "type": "boolean",
+            "title": "Editable"
+          },
+          "member_count": {
+            "type": "integer",
+            "title": "Member Count",
+            "default": 0
+          },
+          "group_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GroupTypeEnum"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "interface": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccessInterface"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "routing_policy": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routing Policy"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "owner_type",
+          "editable"
+        ],
+        "title": "CustomerGroupDetail",
+        "description": "Unified detail shape for a single group from /customer/groups \u2014 a\nread-only platform group or the customer's own editable collection.\nSame fields for both; type-specific fields are null for the other type."
+      },
+      "CustomerGroupView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "owner_type": {
+            "type": "string",
+            "title": "Owner Type"
+          },
+          "editable": {
+            "type": "boolean",
+            "title": "Editable"
+          },
+          "member_count": {
+            "type": "integer",
+            "title": "Member Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "owner_type",
+          "editable"
+        ],
+        "title": "CustomerGroupView",
+        "description": "Unified shape for the merged /customer/groups list \u2014 either a read-only\nplatform ServiceGroup or the customer's own editable ServiceCollection."
+      },
       "GatewayKind": {
         "type": "string",
         "enum": [
@@ -3467,6 +4119,17 @@
               }
             ]
           },
+          "recurrent_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurrent Request Id"
+          },
           "error": {
             "anyOf": [
               {
@@ -3593,6 +4256,17 @@
               }
             ],
             "title": "Error Type"
+          },
+          "recurrent_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurrent Request Id"
           }
         },
         "type": "object",
@@ -3698,7 +4372,7 @@
           "path": {
             "type": "string",
             "title": "Path",
-            "description": "Gateway request path without the gateway base URL \u2014 same shape as what ``service.dispatch(path=...)`` / ``group.dispatch(path=...)`` produces. Examples: ``v1/chat/completions``, ``p/openai``, ``a/my-alias/foo``."
+            "description": "Gateway request path without the gateway base URL \u2014 same shape as what ``service.dispatch(path=...)`` / ``group.dispatch(path=...)`` produces. Examples: ``v1/chat/completions``, ``openai``, ``a/my-alias/foo``."
           },
           "routing_key": {
             "anyOf": [
@@ -3954,7 +4628,7 @@
             "type": "string",
             "maxLength": 500,
             "title": "Target Path",
-            "description": "Target path (e.g. 'p/openai' or 'g/my-llm-group')"
+            "description": "Target path (e.g. 'openai' or 'g/my-llm-group')"
           },
           "routing_key_override": {
             "anyOf": [
@@ -4154,6 +4828,207 @@
         ],
         "title": "ServiceAliasesPublic",
         "description": "List response for ServiceAliases."
+      },
+      "ServiceCollectionCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ServiceCollectionCreate",
+        "description": "Schema for creating a ServiceCollection."
+      },
+      "ServiceCollectionMemberCreate": {
+        "properties": {
+          "service_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Service Id"
+          },
+          "routing_key": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routing Key"
+          },
+          "sort_order": {
+            "type": "integer",
+            "title": "Sort Order",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "service_id"
+        ],
+        "title": "ServiceCollectionMemberCreate",
+        "description": "Schema for adding a member to a ServiceCollection."
+      },
+      "ServiceCollectionMemberPublic": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "service_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Service Id"
+          },
+          "routing_key": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routing Key"
+          },
+          "sort_order": {
+            "type": "integer",
+            "title": "Sort Order"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "service_id",
+          "routing_key",
+          "sort_order"
+        ],
+        "title": "ServiceCollectionMemberPublic",
+        "description": "Public response model for a collection member."
+      },
+      "ServiceCollectionPublic": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "member_count": {
+            "type": "integer",
+            "title": "Member Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "display_name",
+          "description",
+          "enabled"
+        ],
+        "title": "ServiceCollectionPublic",
+        "description": "Public response model for ServiceCollection."
+      },
+      "ServiceCollectionUpdate": {
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          }
+        },
+        "type": "object",
+        "title": "ServiceCollectionUpdate",
+        "description": "Schema for updating a ServiceCollection."
       },
       "ServiceDetail": {
         "properties": {
@@ -4357,128 +5232,6 @@
         ],
         "title": "ServiceEnrollmentStatusEnum",
         "description": "Status of a customer's service enrollment.\n\nWorkflow for services requiring parameters (user_parameters_schema exists):\n\n    [not enrolled] \u2192 (enroll) \u2192 pending \u2192 (task completes) \u2192 incomplete \u2192 (configure) \u2192 active\n                          \u2502                                                                \u2193\n                          \u2502                                  paused \u2190 (pause) \u2190\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                          \u2502\n                          \u2514\u2500\u2192 active  (if required secret already exists)\n\nWorkflow for services without parameters:\n\n    [not enrolled] \u2192 (enroll) \u2192 pending \u2192 (task completes) \u2192 active\n                                                                \u2193\n                                  paused \u2190 (pause) \u2190\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\nStates:\n- pending: Celery task is processing (transient, show spinner)\n- incomplete: Needs user configuration (required parameters not provided)\n- active: Enrolled and fully configured\n- paused: Enrolled but temporarily disabled\n- cancelled: Enrollment cancelled\n\nSecrets do not affect enrollment status \u2014 they are resolved at routing time."
-      },
-      "ServiceGroupDetail": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "display_name": {
-            "type": "string",
-            "title": "Display Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "group_type": {
-            "$ref": "#/components/schemas/GroupTypeEnum"
-          },
-          "service_count": {
-            "type": "integer",
-            "title": "Service Count"
-          },
-          "interface": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AccessInterface"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "routing_policy": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Routing Policy"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "display_name",
-          "group_type",
-          "service_count"
-        ],
-        "title": "ServiceGroupDetail",
-        "description": "Service group metadata with the (single) group-level interface.\n\nGroups declare at most one ``user_access_interfaces`` entry, so\n``interface`` is embedded here directly rather than returned via a\nseparate endpoint. The SDK reads ``grp.interface.base_url`` for\n``group.dispatch(json=...)`` \u2014 an HTTP call to that base URL where\nthe gateway's ``routing_policy`` picks a member service via\nweighted / content-dependent / price-based strategies. ``None`` if\nthe group has no user-facing interface configured.\n\nMember services are fetched separately via\n``GET /customer/groups/{id}/services`` so this response stays\nsmall for groups with many members.\n\n``routing_policy`` is exposed in full (not just the strategy\nname) because customers can configure it themselves via issue\n#857 \u2014 they need to read back the exact config they set."
-      },
-      "ServiceGroupListResponse": {
-        "properties": {
-          "data": {
-            "items": {
-              "$ref": "#/components/schemas/ServiceGroupSummary"
-            },
-            "type": "array",
-            "title": "Data"
-          },
-          "count": {
-            "type": "integer",
-            "title": "Count"
-          }
-        },
-        "type": "object",
-        "required": [
-          "data",
-          "count"
-        ],
-        "title": "ServiceGroupListResponse",
-        "description": "Paginated list of customer-visible service groups."
-      },
-      "ServiceGroupSummary": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "display_name": {
-            "type": "string",
-            "title": "Display Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "group_type": {
-            "$ref": "#/components/schemas/GroupTypeEnum"
-          },
-          "service_count": {
-            "type": "integer",
-            "title": "Service Count"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "display_name",
-          "group_type",
-          "service_count"
-        ],
-        "title": "ServiceGroupSummary",
-        "description": "Customer-visible service group summary.\n\nIdentified by ``name`` rather than UUID \u2014 group UUIDs change when\nadmins recreate a group, so SDK scripts that hardcode UUIDs break\nsilently after a recreation. Names survive because admins reuse\nthe same slug.\n\nExcludes internal platform configuration (``membership_rules``,\n``routing_policy``, ``user_access_interfaces``) \u2014 customers only\nneed the resolved ``base_url`` for gateway dispatch, not the raw\ninterface config."
       },
       "ServiceSummary": {
         "properties": {

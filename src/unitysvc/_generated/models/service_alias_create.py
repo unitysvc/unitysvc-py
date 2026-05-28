@@ -23,7 +23,7 @@ class ServiceAliasCreate:
     name: str
     """ URL-safe alias name (lowercase, alphanumeric, hyphens, underscores) """
     target_path: str
-    """ Target path (e.g. 'p/openai' or 'g/my-llm-group') """
+    """ Target path (e.g. 'openai' or 'g/my-llm-group') """
     description: None | str | Unset = UNSET
     request_routing_key: None | ServiceAliasCreateRequestRoutingKeyType0 | Unset = UNSET
     is_routing: bool | Unset = True

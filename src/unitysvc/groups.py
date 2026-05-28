@@ -22,9 +22,12 @@ with bound methods.
 
 from __future__ import annotations
 
+import builtins
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
+from ._generated.types import UNSET as _UNSET
 from ._http import unwrap
 from ._streaming import StreamingResponse, build_stream_kwargs
 from ._wrappers import _Wrappable
@@ -33,8 +36,11 @@ if TYPE_CHECKING:
     import httpx
 
     from ._generated.client import AuthenticatedClient
-    from ._generated.models.service_group_detail import ServiceGroupDetail
-    from ._generated.models.service_group_summary import ServiceGroupSummary
+    from ._generated.models.customer_group_detail import CustomerGroupDetail
+    from ._generated.models.customer_group_view import CustomerGroupView
+    from ._generated.models.service_collection_member_public import (
+        ServiceCollectionMemberPublic,
+    )
     from .client import Client
     from .services import Service
 
@@ -66,7 +72,7 @@ class Group(_Wrappable):
 
     __slots__ = ("_raw", "_parent")
 
-    def __init__(self, raw: ServiceGroupDetail | ServiceGroupSummary, parent: Client) -> None:
+    def __init__(self, raw: CustomerGroupDetail | CustomerGroupView, parent: Client) -> None:
         object.__setattr__(self, "_raw", raw)
         object.__setattr__(self, "_parent", parent)
 
@@ -202,27 +208,35 @@ class Groups:
     # ------------------------------------------------------------------
     # Read
     # ------------------------------------------------------------------
-    def list(self, *, name: str | None = None) -> GroupListPage:
-        """List active platform service groups visible to the customer.
+    def list(self, *, owner: str = "all", name: str | None = None) -> GroupListPage:
+        """List service groups and collections visible to the customer.
 
-        The visible set is small and bounded — the endpoint is not
-        paginated. ``name`` filters by partial substring match.
-        Items are returned as :class:`Group` wrappers with bound
-        methods.
+        Returns platform groups plus the customer's own editable
+        collections. The visible set is small and bounded — the
+        endpoint is not paginated and now returns a flat list.
+
+        ``owner`` narrows the server-side result set: ``"all"``
+        (platform + own, default), ``"system"`` (platform only), or
+        ``"own"`` (the customer's own collections only).
+
+        ``name`` is a client-side substring filter applied on top of
+        the returned rows (kept for back-compat with scripts that
+        passed ``name=``). Items are :class:`Group` wrappers with
+        bound methods.
         """
         from ._generated.api.customer_groups import customer_groups_list_groups
-        from ._generated.types import UNSET
 
         raw = unwrap(
             customer_groups_list_groups.sync_detailed(
                 client=self._client,
-                name=name if name is not None else UNSET,
+                owner=owner,
             )
         )
-        return GroupListPage(
-            data=[Group(item, parent=self._parent) for item in raw.data],
-            count=raw.count,
-        )
+        items = list(raw)
+        if name is not None:
+            items = [item for item in items if name in item.name]
+        data = [Group(item, parent=self._parent) for item in items]
+        return GroupListPage(data=data, count=len(data))
 
     def get(self, name: str) -> Group:
         """Get a single group by its slug name."""
@@ -239,6 +253,140 @@ class Groups:
     # Legacy alias — kept so SDK scripts that called ``get_by_name`` keep
     # working. Lookup is name-native now, so it's just ``get``.
     get_by_name = get
+
+    # ------------------------------------------------------------------
+    # Collection management (customer-owned editable groups)
+    # ------------------------------------------------------------------
+    def create(
+        self,
+        *,
+        name: str,
+        display_name: str | None = None,
+        description: str | None = None,
+    ) -> Group:
+        """Create a customer-owned service collection.
+
+        Collections are editable, customer-curated catalogs addressable
+        at ``/g/<name>``. Returns the created group as a :class:`Group`.
+        """
+        from ._generated.api.customer_groups import (
+            customer_groups_create_customer_group,
+        )
+        from ._generated.models.service_collection_create import ServiceCollectionCreate
+        from ._generated.types import UNSET
+
+        body = ServiceCollectionCreate(
+            name=name,
+            display_name=display_name if display_name is not None else UNSET,
+            description=description if description is not None else UNSET,
+        )
+        raw = unwrap(
+            customer_groups_create_customer_group.sync_detailed(
+                client=self._client,
+                body=body,
+            )
+        )
+        return Group(raw, parent=self._parent)
+
+    def update(
+        self,
+        group_id: str | UUID,
+        *,
+        display_name: Any = _UNSET,
+        description: Any = _UNSET,
+        enabled: Any = _UNSET,
+    ) -> Group:
+        """Update a customer-owned collection's metadata.
+
+        Only the fields you pass are changed; omitted fields are left
+        untouched server-side. Returns the updated group.
+        """
+        from ._generated.api.customer_groups import (
+            customer_groups_update_customer_group,
+        )
+        from ._generated.models.service_collection_update import ServiceCollectionUpdate
+
+        body = ServiceCollectionUpdate(
+            display_name=display_name,
+            description=description,
+            enabled=enabled,
+        )
+        raw = unwrap(
+            customer_groups_update_customer_group.sync_detailed(
+                UUID(str(group_id)),
+                client=self._client,
+                body=body,
+            )
+        )
+        return Group(raw, parent=self._parent)
+
+    def delete(self, group_id: str | UUID) -> None:
+        """Delete a customer-owned collection."""
+        from ._generated.api.customer_groups import (
+            customer_groups_delete_customer_group,
+        )
+
+        unwrap(
+            customer_groups_delete_customer_group.sync_detailed(
+                UUID(str(group_id)),
+                client=self._client,
+            )
+        )
+
+    def add_member(
+        self,
+        group_id: str | UUID,
+        *,
+        service_id: str | UUID,
+        routing_key: Any = None,
+        sort_order: int = 0,
+    ) -> ServiceCollectionMemberPublic:
+        """Add a member service to a customer-owned collection.
+
+        Returns the created member record (raw generated
+        :class:`ServiceCollectionMemberPublic`).
+        """
+        from ._generated.api.customer_groups import customer_groups_add_member
+        from ._generated.models.service_collection_member_create import (
+            ServiceCollectionMemberCreate,
+        )
+        from ._generated.types import UNSET
+
+        body = ServiceCollectionMemberCreate(
+            service_id=UUID(str(service_id)),
+            routing_key=routing_key if routing_key is not None else UNSET,
+            sort_order=sort_order,
+        )
+        return unwrap(
+            customer_groups_add_member.sync_detailed(
+                UUID(str(group_id)),
+                client=self._client,
+                body=body,
+            )
+        )
+
+    def members(self, group_id: str | UUID) -> builtins.list[ServiceCollectionMemberPublic]:
+        """List the member services of a collection (raw member records)."""
+        from ._generated.api.customer_groups import customer_groups_list_members
+
+        return unwrap(
+            customer_groups_list_members.sync_detailed(
+                UUID(str(group_id)),
+                client=self._client,
+            )
+        )
+
+    def remove_member(self, group_id: str | UUID, service_id: str | UUID) -> None:
+        """Remove a member service from a customer-owned collection."""
+        from ._generated.api.customer_groups import customer_groups_remove_member
+
+        unwrap(
+            customer_groups_remove_member.sync_detailed(
+                UUID(str(group_id)),
+                UUID(str(service_id)),
+                client=self._client,
+            )
+        )
 
     # ------------------------------------------------------------------
     # Navigation
