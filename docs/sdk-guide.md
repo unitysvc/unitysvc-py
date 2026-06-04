@@ -97,6 +97,24 @@ Field access on a `Group` is forwarded to the underlying record, so
 `grp.name`, `grp.routing_policy`, `grp.interface`, etc. all work
 exactly as they do on the raw response model.
 
+For **customer-owned collections** (editable groups), the membership
+and metadata operations are bound on the `Group` wrapper too — each
+pre-binds the group's id, so you don't re-pass it:
+
+```python
+coll = client.groups.create(name="my-llms", display_name="My LLMs")
+coll.add_member(service_id=svc_id)        # POST /<id>/members
+members = coll.members()                   # list member records
+coll.remove_member(service_id=svc_id)
+coll.update(description="curated set")      # partial metadata update
+coll = coll.refresh()                       # re-fetch latest state
+coll.delete()
+```
+
+The same ops remain on the manager (`client.groups.add_member(id, ...)`)
+for when you only have an id. Both surfaces have full async parity on
+`AsyncClient`.
+
 ## `services`
 
 Services are what you actually dispatch to. Each carries a list of

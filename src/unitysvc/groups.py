@@ -161,6 +161,59 @@ class Group(_Wrappable):
             timeout=timeout,
         )
 
+    # ------------------------------------------------------------------
+    # Collection management (pre-bind this group's id)
+    #
+    # Customer-owned collections only — these mirror the membership /
+    # metadata ops on :class:`Groups`, filling in this group's id so
+    # you don't re-pass it.
+    # ------------------------------------------------------------------
+    def refresh(self) -> Group:
+        """Re-fetch this group by name (latest metadata / members)."""
+        return self._parent.groups.get(self._raw.name)
+
+    def update(
+        self,
+        *,
+        display_name: Any = _UNSET,
+        description: Any = _UNSET,
+        enabled: Any = _UNSET,
+    ) -> Group:
+        """Update this collection's metadata. See :meth:`Groups.update`."""
+        return self._parent.groups.update(
+            self._raw.id,
+            display_name=display_name,
+            description=description,
+            enabled=enabled,
+        )
+
+    def delete(self) -> None:
+        """Delete this customer-owned collection. See :meth:`Groups.delete`."""
+        self._parent.groups.delete(self._raw.id)
+
+    def add_member(
+        self,
+        *,
+        service_id: str | UUID,
+        routing_key: Any = None,
+        sort_order: int = 0,
+    ) -> ServiceCollectionMemberPublic:
+        """Add a member service to this collection. See :meth:`Groups.add_member`."""
+        return self._parent.groups.add_member(
+            self._raw.id,
+            service_id=service_id,
+            routing_key=routing_key,
+            sort_order=sort_order,
+        )
+
+    def members(self) -> builtins.list[ServiceCollectionMemberPublic]:
+        """List this collection's member services. See :meth:`Groups.members`."""
+        return self._parent.groups.members(self._raw.id)
+
+    def remove_member(self, service_id: str | UUID) -> None:
+        """Remove a member service from this collection. See :meth:`Groups.remove_member`."""
+        self._parent.groups.remove_member(self._raw.id, service_id)
+
 
 @dataclass
 class GroupListPage:

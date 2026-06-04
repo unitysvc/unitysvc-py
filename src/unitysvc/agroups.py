@@ -100,6 +100,55 @@ class AsyncGroup:
             timeout=timeout,
         )
 
+    # ------------------------------------------------------------------
+    # Collection management (pre-bind this group's id)
+    # ------------------------------------------------------------------
+    async def refresh(self) -> AsyncGroup:
+        """Re-fetch this group by name (latest metadata / members)."""
+        return await self._parent.groups.get(self._raw.name)
+
+    async def update(
+        self,
+        *,
+        display_name: Any = _UNSET,
+        description: Any = _UNSET,
+        enabled: Any = _UNSET,
+    ) -> AsyncGroup:
+        """Update this collection's metadata. See :meth:`AsyncGroups.update`."""
+        return await self._parent.groups.update(
+            self._raw.id,
+            display_name=display_name,
+            description=description,
+            enabled=enabled,
+        )
+
+    async def delete(self) -> None:
+        """Delete this customer-owned collection. See :meth:`AsyncGroups.delete`."""
+        await self._parent.groups.delete(self._raw.id)
+
+    async def add_member(
+        self,
+        *,
+        service_id: str | UUID,
+        routing_key: Any = None,
+        sort_order: int = 0,
+    ) -> ServiceCollectionMemberPublic:
+        """Add a member service to this collection. See :meth:`AsyncGroups.add_member`."""
+        return await self._parent.groups.add_member(
+            self._raw.id,
+            service_id=service_id,
+            routing_key=routing_key,
+            sort_order=sort_order,
+        )
+
+    async def members(self) -> builtins.list[ServiceCollectionMemberPublic]:
+        """List this collection's member services. See :meth:`AsyncGroups.members`."""
+        return await self._parent.groups.members(self._raw.id)
+
+    async def remove_member(self, service_id: str | UUID) -> None:
+        """Remove a member service from this collection. See :meth:`AsyncGroups.remove_member`."""
+        await self._parent.groups.remove_member(self._raw.id, service_id)
+
 
 @dataclass
 class AsyncGroupListPage:
