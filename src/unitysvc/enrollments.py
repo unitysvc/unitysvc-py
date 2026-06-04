@@ -42,7 +42,13 @@ class Enrollment:
     """Active-record wrapper around an enrollment.
 
     Forwards field access (``enr.id``, ``enr.status``, ``enr.parameters``,
-    …) to the underlying generated record via ``__getattr__``. Adds:
+    ``enr.code``, …) to the underlying generated record via ``__getattr__``.
+
+    Every enrollment has a unique, stable **4-character** ``code`` (e.g.
+    ``CEFF``). The enrollment is reachable at ``/e/<code>`` on the gateway —
+    a short, unique handle to this enrollment's endpoint.
+
+    Adds:
 
     - :meth:`cancel` — sets status to ``cancelled`` (preserves
       parameters so a re-enroll reactivates).
@@ -85,9 +91,7 @@ class Enrollment:
                 time.sleep(1)
                 enr = enr.refresh()
         """
-        return self._parent.enrollments.get(
-            self._raw.id, include_service_details=include_service_details
-        )
+        return self._parent.enrollments.get(self._raw.id, include_service_details=include_service_details)
 
 
 @dataclass

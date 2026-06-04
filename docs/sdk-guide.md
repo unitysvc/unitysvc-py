@@ -242,6 +242,15 @@ while enr.status == "pending":
 enr.cancel()                                    # unenroll
 ```
 
+Every enrollment carries a unique, stable **4-character code** (`enr.code`,
+e.g. `CEFF`). It is also a routing handle: the enrollment is reachable at
+`/e/<code>` on the gateway — a short, unique alias for this enrollment's
+endpoint, regardless of the service's own URL.
+
+```python
+print(enr.code)                                 # e.g. "CEFF"  →  /e/CEFF
+```
+
 If you only have an enrollment id (e.g. from a webhook),
 `client.enrollments.get(id)` returns the same `Enrollment` wrapper.
 

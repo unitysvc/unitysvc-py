@@ -7,16 +7,16 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.chain_step_create import ChainStepCreate
+from ...models.chain_step_public import ChainStepPublic
 from ...models.http_validation_error import HTTPValidationError
-from ...models.service_collection_member_create import ServiceCollectionMemberCreate
-from ...models.service_collection_member_public import ServiceCollectionMemberPublic
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    group_id: UUID,
+    chain_id: UUID,
     *,
-    body: ServiceCollectionMemberCreate,
+    body: ChainStepCreate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -29,8 +29,8 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/groups/{group_id}/members".format(
-            group_id=quote(str(group_id), safe=""),
+        "url": "/chains/{chain_id}/steps".format(
+            chain_id=quote(str(chain_id), safe=""),
         ),
     }
 
@@ -44,9 +44,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | ServiceCollectionMemberPublic | None:
+) -> ChainStepPublic | HTTPValidationError | None:
     if response.status_code == 201:
-        response_201 = ServiceCollectionMemberPublic.from_dict(response.json())
+        response_201 = ChainStepPublic.from_dict(response.json())
 
         return response_201
 
@@ -63,7 +63,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | ServiceCollectionMemberPublic]:
+) -> Response[ChainStepPublic | HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -73,37 +73,33 @@ def _build_response(
 
 
 def sync_detailed(
-    group_id: UUID,
+    chain_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: ServiceCollectionMemberCreate,
+    body: ChainStepCreate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | ServiceCollectionMemberPublic]:
-    """Add Member
+) -> Response[ChainStepPublic | HTTPValidationError]:
+    """Add Step
 
-     Add a service to a customer-owned collection.
-
-    The service must be one the customer can dispatch — it needs no
-    enrollment, or the customer has an active enrollment for it.
-    Collections are capped at ``MAX_MEMBERS_PER_COLLECTION`` members.
+     Append one step to a chain.
 
     Args:
-        group_id (UUID):
+        chain_id (UUID):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (ServiceCollectionMemberCreate): Schema for adding a member to a ServiceCollection.
+        body (ChainStepCreate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ServiceCollectionMemberPublic]
+        Response[ChainStepPublic | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        group_id=group_id,
+        chain_id=chain_id,
         body=body,
         authorization=authorization,
         x_role_id=x_role_id,
@@ -117,37 +113,33 @@ def sync_detailed(
 
 
 def sync(
-    group_id: UUID,
+    chain_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: ServiceCollectionMemberCreate,
+    body: ChainStepCreate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | ServiceCollectionMemberPublic | None:
-    """Add Member
+) -> ChainStepPublic | HTTPValidationError | None:
+    """Add Step
 
-     Add a service to a customer-owned collection.
-
-    The service must be one the customer can dispatch — it needs no
-    enrollment, or the customer has an active enrollment for it.
-    Collections are capped at ``MAX_MEMBERS_PER_COLLECTION`` members.
+     Append one step to a chain.
 
     Args:
-        group_id (UUID):
+        chain_id (UUID):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (ServiceCollectionMemberCreate): Schema for adding a member to a ServiceCollection.
+        body (ChainStepCreate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ServiceCollectionMemberPublic
+        ChainStepPublic | HTTPValidationError
     """
 
     return sync_detailed(
-        group_id=group_id,
+        chain_id=chain_id,
         client=client,
         body=body,
         authorization=authorization,
@@ -156,37 +148,33 @@ def sync(
 
 
 async def asyncio_detailed(
-    group_id: UUID,
+    chain_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: ServiceCollectionMemberCreate,
+    body: ChainStepCreate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | ServiceCollectionMemberPublic]:
-    """Add Member
+) -> Response[ChainStepPublic | HTTPValidationError]:
+    """Add Step
 
-     Add a service to a customer-owned collection.
-
-    The service must be one the customer can dispatch — it needs no
-    enrollment, or the customer has an active enrollment for it.
-    Collections are capped at ``MAX_MEMBERS_PER_COLLECTION`` members.
+     Append one step to a chain.
 
     Args:
-        group_id (UUID):
+        chain_id (UUID):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (ServiceCollectionMemberCreate): Schema for adding a member to a ServiceCollection.
+        body (ChainStepCreate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ServiceCollectionMemberPublic]
+        Response[ChainStepPublic | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        group_id=group_id,
+        chain_id=chain_id,
         body=body,
         authorization=authorization,
         x_role_id=x_role_id,
@@ -198,38 +186,34 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    group_id: UUID,
+    chain_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: ServiceCollectionMemberCreate,
+    body: ChainStepCreate,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | ServiceCollectionMemberPublic | None:
-    """Add Member
+) -> ChainStepPublic | HTTPValidationError | None:
+    """Add Step
 
-     Add a service to a customer-owned collection.
-
-    The service must be one the customer can dispatch — it needs no
-    enrollment, or the customer has an active enrollment for it.
-    Collections are capped at ``MAX_MEMBERS_PER_COLLECTION`` members.
+     Append one step to a chain.
 
     Args:
-        group_id (UUID):
+        chain_id (UUID):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (ServiceCollectionMemberCreate): Schema for adding a member to a ServiceCollection.
+        body (ChainStepCreate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ServiceCollectionMemberPublic
+        ChainStepPublic | HTTPValidationError
     """
 
     return (
         await asyncio_detailed(
-            group_id=group_id,
+            chain_id=chain_id,
             client=client,
             body=body,
             authorization=authorization,
