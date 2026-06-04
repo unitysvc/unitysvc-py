@@ -44,6 +44,8 @@ with Client.from_env() as client:
 | `client.resolve(...)`       | `/v1/customer/resolve` (dry-run)        |
 | `client.secrets`            | `/v1/customer/secrets/*`                |
 | `client.aliases`            | `/v1/customer/aliases/*`                |
+| `client.chains`             | `/v1/customer/chains/*`                 |
+| `client.broadcasts`         | `/v1/customer/broadcasts/*`             |
 | `client.recurrent_requests` | `/v1/customer/recurrent-requests/*`     |
 | `client.request_logs`       | `/v1/customer/request-logs/*`           |
 
@@ -329,6 +331,79 @@ client.aliases.delete(alias_id)
     generating a typed `ServiceAliasPublic` response model. Until the
     backend spec is fixed, alias read methods return loosely-typed
     parsed bodies.
+
+## `chains`
+
+A **chain** runs a sequence of steps where each step's *success* and
+*failure* branch to a different next step — covering failover (advance
+on failure) and ordered workflows (advance on success) in one
+construct. Chains are **managed by UUID** but **dispatched by name** at
+the gateway `/c/<name>` primitive.
+
+`client.chains.get(id)` and the items in `client.chains.list().data`
+are `Chain` active-record wrappers: field access is forwarded to the
+underlying record (`ch.name`, `ch.steps`, `ch.enabled`), and the
+gateway wrapper primitives compose on the chain's `/c/<name>` path.
+
+```python
+ch = client.chains.create(
+    name="llm-failover",
+    steps=[
+        {"name": "primary", "target_path": "anthropic", "on_failure": "continue"},
+        {"name": "backup",  "target_path": "openai",    "on_success": "stop"},
+    ],
+)
+resp = ch.dispatch(json={"messages": [...]})          # POST /c/llm-failover
+resp = ch.logged().dispatch(json={"messages": [...]})  # compose wrapper primitives
+
+# Step management pre-binds the chain id.
+ch.add_step(name="tertiary", target_path="mistral", sort_order=2)
+ch.replace_steps([...])      # swap the whole step list atomically
+ch.update(enabled=False)     # partial metadata update
+ch.delete()
+```
+
+Each step dict takes `name` and `target_path` (required) plus optional
+`sort_order` (auto-assigned from list position when omitted),
+`on_success` (default `"stop"`), `on_failure` (default `"continue"`),
+and `timeout_ms`.
+
+## `broadcasts`
+
+A **broadcast** fans one call out to many targets in parallel — either
+a `sync` envelope of per-target results, or `async` enqueued tasks.
+Like chains, broadcasts are **managed by UUID** but **dispatched by
+name** at the gateway `/b/<name>` primitive.
+
+`client.broadcasts.get(id)` and the items in
+`client.broadcasts.list().data` are `Broadcast` active-record wrappers
+with the same forwarding + wrapper-composition contract as `Chain`.
+
+```python
+bc = client.broadcasts.create(
+    name="eval-fanout",
+    mode="sync",                 # or "async"
+    targets=[
+        {"name": "anthropic", "target_path": "anthropic"},
+        {"name": "openai",    "target_path": "openai"},
+    ],
+)
+resp = bc.dispatch(json={"messages": [...]})   # POST /b/eval-fanout → all targets
+
+# Target management pre-binds the broadcast id.
+bc.add_target(name="mistral", target_path="mistral")
+bc.replace_targets([...])    # swap the whole target list atomically
+bc.update(mode="async")      # partial metadata update
+bc.delete()
+```
+
+Each target dict takes `name` and `target_path` (required) plus
+optional `routing_key_override` (dict) and `sort_order`.
+
+Both `chains` and `broadcasts` have full async parity on
+`AsyncClient` — every method is an `async def` with the same
+signature (`await client.chains.create(...)`,
+`await ch.dispatch(...)`).
 
 ## `recurrent_requests`
 
