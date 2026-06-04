@@ -39,6 +39,8 @@ from .client import (
 if TYPE_CHECKING:
     from ._generated.models.resolve_response import ResolveResponse
     from .aaliases import AsyncAliases
+    from .abroadcasts import AsyncBroadcasts
+    from .achains import AsyncChains
     from .aenrollments import AsyncEnrollments
     from .agroups import AsyncGroups
     from .arecurrent_requests import AsyncRecurrentRequests
@@ -96,6 +98,8 @@ class AsyncClient:
         self.smtp_base_url = smtp_base_url or os.environ.get(ENV_SMTP_BASE_URL)
 
         self._aliases: AsyncAliases | None = None
+        self._broadcasts: AsyncBroadcasts | None = None
+        self._chains: AsyncChains | None = None
         self._enrollments: AsyncEnrollments | None = None
         self._groups: AsyncGroups | None = None
         self._recurrent_requests: AsyncRecurrentRequests | None = None
@@ -129,6 +133,22 @@ class AsyncClient:
         return self._aliases
 
     @property
+    def broadcasts(self) -> AsyncBroadcasts:
+        if self._broadcasts is None:
+            from .abroadcasts import AsyncBroadcasts
+
+            self._broadcasts = AsyncBroadcasts(self._client, parent=self)
+        return self._broadcasts
+
+    @property
+    def chains(self) -> AsyncChains:
+        if self._chains is None:
+            from .achains import AsyncChains
+
+            self._chains = AsyncChains(self._client, parent=self)
+        return self._chains
+
+    @property
     def enrollments(self) -> AsyncEnrollments:
         if self._enrollments is None:
             from .aenrollments import AsyncEnrollments
@@ -151,6 +171,54 @@ class AsyncClient:
 
             self._services = AsyncServices(self._client, parent=self)
         return self._services
+
+    # ------------------------------------------------------------------
+    # Dispatch (lower-level escape hatch)
+    # ------------------------------------------------------------------
+    async def dispatch(
+        self,
+        path: str,
+        *,
+        method: str = "POST",
+        json: object = None,
+        data: object = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+    ) -> httpx.Response:
+        """Send a request to a gateway-relative path (async).
+
+        Async mirror of :meth:`unitysvc.Client.dispatch`. ``path`` must
+        be gateway-relative (no scheme, no leading slash) — e.g.
+        ``"c/<chain>"``, ``"b/<broadcast>"``, ``"l/p/<service-id>"``.
+        Resolves the gateway base URL from ``api_base_url`` (falling
+        back to the control-plane base with the trailing ``/v1``
+        stripped). Raises ``ValueError`` when neither is resolvable.
+        """
+        from .agroups import _http_dispatch_async
+
+        gateway_root = self.api_base_url
+        if not gateway_root:
+            stripped = self._base_url.rstrip("/")
+            if stripped.endswith("/v1"):
+                stripped = stripped[: -len("/v1")]
+            gateway_root = stripped
+        if not gateway_root:
+            raise ValueError(
+                "Cannot resolve gateway base URL. Set api_base_url= on "
+                "the AsyncClient constructor or UNITYSVC_API_BASE_URL in "
+                "the environment."
+            )
+
+        return await _http_dispatch_async(
+            self._client,
+            base_url=gateway_root,
+            path=path,
+            method=method,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout,
+        )
 
     # ------------------------------------------------------------------
     # Resolve (one-shot primitive)

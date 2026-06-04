@@ -65,6 +65,7 @@ class CustomerEnrollment:
     updated_at: datetime.datetime | None | Unset = UNSET
     service: CustomerEnrollmentServiceType0 | None | Unset = UNSET
     proxy_endpoint: None | str | Unset = UNSET
+    code: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -109,6 +110,12 @@ class CustomerEnrollment:
         else:
             proxy_endpoint = self.proxy_endpoint
 
+        code: None | str | Unset
+        if isinstance(self.code, Unset):
+            code = UNSET
+        else:
+            code = self.code
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -127,6 +134,8 @@ class CustomerEnrollment:
             field_dict["service"] = service
         if proxy_endpoint is not UNSET:
             field_dict["proxy_endpoint"] = proxy_endpoint
+        if code is not UNSET:
+            field_dict["code"] = code
 
         return field_dict
 
@@ -204,6 +213,15 @@ class CustomerEnrollment:
 
         proxy_endpoint = _parse_proxy_endpoint(d.pop("proxy_endpoint", UNSET))
 
+        def _parse_code(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        code = _parse_code(d.pop("code", UNSET))
+
         customer_enrollment = cls(
             id=id,
             service_id=service_id,
@@ -213,6 +231,7 @@ class CustomerEnrollment:
             updated_at=updated_at,
             service=service,
             proxy_endpoint=proxy_endpoint,
+            code=code,
         )
 
         customer_enrollment.additional_properties = d

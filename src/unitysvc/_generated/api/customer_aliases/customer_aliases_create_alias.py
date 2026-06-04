@@ -84,15 +84,14 @@ def sync_detailed(
     non-routing instead. Users can later switch routing via the
     ``/aliases/{id}/switch`` endpoint.
 
-    Per-tier hard cap (#1063 / #1071 / #1083): when the customer's
-    active plan declares ``terms.aliases.max_allowed``, creating past
-    that cap returns 422 with an upgrade-prompt body. When
-    ``max_allowed`` is ``None`` (the default — most plans bill past
-    ``included`` rather than cap), creation is always allowed and the
-    statement worker bills any aliases above the included quota.
+    Combined routing-object cap (#1071 / #1083 / #1136): when the
+    customer's active plan declares ``terms.routing_objects.max_allowed``,
+    creating past that cap — counting ALL the customer's routing objects
+    (aliases + collections) — returns 422 with an upgrade-prompt body.
+    When ``max_allowed`` is ``None`` (unlimited), creation is always
+    allowed. Routing objects are free; there is no per-object billing.
     Seat-scaling for Team subscriptions is applied by
-    ``enforce_quota_for_customer``. Unsubscribed customers have no
-    quota — there's nothing to charge against either way.
+    ``enforce_quota_for_customer``. Unsubscribed customers have no quota.
 
     Args:
         authorization (None | str | Unset):
@@ -136,15 +135,14 @@ def sync(
     non-routing instead. Users can later switch routing via the
     ``/aliases/{id}/switch`` endpoint.
 
-    Per-tier hard cap (#1063 / #1071 / #1083): when the customer's
-    active plan declares ``terms.aliases.max_allowed``, creating past
-    that cap returns 422 with an upgrade-prompt body. When
-    ``max_allowed`` is ``None`` (the default — most plans bill past
-    ``included`` rather than cap), creation is always allowed and the
-    statement worker bills any aliases above the included quota.
+    Combined routing-object cap (#1071 / #1083 / #1136): when the
+    customer's active plan declares ``terms.routing_objects.max_allowed``,
+    creating past that cap — counting ALL the customer's routing objects
+    (aliases + collections) — returns 422 with an upgrade-prompt body.
+    When ``max_allowed`` is ``None`` (unlimited), creation is always
+    allowed. Routing objects are free; there is no per-object billing.
     Seat-scaling for Team subscriptions is applied by
-    ``enforce_quota_for_customer``. Unsubscribed customers have no
-    quota — there's nothing to charge against either way.
+    ``enforce_quota_for_customer``. Unsubscribed customers have no quota.
 
     Args:
         authorization (None | str | Unset):
@@ -183,15 +181,14 @@ async def asyncio_detailed(
     non-routing instead. Users can later switch routing via the
     ``/aliases/{id}/switch`` endpoint.
 
-    Per-tier hard cap (#1063 / #1071 / #1083): when the customer's
-    active plan declares ``terms.aliases.max_allowed``, creating past
-    that cap returns 422 with an upgrade-prompt body. When
-    ``max_allowed`` is ``None`` (the default — most plans bill past
-    ``included`` rather than cap), creation is always allowed and the
-    statement worker bills any aliases above the included quota.
+    Combined routing-object cap (#1071 / #1083 / #1136): when the
+    customer's active plan declares ``terms.routing_objects.max_allowed``,
+    creating past that cap — counting ALL the customer's routing objects
+    (aliases + collections) — returns 422 with an upgrade-prompt body.
+    When ``max_allowed`` is ``None`` (unlimited), creation is always
+    allowed. Routing objects are free; there is no per-object billing.
     Seat-scaling for Team subscriptions is applied by
-    ``enforce_quota_for_customer``. Unsubscribed customers have no
-    quota — there's nothing to charge against either way.
+    ``enforce_quota_for_customer``. Unsubscribed customers have no quota.
 
     Args:
         authorization (None | str | Unset):
@@ -233,15 +230,14 @@ async def asyncio(
     non-routing instead. Users can later switch routing via the
     ``/aliases/{id}/switch`` endpoint.
 
-    Per-tier hard cap (#1063 / #1071 / #1083): when the customer's
-    active plan declares ``terms.aliases.max_allowed``, creating past
-    that cap returns 422 with an upgrade-prompt body. When
-    ``max_allowed`` is ``None`` (the default — most plans bill past
-    ``included`` rather than cap), creation is always allowed and the
-    statement worker bills any aliases above the included quota.
+    Combined routing-object cap (#1071 / #1083 / #1136): when the
+    customer's active plan declares ``terms.routing_objects.max_allowed``,
+    creating past that cap — counting ALL the customer's routing objects
+    (aliases + collections) — returns 422 with an upgrade-prompt body.
+    When ``max_allowed`` is ``None`` (unlimited), creation is always
+    allowed. Routing objects are free; there is no per-object billing.
     Seat-scaling for Team subscriptions is applied by
-    ``enforce_quota_for_customer``. Unsubscribed customers have no
-    quota — there's nothing to charge against either way.
+    ``enforce_quota_for_customer``. Unsubscribed customers have no quota.
 
     Args:
         authorization (None | str | Unset):

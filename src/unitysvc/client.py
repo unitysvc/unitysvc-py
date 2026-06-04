@@ -52,6 +52,8 @@ from ._generated.client import AuthenticatedClient as _LowLevelClient
 if TYPE_CHECKING:
     from ._generated.models.resolve_response import ResolveResponse
     from .aliases import Aliases
+    from .broadcasts import Broadcasts
+    from .chains import Chains
     from .enrollments import Enrollments
     from .groups import Groups
     from .recurrent_requests import RecurrentRequests
@@ -125,6 +127,8 @@ class Client:
 
         # Lazy resource initialization.
         self._aliases: Aliases | None = None
+        self._broadcasts: Broadcasts | None = None
+        self._chains: Chains | None = None
         self._enrollments: Enrollments | None = None
         self._groups: Groups | None = None
         self._recurrent_requests: RecurrentRequests | None = None
@@ -161,6 +165,22 @@ class Client:
 
             self._aliases = Aliases(self._client)
         return self._aliases
+
+    @property
+    def broadcasts(self) -> Broadcasts:
+        if self._broadcasts is None:
+            from .broadcasts import Broadcasts
+
+            self._broadcasts = Broadcasts(self._client, parent=self)
+        return self._broadcasts
+
+    @property
+    def chains(self) -> Chains:
+        if self._chains is None:
+            from .chains import Chains
+
+            self._chains = Chains(self._client, parent=self)
+        return self._chains
 
     @property
     def enrollments(self) -> Enrollments:

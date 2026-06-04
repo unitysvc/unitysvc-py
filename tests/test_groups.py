@@ -105,6 +105,33 @@ def test_create_round_trip() -> None:
     assert body["description"] == "a curated set"
 
 
+def test_group_wrapper_binds_membership_ops() -> None:
+    """The Group active-record binds add_member/members/remove_member to its id."""
+    grp = _group_view("my-collection", owner_type="customer", editable=True)
+    service_id = str(uuid.uuid4())
+    captured: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(request)
+        if request.method == "POST" and request.url.path.rstrip("/").endswith(f"/{grp['id']}/members"):
+            return httpx.Response(
+                201,
+                json={"id": str(uuid.uuid4()), "service_id": service_id, "routing_key": None, "sort_order": 0},
+            )
+        return httpx.Response(200, json=grp)
+
+    with Client(api_key="svcpass_test") as client:
+        client._client.get_httpx_client()._transport = httpx.MockTransport(handler)
+        group = client.groups.get("my-collection")
+        member = group.add_member(service_id=service_id)
+
+    # add_member pre-binds this group's id into the request path.
+    assert str(member.service_id) == service_id
+    add_req = captured[-1]
+    assert add_req.method == "POST"
+    assert add_req.url.path.rstrip("/").endswith(f"/{grp['id']}/members")
+
+
 @pytest.mark.asyncio
 async def test_async_list_returns_envelope() -> None:
     payload = [_group_view("llm")]

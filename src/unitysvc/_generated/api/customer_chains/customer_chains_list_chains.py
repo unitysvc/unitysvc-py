@@ -1,22 +1,20 @@
 from http import HTTPStatus
 from typing import Any, cast
 from urllib.parse import quote
-from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.chains_public import ChainsPublic
 from ...models.http_validation_error import HTTPValidationError
-from ...models.service_collection_member_create import ServiceCollectionMemberCreate
-from ...models.service_collection_member_public import ServiceCollectionMemberPublic
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    group_id: UUID,
     *,
-    body: ServiceCollectionMemberCreate,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -27,16 +25,19 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
+    params: dict[str, Any] = {}
+
+    params["skip"] = skip
+
+    params["limit"] = limit
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/groups/{group_id}/members".format(
-            group_id=quote(str(group_id), safe=""),
-        ),
+        "method": "get",
+        "url": "/chains/",
+        "params": params,
     }
-
-    _kwargs["json"] = body.to_dict()
-
-    headers["Content-Type"] = "application/json"
 
     _kwargs["headers"] = headers
     return _kwargs
@@ -44,11 +45,11 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | ServiceCollectionMemberPublic | None:
-    if response.status_code == 201:
-        response_201 = ServiceCollectionMemberPublic.from_dict(response.json())
+) -> ChainsPublic | HTTPValidationError | None:
+    if response.status_code == 200:
+        response_200 = ChainsPublic.from_dict(response.json())
 
-        return response_201
+        return response_200
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
@@ -63,7 +64,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | ServiceCollectionMemberPublic]:
+) -> Response[ChainsPublic | HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -73,38 +74,34 @@ def _build_response(
 
 
 def sync_detailed(
-    group_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: ServiceCollectionMemberCreate,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | ServiceCollectionMemberPublic]:
-    """Add Member
+) -> Response[ChainsPublic | HTTPValidationError]:
+    """List Chains
 
-     Add a service to a customer-owned collection.
-
-    The service must be one the customer can dispatch — it needs no
-    enrollment, or the customer has an active enrollment for it.
-    Collections are capped at ``MAX_MEMBERS_PER_COLLECTION`` members.
+     List customer's chains.
 
     Args:
-        group_id (UUID):
+        skip (int | Unset):  Default: 0.
+        limit (int | Unset):  Default: 100.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (ServiceCollectionMemberCreate): Schema for adding a member to a ServiceCollection.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ServiceCollectionMemberPublic]
+        Response[ChainsPublic | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        group_id=group_id,
-        body=body,
+        skip=skip,
+        limit=limit,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -117,77 +114,69 @@ def sync_detailed(
 
 
 def sync(
-    group_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: ServiceCollectionMemberCreate,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | ServiceCollectionMemberPublic | None:
-    """Add Member
+) -> ChainsPublic | HTTPValidationError | None:
+    """List Chains
 
-     Add a service to a customer-owned collection.
-
-    The service must be one the customer can dispatch — it needs no
-    enrollment, or the customer has an active enrollment for it.
-    Collections are capped at ``MAX_MEMBERS_PER_COLLECTION`` members.
+     List customer's chains.
 
     Args:
-        group_id (UUID):
+        skip (int | Unset):  Default: 0.
+        limit (int | Unset):  Default: 100.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (ServiceCollectionMemberCreate): Schema for adding a member to a ServiceCollection.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ServiceCollectionMemberPublic
+        ChainsPublic | HTTPValidationError
     """
 
     return sync_detailed(
-        group_id=group_id,
         client=client,
-        body=body,
+        skip=skip,
+        limit=limit,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
 
 
 async def asyncio_detailed(
-    group_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: ServiceCollectionMemberCreate,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | ServiceCollectionMemberPublic]:
-    """Add Member
+) -> Response[ChainsPublic | HTTPValidationError]:
+    """List Chains
 
-     Add a service to a customer-owned collection.
-
-    The service must be one the customer can dispatch — it needs no
-    enrollment, or the customer has an active enrollment for it.
-    Collections are capped at ``MAX_MEMBERS_PER_COLLECTION`` members.
+     List customer's chains.
 
     Args:
-        group_id (UUID):
+        skip (int | Unset):  Default: 0.
+        limit (int | Unset):  Default: 100.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (ServiceCollectionMemberCreate): Schema for adding a member to a ServiceCollection.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ServiceCollectionMemberPublic]
+        Response[ChainsPublic | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        group_id=group_id,
-        body=body,
+        skip=skip,
+        limit=limit,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -198,40 +187,36 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    group_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: ServiceCollectionMemberCreate,
+    skip: int | Unset = 0,
+    limit: int | Unset = 100,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | ServiceCollectionMemberPublic | None:
-    """Add Member
+) -> ChainsPublic | HTTPValidationError | None:
+    """List Chains
 
-     Add a service to a customer-owned collection.
-
-    The service must be one the customer can dispatch — it needs no
-    enrollment, or the customer has an active enrollment for it.
-    Collections are capped at ``MAX_MEMBERS_PER_COLLECTION`` members.
+     List customer's chains.
 
     Args:
-        group_id (UUID):
+        skip (int | Unset):  Default: 0.
+        limit (int | Unset):  Default: 100.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (ServiceCollectionMemberCreate): Schema for adding a member to a ServiceCollection.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ServiceCollectionMemberPublic
+        ChainsPublic | HTTPValidationError
     """
 
     return (
         await asyncio_detailed(
-            group_id=group_id,
             client=client,
-            body=body,
+            skip=skip,
+            limit=limit,
             authorization=authorization,
             x_role_id=x_role_id,
         )
