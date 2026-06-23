@@ -12,6 +12,7 @@ from .request_logs import _or_unset
 if TYPE_CHECKING:
     from ._generated.client import AuthenticatedClient
     from ._generated.models.logging_status_response import LoggingStatusResponse
+    from ._generated.models.ops_customer_request_log_detail import OpsCustomerRequestLogDetail
     from ._generated.models.request_log_detail import RequestLogDetail
     from ._generated.models.request_log_list_response import RequestLogListResponse
 
@@ -82,7 +83,7 @@ class AsyncRequestLogs:
             )
         )
 
-    async def get(self, log_id: UUID | str) -> RequestLogDetail:
+    async def get(self, log_id: UUID | str) -> OpsCustomerRequestLogDetail | RequestLogDetail:
         from ._generated.api.customer import customer_get_request_log
 
         return unwrap(
