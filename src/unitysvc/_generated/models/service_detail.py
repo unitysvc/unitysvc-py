@@ -44,7 +44,7 @@ class ServiceDetail:
     capabilities: list[str] | None | Unset = UNSET
     tags: list[str] | None | Unset = UNSET
     list_price: None | ServiceDetailListPriceType0 | Unset = UNSET
-    enrollment_required: bool | Unset = False
+    enrollment_channel: None | str | Unset = UNSET
     listing_type: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -117,7 +117,11 @@ class ServiceDetail:
         else:
             list_price = self.list_price
 
-        enrollment_required = self.enrollment_required
+        enrollment_channel: None | str | Unset
+        if isinstance(self.enrollment_channel, Unset):
+            enrollment_channel = UNSET
+        else:
+            enrollment_channel = self.enrollment_channel
 
         listing_type: None | str | Unset
         if isinstance(self.listing_type, Unset):
@@ -151,8 +155,8 @@ class ServiceDetail:
             field_dict["tags"] = tags
         if list_price is not UNSET:
             field_dict["list_price"] = list_price
-        if enrollment_required is not UNSET:
-            field_dict["enrollment_required"] = enrollment_required
+        if enrollment_channel is not UNSET:
+            field_dict["enrollment_channel"] = enrollment_channel
         if listing_type is not UNSET:
             field_dict["listing_type"] = listing_type
 
@@ -272,7 +276,14 @@ class ServiceDetail:
 
         list_price = _parse_list_price(d.pop("list_price", UNSET))
 
-        enrollment_required = d.pop("enrollment_required", UNSET)
+        def _parse_enrollment_channel(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        enrollment_channel = _parse_enrollment_channel(d.pop("enrollment_channel", UNSET))
 
         def _parse_listing_type(data: object) -> None | str | Unset:
             if data is None:
@@ -295,7 +306,7 @@ class ServiceDetail:
             capabilities=capabilities,
             tags=tags,
             list_price=list_price,
-            enrollment_required=enrollment_required,
+            enrollment_channel=enrollment_channel,
             listing_type=listing_type,
         )
 

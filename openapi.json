@@ -2855,7 +2855,7 @@
           "customer-groups"
         ],
         "summary": "Add Member",
-        "description": "Add a service to a customer-owned collection.\n\nThe service must be one the customer can dispatch \u2014 it needs no\nenrollment, or the customer has an active enrollment for it.\nCollections are capped at ``MAX_MEMBERS_PER_COLLECTION`` members.",
+        "description": "Add a service to a customer-owned collection.\n\nThe service must be one the customer can dispatch \u2014 it needs no\nenrollment, or the customer has an active enrollment for it.",
         "operationId": "customer-groups-add_member",
         "parameters": [
           {
@@ -3460,7 +3460,7 @@
           "customer-recurrent-requests"
         ],
         "summary": "Trigger Recurrent Request",
-        "description": "Execute a recurrent request once via the gateway proxy.\n\nResolves body templates, sends the request through execute_proxy_request\n(same code path as the gateway and recurrence worker), and returns the\nupstream response directly.",
+        "description": "Execute a recurrent request once via the gateway proxy.\n\nResolves body templates, sends the request through APISIX (same path a\nlive request takes, signed with the customer's platform key), and returns\nthe upstream response directly (#646).",
         "operationId": "customer-recurrent-requests-trigger_recurrent_request",
         "parameters": [
           {
@@ -4042,7 +4042,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RequestLogDetail"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RequestLogDetail"
+                    },
+                    {
+                      "$ref": "#/components/schemas/OpsCustomerRequestLogDetail"
+                    }
+                  ],
+                  "title": "Response Customer-Get Request Log"
                 }
               }
             }
@@ -4142,7 +4150,7 @@
           "customer-secrets"
         ],
         "summary": "List Secrets",
-        "description": "List the current customer's secrets.\n\nReturns secret metadata only \u2014 values are never returned.",
+        "description": "List the current customer's secrets.\n\nReturns secret metadata only \u2014 values are never returned. ``limit``\ndefaults to ``None`` (every secret); pass one to paginate.",
         "operationId": "customer-secrets-list_secrets",
         "parameters": [
           {
@@ -4160,8 +4168,14 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "default": 100,
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "Limit"
             }
           },
@@ -4690,7 +4704,7 @@
           "customer-services"
         ],
         "summary": "Set Customer Group Membership",
-        "description": "Set which of the customer's editable collections contain the\nservice (toggle/diff). ``include_default`` ensures the Favorites\ncollection exists then adds; unchecking removes. Rejects services the\ncustomer can't dispatch and enforces the per-collection member cap.",
+        "description": "Set which of the customer's editable collections contain the\nservice (toggle/diff). ``include_default`` ensures the Favorites\ncollection exists then adds; unchecking removes. Rejects services the\ncustomer can't dispatch.",
         "operationId": "customer-services-set_customer_group_membership",
         "parameters": [
           {
@@ -6003,16 +6017,53 @@
         "title": "GatewayKind",
         "description": "Short-form gateway selector for ``ResolveRequest.gateway``.\n\nCustomer-facing shorthand \u2014 maps to the ``<NAME>_GATEWAY_BASE_URL``\nsettings template internally. ``api`` covers HTTP services (LLM,\nuptime monitors, generic APIs); ``s3`` and ``smtp`` cover storage\nand email relay."
       },
+      "GatewayRequestInfo": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "headers": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headers"
+          },
+          "body": {
+            "title": "Body"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "url"
+        ],
+        "title": "GatewayRequestInfo",
+        "description": "Gateway-transformed request sent to upstream."
+      },
       "GroupTypeEnum": {
         "type": "string",
         "enum": [
           "category",
           "collection",
           "routable",
-          "misc"
+          "misc",
+          "capability_pool"
         ],
         "title": "GroupTypeEnum",
-        "description": "Type of service group \u2014 derived from configuration, not set directly.\n\nDerivation rules:\n- No rules, no access interfaces \u2192 category (organizes descendants)\n- Rules, no access interfaces \u2192 collection (curated set for browsing)\n- Rules + access interfaces \u2192 group (has own API endpoint + routing)\n- System-generated catch-all \u2192 misc"
+        "description": "Type of service group \u2014 derived from configuration, not set directly.\n\nDerivation rules:\n- No rules, no access interfaces \u2192 category (organizes descendants)\n- Rules, no access interfaces \u2192 collection (curated set for browsing)\n- Rules + access interfaces \u2192 group (has own API endpoint + routing)\n- System-generated catch-all \u2192 misc\n- Set explicitly (never derived, like misc) \u2192 capability_pool\n\n``capability_pool`` (#1244) backs the ``/p/<name>`` namespace: membership\nis claim-driven \u2014 services instantiated from a ServiceTemplate whose\n``pool_name`` matches the group name \u2014 computed by a dedicated refresh,\nnot by ``membership_rules``. Distinct from ``routable`` (``/g/``), whose\nmembership is curated."
       },
       "HTTPValidationError": {
         "properties": {
@@ -6052,6 +6103,122 @@
           "message"
         ],
         "title": "Message"
+      },
+      "OpsCustomerRequestLogDetail": {
+        "properties": {
+          "log_id": {
+            "type": "string",
+            "title": "Log Id"
+          },
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "event_timestamp": {
+            "type": "string",
+            "title": "Event Timestamp"
+          },
+          "gateway_source": {
+            "type": "string",
+            "title": "Gateway Source"
+          },
+          "customer_id": {
+            "type": "string",
+            "title": "Customer Id"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "service_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Id"
+          },
+          "service_enrollment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Enrollment Id"
+          },
+          "user_request": {
+            "$ref": "#/components/schemas/UserRequestInfo"
+          },
+          "upstream_response": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UpstreamResponseInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "usage_event": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UsageEventInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recurrent_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurrent Request Id"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SanitizedErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gateway_request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GatewayRequestInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "log_id",
+          "event_id",
+          "event_timestamp",
+          "gateway_source",
+          "customer_id",
+          "user_id",
+          "user_request"
+        ],
+        "title": "OpsCustomerRequestLogDetail",
+        "description": "Customer request-log detail for ops-customer members.\n\nSellers who are active members of the configured ops customer team may\ninspect the gateway-transformed upstream request for their own routing\ndiagnostics. Regular customers still receive ``RequestLogDetail`` without\nthis field."
       },
       "RecurrentRequestCreate": {
         "properties": {
@@ -7480,10 +7647,16 @@
             ],
             "title": "List Price"
           },
-          "enrollment_required": {
-            "type": "boolean",
-            "title": "Enrollment Required",
-            "default": false
+          "enrollment_channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enrollment Channel"
           },
           "listing_type": {
             "anyOf": [

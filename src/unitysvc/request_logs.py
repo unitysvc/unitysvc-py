@@ -29,6 +29,7 @@ T = TypeVar("T")
 if TYPE_CHECKING:
     from ._generated.client import AuthenticatedClient
     from ._generated.models.logging_status_response import LoggingStatusResponse
+    from ._generated.models.ops_customer_request_log_detail import OpsCustomerRequestLogDetail
     from ._generated.models.request_log_detail import RequestLogDetail
     from ._generated.models.request_log_list_response import RequestLogListResponse
 
@@ -151,7 +152,7 @@ class RequestLogs:
             )
         )
 
-    def get(self, log_id: UUID | str) -> RequestLogDetail:
+    def get(self, log_id: UUID | str) -> OpsCustomerRequestLogDetail | RequestLogDetail:
         """Get full detail of a single request log row.
 
         Includes request and response bodies (subject to the

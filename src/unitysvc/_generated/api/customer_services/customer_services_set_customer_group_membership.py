@@ -85,7 +85,7 @@ def sync_detailed(
      Set which of the customer's editable collections contain the
     service (toggle/diff). ``include_default`` ensures the Favorites
     collection exists then adds; unchecking removes. Rejects services the
-    customer can't dispatch and enforces the per-collection member cap.
+    customer can't dispatch.
 
     Args:
         service_id (UUID):
@@ -132,7 +132,7 @@ def sync(
      Set which of the customer's editable collections contain the
     service (toggle/diff). ``include_default`` ensures the Favorites
     collection exists then adds; unchecking removes. Rejects services the
-    customer can't dispatch and enforces the per-collection member cap.
+    customer can't dispatch.
 
     Args:
         service_id (UUID):
@@ -174,7 +174,7 @@ async def asyncio_detailed(
      Set which of the customer's editable collections contain the
     service (toggle/diff). ``include_default`` ensures the Favorites
     collection exists then adds; unchecking removes. Rejects services the
-    customer can't dispatch and enforces the per-collection member cap.
+    customer can't dispatch.
 
     Args:
         service_id (UUID):
@@ -219,7 +219,7 @@ async def asyncio(
      Set which of the customer's editable collections contain the
     service (toggle/diff). ``include_default`` ensures the Favorites
     collection exists then adds; unchecking removes. Rejects services the
-    customer can't dispatch and enforces the per-collection member cap.
+    customer can't dispatch.
 
     Args:
         service_id (UUID):

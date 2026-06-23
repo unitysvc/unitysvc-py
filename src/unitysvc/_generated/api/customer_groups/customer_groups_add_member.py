@@ -86,7 +86,6 @@ def sync_detailed(
 
     The service must be one the customer can dispatch — it needs no
     enrollment, or the customer has an active enrollment for it.
-    Collections are capped at ``MAX_MEMBERS_PER_COLLECTION`` members.
 
     Args:
         group_id (UUID):
@@ -130,7 +129,6 @@ def sync(
 
     The service must be one the customer can dispatch — it needs no
     enrollment, or the customer has an active enrollment for it.
-    Collections are capped at ``MAX_MEMBERS_PER_COLLECTION`` members.
 
     Args:
         group_id (UUID):
@@ -169,7 +167,6 @@ async def asyncio_detailed(
 
     The service must be one the customer can dispatch — it needs no
     enrollment, or the customer has an active enrollment for it.
-    Collections are capped at ``MAX_MEMBERS_PER_COLLECTION`` members.
 
     Args:
         group_id (UUID):
@@ -211,7 +208,6 @@ async def asyncio(
 
     The service must be one the customer can dispatch — it needs no
     enrollment, or the customer has an active enrollment for it.
-    Collections are capped at ``MAX_MEMBERS_PER_COLLECTION`` members.
 
     Args:
         group_id (UUID):

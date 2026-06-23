@@ -75,9 +75,9 @@ def sync_detailed(
 
      Execute a recurrent request once via the gateway proxy.
 
-    Resolves body templates, sends the request through execute_proxy_request
-    (same code path as the gateway and recurrence worker), and returns the
-    upstream response directly.
+    Resolves body templates, sends the request through APISIX (same path a
+    live request takes, signed with the customer's platform key), and returns
+    the upstream response directly (#646).
 
     Args:
         request_id (UUID):
@@ -116,9 +116,9 @@ def sync(
 
      Execute a recurrent request once via the gateway proxy.
 
-    Resolves body templates, sends the request through execute_proxy_request
-    (same code path as the gateway and recurrence worker), and returns the
-    upstream response directly.
+    Resolves body templates, sends the request through APISIX (same path a
+    live request takes, signed with the customer's platform key), and returns
+    the upstream response directly (#646).
 
     Args:
         request_id (UUID):
@@ -152,9 +152,9 @@ async def asyncio_detailed(
 
      Execute a recurrent request once via the gateway proxy.
 
-    Resolves body templates, sends the request through execute_proxy_request
-    (same code path as the gateway and recurrence worker), and returns the
-    upstream response directly.
+    Resolves body templates, sends the request through APISIX (same path a
+    live request takes, signed with the customer's platform key), and returns
+    the upstream response directly (#646).
 
     Args:
         request_id (UUID):
@@ -191,9 +191,9 @@ async def asyncio(
 
      Execute a recurrent request once via the gateway proxy.
 
-    Resolves body templates, sends the request through execute_proxy_request
-    (same code path as the gateway and recurrence worker), and returns the
-    upstream response directly.
+    Resolves body templates, sends the request through APISIX (same path a
+    live request takes, signed with the customer's platform key), and returns
+    the upstream response directly (#646).
 
     Args:
         request_id (UUID):

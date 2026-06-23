@@ -34,10 +34,13 @@ from .customer_group_membership_response import CustomerGroupMembershipResponse
 from .customer_group_membership_update import CustomerGroupMembershipUpdate
 from .customer_group_view import CustomerGroupView
 from .gateway_kind import GatewayKind
+from .gateway_request_info import GatewayRequestInfo
+from .gateway_request_info_headers_type_0 import GatewayRequestInfoHeadersType0
 from .group_type_enum import GroupTypeEnum
 from .http_validation_error import HTTPValidationError
 from .logging_status_response import LoggingStatusResponse
 from .message import Message
+from .ops_customer_request_log_detail import OpsCustomerRequestLogDetail
 from .recurrent_request_create import RecurrentRequestCreate
 from .recurrent_request_create_body_template_type_0 import RecurrentRequestCreateBodyTemplateType0
 from .recurrent_request_create_request_headers_type_0 import RecurrentRequestCreateRequestHeadersType0
@@ -132,10 +135,13 @@ __all__ = (
     "CustomerGroupMembershipUpdate",
     "CustomerGroupView",
     "GatewayKind",
+    "GatewayRequestInfo",
+    "GatewayRequestInfoHeadersType0",
     "GroupTypeEnum",
     "HTTPValidationError",
     "LoggingStatusResponse",
     "Message",
+    "OpsCustomerRequestLogDetail",
     "RecurrentRequestCreate",
     "RecurrentRequestCreateBodyTemplateType0",
     "RecurrentRequestCreateRequestHeadersType0",
