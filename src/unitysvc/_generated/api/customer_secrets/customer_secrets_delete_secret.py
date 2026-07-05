@@ -14,6 +14,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     name: str,
     *,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -24,11 +25,18 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
+    params: dict[str, Any] = {}
+
+    params["shared"] = shared
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
         "method": "delete",
         "url": "/secrets/{name}".format(
             name=quote(str(name), safe=""),
         ),
+        "params": params,
     }
 
     _kwargs["headers"] = headers
@@ -69,6 +77,7 @@ def sync_detailed(
     name: str,
     *,
     client: AuthenticatedClient | Client,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | Message]:
@@ -82,6 +91,8 @@ def sync_detailed(
 
     Args:
         name (str):
+        shared (bool | Unset): When true, delete the shared team secret. When false (default),
+            delete the caller's personal secret. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -95,6 +106,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         name=name,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -110,6 +122,7 @@ def sync(
     name: str,
     *,
     client: AuthenticatedClient | Client,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | Message | None:
@@ -123,6 +136,8 @@ def sync(
 
     Args:
         name (str):
+        shared (bool | Unset): When true, delete the shared team secret. When false (default),
+            delete the caller's personal secret. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -137,6 +152,7 @@ def sync(
     return sync_detailed(
         name=name,
         client=client,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -146,6 +162,7 @@ async def asyncio_detailed(
     name: str,
     *,
     client: AuthenticatedClient | Client,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | Message]:
@@ -159,6 +176,8 @@ async def asyncio_detailed(
 
     Args:
         name (str):
+        shared (bool | Unset): When true, delete the shared team secret. When false (default),
+            delete the caller's personal secret. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -172,6 +191,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         name=name,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -185,6 +205,7 @@ async def asyncio(
     name: str,
     *,
     client: AuthenticatedClient | Client,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | Message | None:
@@ -198,6 +219,8 @@ async def asyncio(
 
     Args:
         name (str):
+        shared (bool | Unset): When true, delete the shared team secret. When false (default),
+            delete the caller's personal secret. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -213,6 +236,7 @@ async def asyncio(
         await asyncio_detailed(
             name=name,
             client=client,
+            shared=shared,
             authorization=authorization,
             x_role_id=x_role_id,
         )
