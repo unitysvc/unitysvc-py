@@ -605,6 +605,7 @@ $ usvc services enroll [OPTIONS] SERVICE_ID
 
 * `--parameters TEXT`: Enrollment parameters as inline JSON object.
 * `-p, --parameter TEXT`: Single &#x27;key=value&#x27; parameter (string-valued). Repeatable; merged with --parameters.
+* `--shared`: Create a shared team enrollment instead of a personal enrollment.
 * `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
@@ -690,6 +691,7 @@ $ usvc enrollments list [OPTIONS]
 * `--skip INTEGER`: Offset for pagination.  [default: 0]
 * `--limit INTEGER`: Max records to return.  [default: 100]
 * `--no-service-details`: Skip embedding the service detail payload (faster).
+* `--shared`: List shared team enrollments instead of personal enrollments.
 * `-f, --format TEXT`: Output format: table | json.  [default: table]
 * `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]

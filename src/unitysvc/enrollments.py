@@ -138,8 +138,13 @@ class Enrollments:
         skip: int = 0,
         limit: int = 100,
         include_service_details: bool = True,
+        shared: bool = False,
     ) -> EnrollmentList:
-        """List enrollments owned by the calling customer."""
+        """List enrollments visible in the selected scope.
+
+        By default this returns the caller's personal enrollments. Pass
+        ``shared=True`` to list team-shared enrollments.
+        """
         from ._generated.api.customer import customer_list_enrollments
 
         raw = unwrap(
@@ -148,6 +153,7 @@ class Enrollments:
                 skip=skip,
                 limit=limit,
                 include_service_details=include_service_details,
+                shared=shared,
             )
         )
         return EnrollmentList(
@@ -181,18 +187,23 @@ class Enrollments:
         *,
         service_id: str | UUID,
         parameters: dict[str, Any] | None = None,
+        shared: bool = False,
     ) -> Enrollment:
         """Enroll in a service (async — poll status via :meth:`Enrollment.refresh`).
 
         Returns immediately with ``status="pending"``; the server
         activates the enrollment in a background worker once required
-        parameters / secrets are satisfied.
+        parameters / secrets are satisfied. By default, creates a personal
+        enrollment owned by the calling user. Pass ``shared=True`` to create
+        a team-shared enrollment; the backend requires owner or billing-manager
+        permissions for shared enrollments.
 
         Args:
             service_id: Service UUID.
             parameters: Optional user parameters (BYOK/BYOE values,
                 model selection, etc.). Secret-shaped keys
                 (``api_key``, ``password``, ...) are masked on reads.
+            shared: Create a team-shared enrollment instead of a personal one.
         """
         from ._generated.api.customer import customer_enroll
         from ._generated.models.service_enrollment_create import ServiceEnrollmentCreate
@@ -211,6 +222,7 @@ class Enrollments:
                     service_id=svc_uuid,
                     parameters=params_obj,  # type: ignore[arg-type]
                 ),
+                shared=shared,
             )
         )
         return Enrollment(raw, parent=self._parent)

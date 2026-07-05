@@ -46,6 +46,11 @@ def list_enrollments(
         "--no-service-details",
         help="Skip embedding the service detail payload (faster).",
     ),
+    shared: bool = typer.Option(
+        False,
+        "--shared",
+        help="List shared team enrollments instead of personal enrollments.",
+    ),
     output_format: str = typer.Option("table", "--format", "-f", help="Output format: table | json."),
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),
@@ -58,6 +63,7 @@ def list_enrollments(
                 skip=skip,
                 limit=limit,
                 include_service_details=not no_service_details,
+                shared=shared,
             )
             return [model_to_dict(e._raw) for e in page.data]
 

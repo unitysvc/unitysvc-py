@@ -172,14 +172,23 @@ class Service(_Wrappable):
     # ------------------------------------------------------------------
     # Enrollment shortcut + secrets introspection
     # ------------------------------------------------------------------
-    def enroll(self, *, parameters: dict[str, Any] | None = None) -> Enrollment:
+    def enroll(
+        self,
+        *,
+        parameters: dict[str, Any] | None = None,
+        shared: bool = False,
+    ) -> Enrollment:
         """Enroll in this service. See :meth:`Enrollments.create`.
 
         Convenience that pre-binds ``service_id``. Returns an
         :class:`~unitysvc.enrollments.Enrollment` ready for
         ``.refresh()`` / ``.cancel()``.
         """
-        return self._parent.enrollments.create(service_id=self._raw.id, parameters=parameters)
+        return self._parent.enrollments.create(
+            service_id=self._raw.id,
+            parameters=parameters,
+            shared=shared,
+        )
 
     def required_secrets(self, *, interface: str | UUID | None = None) -> list[str]:
         """Customer secrets the picked interface requires for dispatch.

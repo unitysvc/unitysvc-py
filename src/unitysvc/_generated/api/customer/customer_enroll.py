@@ -15,6 +15,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     body: ServiceEnrollmentCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -25,9 +26,16 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
+    params: dict[str, Any] = {}
+
+    params["shared"] = shared
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/enrollments/",
+        "params": params,
     }
 
     _kwargs["json"] = body.to_dict()
@@ -72,6 +80,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ServiceEnrollmentCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[CustomerEnrollmentCreateResponse | HTTPValidationError]:
@@ -86,6 +95,8 @@ def sync_detailed(
     customer context.
 
     Args:
+        shared (bool | Unset): When true, create a shared team enrollment visible to all org
+            members. The default creates a personal enrollment for the caller. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ServiceEnrollmentCreate): Model for creating new Enrollments.
@@ -103,6 +114,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -118,6 +130,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     body: ServiceEnrollmentCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> CustomerEnrollmentCreateResponse | HTTPValidationError | None:
@@ -132,6 +145,8 @@ def sync(
     customer context.
 
     Args:
+        shared (bool | Unset): When true, create a shared team enrollment visible to all org
+            members. The default creates a personal enrollment for the caller. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ServiceEnrollmentCreate): Model for creating new Enrollments.
@@ -150,6 +165,7 @@ def sync(
     return sync_detailed(
         client=client,
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -159,6 +175,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ServiceEnrollmentCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[CustomerEnrollmentCreateResponse | HTTPValidationError]:
@@ -173,6 +190,8 @@ async def asyncio_detailed(
     customer context.
 
     Args:
+        shared (bool | Unset): When true, create a shared team enrollment visible to all org
+            members. The default creates a personal enrollment for the caller. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ServiceEnrollmentCreate): Model for creating new Enrollments.
@@ -190,6 +209,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -203,6 +223,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     body: ServiceEnrollmentCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> CustomerEnrollmentCreateResponse | HTTPValidationError | None:
@@ -217,6 +238,8 @@ async def asyncio(
     customer context.
 
     Args:
+        shared (bool | Unset): When true, create a shared team enrollment visible to all org
+            members. The default creates a personal enrollment for the caller. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ServiceEnrollmentCreate): Model for creating new Enrollments.
@@ -236,6 +259,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             body=body,
+            shared=shared,
             authorization=authorization,
             x_role_id=x_role_id,
         )

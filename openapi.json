@@ -1924,6 +1924,18 @@
         "operationId": "customer-enroll",
         "parameters": [
           {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "When true, create a shared team enrollment visible to all org members. The default creates a personal enrollment for the caller.",
+              "default": false,
+              "title": "Shared"
+            },
+            "description": "When true, create a shared team enrollment visible to all org members. The default creates a personal enrollment for the caller."
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -2027,6 +2039,18 @@
               "default": true,
               "title": "Include Service Details"
             }
+          },
+          {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "When true, list shared team enrollments. When false (default), list the caller's personal enrollments.",
+              "default": false,
+              "title": "Shared"
+            },
+            "description": "When true, list shared team enrollments. When false (default), list the caller's personal enrollments."
           },
           {
             "name": "authorization",
@@ -5598,6 +5622,18 @@
             "format": "uuid",
             "title": "Service Id"
           },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
           "status": {
             "$ref": "#/components/schemas/ServiceEnrollmentStatusEnum"
           },
@@ -5710,6 +5746,18 @@
             "type": "string",
             "format": "uuid",
             "title": "Service Id"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
           },
           "status": {
             "$ref": "#/components/schemas/ServiceEnrollmentStatusEnum"

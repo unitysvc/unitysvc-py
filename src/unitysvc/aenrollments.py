@@ -68,7 +68,9 @@ class AsyncEnrollments:
         skip: int = 0,
         limit: int = 100,
         include_service_details: bool = True,
+        shared: bool = False,
     ) -> AsyncEnrollmentList:
+        """List personal enrollments by default; pass ``shared=True`` for team enrollments."""
         from ._generated.api.customer import customer_list_enrollments
 
         raw = unwrap(
@@ -77,6 +79,7 @@ class AsyncEnrollments:
                 skip=skip,
                 limit=limit,
                 include_service_details=include_service_details,
+                shared=shared,
             )
         )
         return AsyncEnrollmentList(
@@ -106,7 +109,9 @@ class AsyncEnrollments:
         *,
         service_id: str | UUID,
         parameters: dict[str, Any] | None = None,
+        shared: bool = False,
     ) -> AsyncEnrollment:
+        """Create a personal enrollment by default; pass ``shared=True`` for team scope."""
         from ._generated.api.customer import customer_enroll
         from ._generated.models.service_enrollment_create import ServiceEnrollmentCreate
         from ._generated.models.service_enrollment_create_parameters_type_0 import (
@@ -123,6 +128,7 @@ class AsyncEnrollments:
                     service_id=svc_uuid,
                     parameters=params_obj,  # type: ignore[arg-type]
                 ),
+                shared=shared,
             )
         )
         return AsyncEnrollment(raw, parent=self._parent)
