@@ -68,9 +68,9 @@ class AsyncEnrollments:
         skip: int = 0,
         limit: int = 100,
         include_service_details: bool = True,
-        shared: bool = False,
+        shared: bool = True,
     ) -> AsyncEnrollmentList:
-        """List personal enrollments by default; pass ``shared=True`` for team enrollments."""
+        """List shared team enrollments by default; pass ``shared=False`` for personal enrollments."""
         from ._generated.api.customer import customer_list_enrollments
 
         raw = unwrap(

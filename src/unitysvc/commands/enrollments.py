@@ -47,9 +47,9 @@ def list_enrollments(
         help="Skip embedding the service detail payload (faster).",
     ),
     shared: bool = typer.Option(
-        False,
-        "--shared",
-        help="List shared team enrollments instead of personal enrollments.",
+        True,
+        "--shared/--personal",
+        help="List shared team enrollments or personal enrollments.",
     ),
     output_format: str = typer.Option("table", "--format", "-f", help="Output format: table | json."),
     api_key: str | None = api_key_option(),

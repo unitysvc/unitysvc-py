@@ -2046,11 +2046,11 @@
             "required": false,
             "schema": {
               "type": "boolean",
-              "description": "When true, list shared team enrollments. When false (default), list the caller's personal enrollments.",
-              "default": false,
+              "description": "When true (default), list shared team enrollments. When false, list the caller's personal enrollments. The default preserves legacy shared enrollment visibility during the migration.",
+              "default": true,
               "title": "Shared"
             },
-            "description": "When true, list shared team enrollments. When false (default), list the caller's personal enrollments."
+            "description": "When true (default), list shared team enrollments. When false, list the caller's personal enrollments. The default preserves legacy shared enrollment visibility during the migration."
           },
           {
             "name": "authorization",
