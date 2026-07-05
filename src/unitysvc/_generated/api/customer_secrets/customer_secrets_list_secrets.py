@@ -88,7 +88,7 @@ def sync_detailed(
 ) -> Response[HTTPValidationError | SecretsPublic]:
     """List Secrets
 
-     List the current customer's secrets.
+     List the current customer's secrets (shared + personal).
 
     Returns secret metadata only — values are never returned. ``limit``
     defaults to ``None`` (every secret); pass one to paginate.
@@ -131,7 +131,7 @@ def sync(
 ) -> HTTPValidationError | SecretsPublic | None:
     """List Secrets
 
-     List the current customer's secrets.
+     List the current customer's secrets (shared + personal).
 
     Returns secret metadata only — values are never returned. ``limit``
     defaults to ``None`` (every secret); pass one to paginate.
@@ -169,7 +169,7 @@ async def asyncio_detailed(
 ) -> Response[HTTPValidationError | SecretsPublic]:
     """List Secrets
 
-     List the current customer's secrets.
+     List the current customer's secrets (shared + personal).
 
     Returns secret metadata only — values are never returned. ``limit``
     defaults to ``None`` (every secret); pass one to paginate.
@@ -210,7 +210,7 @@ async def asyncio(
 ) -> HTTPValidationError | SecretsPublic | None:
     """List Secrets
 
-     List the current customer's secrets.
+     List the current customer's secrets (shared + personal).
 
     Returns secret metadata only — values are never returned. ``limit``
     defaults to ``None`` (every secret); pass one to paginate.

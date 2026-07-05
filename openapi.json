@@ -4150,7 +4150,7 @@
           "customer-secrets"
         ],
         "summary": "List Secrets",
-        "description": "List the current customer's secrets.\n\nReturns secret metadata only \u2014 values are never returned. ``limit``\ndefaults to ``None`` (every secret); pass one to paginate.",
+        "description": "List the current customer's secrets (shared + personal).\n\nReturns secret metadata only \u2014 values are never returned. ``limit``\ndefaults to ``None`` (every secret); pass one to paginate.",
         "operationId": "customer-secrets-list_secrets",
         "parameters": [
           {
@@ -4242,7 +4242,7 @@
           "customer-secrets"
         ],
         "summary": "Get Secret",
-        "description": "Get metadata for one of the current customer's secrets by name.\n\nReturns metadata only \u2014 the value is never returned.",
+        "description": "Get metadata for one of the current customer's secrets by name.\n\nReturns the effective secret for the caller \u2014 personal takes precedence\nover shared. Returns metadata only \u2014 the value is never returned.",
         "operationId": "customer-secrets-get_secret",
         "parameters": [
           {
@@ -4315,7 +4315,7 @@
           "customer-secrets"
         ],
         "summary": "Set Secret",
-        "description": "Set a customer secret to ``value`` (idempotent create-or-replace).\n\nReturns ``201 Created`` on insert and ``200 OK`` on update.\nThe value is encrypted at rest. **The value cannot be retrieved\nafter this call** \u2014 store it securely if you need a copy.\n\nThe customer's routing cache is invalidated so the gateway picks\nup the new value immediately (and any pending enrollments that\nwere blocked waiting for this secret can now resolve).",
+        "description": "Set a customer secret to ``value`` (idempotent create-or-replace).\n\nReturns ``201 Created`` on insert and ``200 OK`` on update.\nThe value is encrypted at rest. **The value cannot be retrieved\nafter this call** \u2014 store it securely if you need a copy.\n\nThe customer's routing cache is invalidated so the gateway picks\nup the new value immediately.",
         "operationId": "customer-secrets-set_secret",
         "parameters": [
           {
@@ -4327,6 +4327,18 @@
               "pattern": "^[A-Z_][A-Z0-9_]*$",
               "title": "Name"
             }
+          },
+          {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "When true, set the shared team secret visible to all org members. When false (default), set a personal secret visible only to this user. Personal secrets shadow same-named shared secrets for your requests.",
+              "default": false,
+              "title": "Shared"
+            },
+            "description": "When true, set the shared team secret visible to all org members. When false (default), set a personal secret visible only to this user. Personal secrets shadow same-named shared secrets for your requests."
           },
           {
             "name": "authorization",
@@ -4410,6 +4422,18 @@
               "type": "string",
               "title": "Name"
             }
+          },
+          {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "When true, delete the shared team secret. When false (default), delete the caller's personal secret.",
+              "default": false,
+              "title": "Shared"
+            },
+            "description": "When true, delete the shared team secret. When false (default), delete the caller's personal secret."
           },
           {
             "name": "authorization",
@@ -6999,9 +7023,28 @@
           "owner_type": {
             "$ref": "#/components/schemas/SecretOwnerTypeEnum"
           },
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
           "owner_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Owner Id"
           },
           "created_at": {
@@ -7039,6 +7082,7 @@
           "name",
           "id",
           "owner_type",
+          "role_id",
           "owner_id",
           "created_at",
           "updated_at",

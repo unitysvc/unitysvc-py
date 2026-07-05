@@ -16,6 +16,7 @@ def _get_kwargs(
     name: str,
     *,
     body: SecretUpdate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -26,11 +27,18 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
+    params: dict[str, Any] = {}
+
+    params["shared"] = shared
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
         "method": "put",
         "url": "/secrets/{name}".format(
             name=quote(str(name), safe=""),
         ),
+        "params": params,
     }
 
     _kwargs["json"] = body.to_dict()
@@ -76,6 +84,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: SecretUpdate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | SecretPublic]:
@@ -88,11 +97,13 @@ def sync_detailed(
     after this call** — store it securely if you need a copy.
 
     The customer's routing cache is invalidated so the gateway picks
-    up the new value immediately (and any pending enrollments that
-    were blocked waiting for this secret can now resolve).
+    up the new value immediately.
 
     Args:
         name (str):
+        shared (bool | Unset): When true, set the shared team secret visible to all org members.
+            When false (default), set a personal secret visible only to this user. Personal secrets
+            shadow same-named shared secrets for your requests. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (SecretUpdate): Request body for ``PUT /secrets/{name}``.
@@ -117,6 +128,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         name=name,
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -133,6 +145,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     body: SecretUpdate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | SecretPublic | None:
@@ -145,11 +158,13 @@ def sync(
     after this call** — store it securely if you need a copy.
 
     The customer's routing cache is invalidated so the gateway picks
-    up the new value immediately (and any pending enrollments that
-    were blocked waiting for this secret can now resolve).
+    up the new value immediately.
 
     Args:
         name (str):
+        shared (bool | Unset): When true, set the shared team secret visible to all org members.
+            When false (default), set a personal secret visible only to this user. Personal secrets
+            shadow same-named shared secrets for your requests. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (SecretUpdate): Request body for ``PUT /secrets/{name}``.
@@ -175,6 +190,7 @@ def sync(
         name=name,
         client=client,
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -185,6 +201,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: SecretUpdate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | SecretPublic]:
@@ -197,11 +214,13 @@ async def asyncio_detailed(
     after this call** — store it securely if you need a copy.
 
     The customer's routing cache is invalidated so the gateway picks
-    up the new value immediately (and any pending enrollments that
-    were blocked waiting for this secret can now resolve).
+    up the new value immediately.
 
     Args:
         name (str):
+        shared (bool | Unset): When true, set the shared team secret visible to all org members.
+            When false (default), set a personal secret visible only to this user. Personal secrets
+            shadow same-named shared secrets for your requests. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (SecretUpdate): Request body for ``PUT /secrets/{name}``.
@@ -226,6 +245,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         name=name,
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -240,6 +260,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     body: SecretUpdate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | SecretPublic | None:
@@ -252,11 +273,13 @@ async def asyncio(
     after this call** — store it securely if you need a copy.
 
     The customer's routing cache is invalidated so the gateway picks
-    up the new value immediately (and any pending enrollments that
-    were blocked waiting for this secret can now resolve).
+    up the new value immediately.
 
     Args:
         name (str):
+        shared (bool | Unset): When true, set the shared team secret visible to all org members.
+            When false (default), set a personal secret visible only to this user. Personal secrets
+            shadow same-named shared secrets for your requests. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (SecretUpdate): Request body for ``PUT /secrets/{name}``.
@@ -283,6 +306,7 @@ async def asyncio(
             name=name,
             client=client,
             body=body,
+            shared=shared,
             authorization=authorization,
             x_role_id=x_role_id,
         )
