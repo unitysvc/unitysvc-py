@@ -50,6 +50,7 @@ class CustomerEnrollmentCreateResponse:
     Secrets do not affect enrollment status — they are resolved at routing time. """
     task_id: str
     message: str
+    owner_id: None | Unset | UUID = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -63,6 +64,14 @@ class CustomerEnrollmentCreateResponse:
 
         message = self.message
 
+        owner_id: None | str | Unset
+        if isinstance(self.owner_id, Unset):
+            owner_id = UNSET
+        elif isinstance(self.owner_id, UUID):
+            owner_id = str(self.owner_id)
+        else:
+            owner_id = self.owner_id
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -74,6 +83,8 @@ class CustomerEnrollmentCreateResponse:
                 "message": message,
             }
         )
+        if owner_id is not UNSET:
+            field_dict["owner_id"] = owner_id
 
         return field_dict
 
@@ -90,12 +101,30 @@ class CustomerEnrollmentCreateResponse:
 
         message = d.pop("message")
 
+        def _parse_owner_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                owner_id_type_0 = UUID(data)
+
+                return owner_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
+
+        owner_id = _parse_owner_id(d.pop("owner_id", UNSET))
+
         customer_enrollment_create_response = cls(
             id=id,
             service_id=service_id,
             status=status,
             task_id=task_id,
             message=message,
+            owner_id=owner_id,
         )
 
         customer_enrollment_create_response.additional_properties = d

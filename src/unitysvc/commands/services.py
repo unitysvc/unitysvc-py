@@ -237,6 +237,11 @@ def enroll_service(
         "-p",
         help="Single 'key=value' parameter (string-valued). Repeatable; merged with --parameters.",
     ),
+    shared: bool = typer.Option(
+        False,
+        "--shared",
+        help="Create a shared team enrollment instead of a personal enrollment.",
+    ),
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),
 ) -> None:
@@ -245,7 +250,11 @@ def enroll_service(
 
     async def _impl() -> dict[str, Any]:
         async with async_client(api_key, base_url) as client:
-            enr = await client.enrollments.create(service_id=service_id, parameters=params)
+            enr = await client.enrollments.create(
+                service_id=service_id,
+                parameters=params,
+                shared=shared,
+            )
             return model_to_dict(enr._raw)
 
     result = run_async(_impl(), error_prefix="Failed to enroll in service")

@@ -114,11 +114,16 @@ class AsyncService:
         )
 
     async def enroll(
-        self, *, parameters: dict[str, Any] | None = None
+        self,
+        *,
+        parameters: dict[str, Any] | None = None,
+        shared: bool = False,
     ) -> AsyncEnrollment:
         """Enroll in this service. See :meth:`unitysvc.services.Service.enroll`."""
         return await self._parent.enrollments.create(
-            service_id=self._raw.id, parameters=parameters
+            service_id=self._raw.id,
+            parameters=parameters,
+            shared=shared,
         )
 
     async def required_secrets(
