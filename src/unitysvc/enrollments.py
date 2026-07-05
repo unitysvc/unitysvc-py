@@ -138,12 +138,13 @@ class Enrollments:
         skip: int = 0,
         limit: int = 100,
         include_service_details: bool = True,
-        shared: bool = False,
+        shared: bool = True,
     ) -> EnrollmentList:
         """List enrollments visible in the selected scope.
 
-        By default this returns the caller's personal enrollments. Pass
-        ``shared=True`` to list team-shared enrollments.
+        By default this returns shared team enrollments to preserve legacy
+        visibility during the migration. Pass ``shared=False`` to list the
+        caller's personal enrollments.
         """
         from ._generated.api.customer import customer_list_enrollments
 

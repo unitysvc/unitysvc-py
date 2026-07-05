@@ -16,7 +16,7 @@ def _get_kwargs(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
-    shared: bool | Unset = False,
+    shared: bool | Unset = True,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -85,7 +85,7 @@ def sync_detailed(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
-    shared: bool | Unset = False,
+    shared: bool | Unset = True,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[CustomerEnrollmentsResponse | HTTPValidationError]:
@@ -99,8 +99,9 @@ def sync_detailed(
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
         include_service_details (bool | Unset):  Default: True.
-        shared (bool | Unset): When true, list shared team enrollments. When false (default), list
-            the caller's personal enrollments. Default: False.
+        shared (bool | Unset): When true (default), list shared team enrollments. When false, list
+            the caller's personal enrollments. The default preserves legacy shared enrollment
+            visibility during the migration. Default: True.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -134,7 +135,7 @@ def sync(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
-    shared: bool | Unset = False,
+    shared: bool | Unset = True,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> CustomerEnrollmentsResponse | HTTPValidationError | None:
@@ -148,8 +149,9 @@ def sync(
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
         include_service_details (bool | Unset):  Default: True.
-        shared (bool | Unset): When true, list shared team enrollments. When false (default), list
-            the caller's personal enrollments. Default: False.
+        shared (bool | Unset): When true (default), list shared team enrollments. When false, list
+            the caller's personal enrollments. The default preserves legacy shared enrollment
+            visibility during the migration. Default: True.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -178,7 +180,7 @@ async def asyncio_detailed(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
-    shared: bool | Unset = False,
+    shared: bool | Unset = True,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[CustomerEnrollmentsResponse | HTTPValidationError]:
@@ -192,8 +194,9 @@ async def asyncio_detailed(
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
         include_service_details (bool | Unset):  Default: True.
-        shared (bool | Unset): When true, list shared team enrollments. When false (default), list
-            the caller's personal enrollments. Default: False.
+        shared (bool | Unset): When true (default), list shared team enrollments. When false, list
+            the caller's personal enrollments. The default preserves legacy shared enrollment
+            visibility during the migration. Default: True.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -225,7 +228,7 @@ async def asyncio(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
-    shared: bool | Unset = False,
+    shared: bool | Unset = True,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> CustomerEnrollmentsResponse | HTTPValidationError | None:
@@ -239,8 +242,9 @@ async def asyncio(
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
         include_service_details (bool | Unset):  Default: True.
-        shared (bool | Unset): When true, list shared team enrollments. When false (default), list
-            the caller's personal enrollments. Default: False.
+        shared (bool | Unset): When true (default), list shared team enrollments. When false, list
+            the caller's personal enrollments. The default preserves legacy shared enrollment
+            visibility during the migration. Default: True.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 

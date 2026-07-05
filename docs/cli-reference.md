@@ -691,7 +691,7 @@ $ usvc enrollments list [OPTIONS]
 * `--skip INTEGER`: Offset for pagination.  [default: 0]
 * `--limit INTEGER`: Max records to return.  [default: 100]
 * `--no-service-details`: Skip embedding the service detail payload (faster).
-* `--shared`: List shared team enrollments instead of personal enrollments.
+* `--shared / --personal`: List shared team enrollments or personal enrollments.  [default: shared]
 * `-f, --format TEXT`: Output format: table | json.  [default: table]
 * `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
