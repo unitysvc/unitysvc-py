@@ -96,7 +96,7 @@ def sync_detailed(
     The value is encrypted at rest. **The value cannot be retrieved
     after this call** — store it securely if you need a copy.
 
-    The customer's routing cache is invalidated so the gateway picks
+    The customer's context cache is invalidated so the gateway picks
     up the new value immediately.
 
     Args:
@@ -157,7 +157,7 @@ def sync(
     The value is encrypted at rest. **The value cannot be retrieved
     after this call** — store it securely if you need a copy.
 
-    The customer's routing cache is invalidated so the gateway picks
+    The customer's context cache is invalidated so the gateway picks
     up the new value immediately.
 
     Args:
@@ -213,7 +213,7 @@ async def asyncio_detailed(
     The value is encrypted at rest. **The value cannot be retrieved
     after this call** — store it securely if you need a copy.
 
-    The customer's routing cache is invalidated so the gateway picks
+    The customer's context cache is invalidated so the gateway picks
     up the new value immediately.
 
     Args:
@@ -272,7 +272,7 @@ async def asyncio(
     The value is encrypted at rest. **The value cannot be retrieved
     after this call** — store it securely if you need a copy.
 
-    The customer's routing cache is invalidated so the gateway picks
+    The customer's context cache is invalidated so the gateway picks
     up the new value immediately.
 
     Args:

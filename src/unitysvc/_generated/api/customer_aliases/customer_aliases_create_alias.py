@@ -15,6 +15,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     body: ServiceAliasCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -25,9 +26,16 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
+    params: dict[str, Any] = {}
+
+    params["shared"] = shared
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/aliases/",
+        "params": params,
     }
 
     _kwargs["json"] = body.to_dict()
@@ -72,6 +80,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ServiceAliasCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | ServiceAliasPublic]:
@@ -94,6 +103,8 @@ def sync_detailed(
     ``enforce_quota_for_customer``. Unsubscribed customers have no quota.
 
     Args:
+        shared (bool | Unset): When true, create a shared team alias visible/editable by all org
+            members. When false (default), create a personal alias owned by this user. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ServiceAliasCreate): Schema for creating a ServiceAlias.
@@ -108,6 +119,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -123,6 +135,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     body: ServiceAliasCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | ServiceAliasPublic | None:
@@ -145,6 +158,8 @@ def sync(
     ``enforce_quota_for_customer``. Unsubscribed customers have no quota.
 
     Args:
+        shared (bool | Unset): When true, create a shared team alias visible/editable by all org
+            members. When false (default), create a personal alias owned by this user. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ServiceAliasCreate): Schema for creating a ServiceAlias.
@@ -160,6 +175,7 @@ def sync(
     return sync_detailed(
         client=client,
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -169,6 +185,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ServiceAliasCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | ServiceAliasPublic]:
@@ -191,6 +208,8 @@ async def asyncio_detailed(
     ``enforce_quota_for_customer``. Unsubscribed customers have no quota.
 
     Args:
+        shared (bool | Unset): When true, create a shared team alias visible/editable by all org
+            members. When false (default), create a personal alias owned by this user. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ServiceAliasCreate): Schema for creating a ServiceAlias.
@@ -205,6 +224,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -218,6 +238,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     body: ServiceAliasCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | ServiceAliasPublic | None:
@@ -240,6 +261,8 @@ async def asyncio(
     ``enforce_quota_for_customer``. Unsubscribed customers have no quota.
 
     Args:
+        shared (bool | Unset): When true, create a shared team alias visible/editable by all org
+            members. When false (default), create a personal alias owned by this user. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ServiceAliasCreate): Schema for creating a ServiceAlias.
@@ -256,6 +279,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             body=body,
+            shared=shared,
             authorization=authorization,
             x_role_id=x_role_id,
         )

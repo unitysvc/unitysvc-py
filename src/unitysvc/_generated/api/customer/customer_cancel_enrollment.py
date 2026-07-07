@@ -77,8 +77,8 @@ def sync_detailed(
 
      Cancel (unenroll from) an enrollment.
 
-    Sets status to ``cancelled`` and invalidates the gateway routing
-    cache so in-flight requests stop being proxied. The enrollment
+    Sets status to ``cancelled`` and invalidates the gateway customer
+    context cache so in-flight requests stop being proxied. The enrollment
     row and its AccessInterfaces are preserved for potential
     reactivation via re-enrollment with matching parameters.
 
@@ -121,8 +121,8 @@ def sync(
 
      Cancel (unenroll from) an enrollment.
 
-    Sets status to ``cancelled`` and invalidates the gateway routing
-    cache so in-flight requests stop being proxied. The enrollment
+    Sets status to ``cancelled`` and invalidates the gateway customer
+    context cache so in-flight requests stop being proxied. The enrollment
     row and its AccessInterfaces are preserved for potential
     reactivation via re-enrollment with matching parameters.
 
@@ -160,8 +160,8 @@ async def asyncio_detailed(
 
      Cancel (unenroll from) an enrollment.
 
-    Sets status to ``cancelled`` and invalidates the gateway routing
-    cache so in-flight requests stop being proxied. The enrollment
+    Sets status to ``cancelled`` and invalidates the gateway customer
+    context cache so in-flight requests stop being proxied. The enrollment
     row and its AccessInterfaces are preserved for potential
     reactivation via re-enrollment with matching parameters.
 
@@ -202,8 +202,8 @@ async def asyncio(
 
      Cancel (unenroll from) an enrollment.
 
-    Sets status to ``cancelled`` and invalidates the gateway routing
-    cache so in-flight requests stop being proxied. The enrollment
+    Sets status to ``cancelled`` and invalidates the gateway customer
+    context cache so in-flight requests stop being proxied. The enrollment
     row and its AccessInterfaces are preserved for potential
     reactivation via re-enrollment with matching parameters.
 

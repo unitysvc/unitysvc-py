@@ -15,6 +15,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     body: ChainCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -25,9 +26,16 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
+    params: dict[str, Any] = {}
+
+    params["shared"] = shared
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/chains/",
+        "params": params,
     }
 
     _kwargs["json"] = body.to_dict()
@@ -72,6 +80,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ChainCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[ChainPublic | HTTPValidationError]:
@@ -80,6 +89,8 @@ def sync_detailed(
      Create a new sequential dispatch chain.
 
     Args:
+        shared (bool | Unset): Create a shared team chain (owner_id=NULL) instead of a personal
+            chain owned by the caller. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ChainCreate):
@@ -94,6 +105,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -109,6 +121,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     body: ChainCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> ChainPublic | HTTPValidationError | None:
@@ -117,6 +130,8 @@ def sync(
      Create a new sequential dispatch chain.
 
     Args:
+        shared (bool | Unset): Create a shared team chain (owner_id=NULL) instead of a personal
+            chain owned by the caller. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ChainCreate):
@@ -132,6 +147,7 @@ def sync(
     return sync_detailed(
         client=client,
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -141,6 +157,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ChainCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[ChainPublic | HTTPValidationError]:
@@ -149,6 +166,8 @@ async def asyncio_detailed(
      Create a new sequential dispatch chain.
 
     Args:
+        shared (bool | Unset): Create a shared team chain (owner_id=NULL) instead of a personal
+            chain owned by the caller. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ChainCreate):
@@ -163,6 +182,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -176,6 +196,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     body: ChainCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> ChainPublic | HTTPValidationError | None:
@@ -184,6 +205,8 @@ async def asyncio(
      Create a new sequential dispatch chain.
 
     Args:
+        shared (bool | Unset): Create a shared team chain (owner_id=NULL) instead of a personal
+            chain owned by the caller. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ChainCreate):
@@ -200,6 +223,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             body=body,
+            shared=shared,
             authorization=authorization,
             x_role_id=x_role_id,
         )

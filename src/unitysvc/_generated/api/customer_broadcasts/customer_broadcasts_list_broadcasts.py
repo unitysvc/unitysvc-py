@@ -15,6 +15,7 @@ def _get_kwargs(
     *,
     skip: int | Unset = 0,
     limit: int | Unset = 100,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -30,6 +31,8 @@ def _get_kwargs(
     params["skip"] = skip
 
     params["limit"] = limit
+
+    params["shared"] = shared
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -78,6 +81,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     skip: int | Unset = 0,
     limit: int | Unset = 100,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[BroadcastsPublic | HTTPValidationError]:
@@ -88,6 +92,8 @@ def sync_detailed(
     Args:
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
+        shared (bool | Unset): Return only shared team broadcasts (owner_id=NULL). Default returns
+            the caller's personal broadcasts plus shared ones. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -102,6 +108,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         skip=skip,
         limit=limit,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -118,6 +125,7 @@ def sync(
     client: AuthenticatedClient | Client,
     skip: int | Unset = 0,
     limit: int | Unset = 100,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> BroadcastsPublic | HTTPValidationError | None:
@@ -128,6 +136,8 @@ def sync(
     Args:
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
+        shared (bool | Unset): Return only shared team broadcasts (owner_id=NULL). Default returns
+            the caller's personal broadcasts plus shared ones. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -143,6 +153,7 @@ def sync(
         client=client,
         skip=skip,
         limit=limit,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -153,6 +164,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     skip: int | Unset = 0,
     limit: int | Unset = 100,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[BroadcastsPublic | HTTPValidationError]:
@@ -163,6 +175,8 @@ async def asyncio_detailed(
     Args:
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
+        shared (bool | Unset): Return only shared team broadcasts (owner_id=NULL). Default returns
+            the caller's personal broadcasts plus shared ones. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -177,6 +191,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         skip=skip,
         limit=limit,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -191,6 +206,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     skip: int | Unset = 0,
     limit: int | Unset = 100,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> BroadcastsPublic | HTTPValidationError | None:
@@ -201,6 +217,8 @@ async def asyncio(
     Args:
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
+        shared (bool | Unset): Return only shared team broadcasts (owner_id=NULL). Default returns
+            the caller's personal broadcasts plus shared ones. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -217,6 +235,7 @@ async def asyncio(
             client=client,
             skip=skip,
             limit=limit,
+            shared=shared,
             authorization=authorization,
             x_role_id=x_role_id,
         )

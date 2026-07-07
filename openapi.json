@@ -15,6 +15,18 @@
         "operationId": "customer-aliases-create_alias",
         "parameters": [
           {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "When true, create a shared team alias visible/editable by all org members. When false (default), create a personal alias owned by this user.",
+              "default": false,
+              "title": "Shared"
+            },
+            "description": "When true, create a shared team alias visible/editable by all org members. When false (default), create a personal alias owned by this user."
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -133,6 +145,18 @@
               "default": false,
               "title": "Include Deactivated"
             }
+          },
+          {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "When true, list shared team aliases only. When false (default), list the caller's personal aliases plus shared ones.",
+              "default": false,
+              "title": "Shared"
+            },
+            "description": "When true, list shared team aliases only. When false (default), list the caller's personal aliases plus shared ones."
           },
           {
             "name": "authorization",
@@ -521,6 +545,18 @@
         "operationId": "customer-broadcasts-create_broadcast",
         "parameters": [
           {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Create a shared team broadcast (owner_id=NULL) instead of a personal broadcast owned by the caller.",
+              "default": false,
+              "title": "Shared"
+            },
+            "description": "Create a shared team broadcast (owner_id=NULL) instead of a personal broadcast owned by the caller."
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -613,6 +649,18 @@
               "default": 100,
               "title": "Limit"
             }
+          },
+          {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Return only shared team broadcasts (owner_id=NULL). Default returns the caller's personal broadcasts plus shared ones.",
+              "default": false,
+              "title": "Shared"
+            },
+            "description": "Return only shared team broadcasts (owner_id=NULL). Default returns the caller's personal broadcasts plus shared ones."
           },
           {
             "name": "authorization",
@@ -1175,6 +1223,18 @@
         "operationId": "customer-chains-create_chain",
         "parameters": [
           {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Create a shared team chain (owner_id=NULL) instead of a personal chain owned by the caller.",
+              "default": false,
+              "title": "Shared"
+            },
+            "description": "Create a shared team chain (owner_id=NULL) instead of a personal chain owned by the caller."
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -1267,6 +1327,18 @@
               "default": 100,
               "title": "Limit"
             }
+          },
+          {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Return only shared team chains (owner_id=NULL). Default returns the caller's personal chains plus shared ones.",
+              "default": false,
+              "title": "Shared"
+            },
+            "description": "Return only shared team chains (owner_id=NULL). Default returns the caller's personal chains plus shared ones."
           },
           {
             "name": "authorization",
@@ -2201,7 +2273,7 @@
           "enrollments"
         ],
         "summary": "Cancel Enrollment",
-        "description": "Cancel (unenroll from) an enrollment.\n\nSets status to ``cancelled`` and invalidates the gateway routing\ncache so in-flight requests stop being proxied. The enrollment\nrow and its AccessInterfaces are preserved for potential\nreactivation via re-enrollment with matching parameters.\n\nCallers can only cancel their own customer's enrollments.",
+        "description": "Cancel (unenroll from) an enrollment.\n\nSets status to ``cancelled`` and invalidates the gateway customer\ncontext cache so in-flight requests stop being proxied. The enrollment\nrow and its AccessInterfaces are preserved for potential\nreactivation via re-enrollment with matching parameters.\n\nCallers can only cancel their own customer's enrollments.",
         "operationId": "customer-cancel_enrollment",
         "parameters": [
           {
@@ -2312,6 +2384,18 @@
             "description": "Which rows to return: 'all' (platform + own), 'system' (platform only), or 'own' (collections only)."
           },
           {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "When true, list shared team collections only. When false (default), list the caller's personal collections plus shared ones.",
+              "default": false,
+              "title": "Shared"
+            },
+            "description": "When true, list shared team collections only. When false (default), list the caller's personal collections plus shared ones."
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -2372,9 +2456,21 @@
           "customer-groups"
         ],
         "summary": "Create Customer Group",
-        "description": "Create a customer-owned service collection.\n\nCollections are the editable half of the unified ``/customer/groups``\nsurface: customer-curated catalogs addressable at ``/g/<name>``.\nPlatform groups remain read-only here. The ``name`` slug is unique\nper customer; a duplicate returns 409.",
+        "description": "Create a customer-owned service collection.\n\nCollections are the editable half of the unified ``/customer/groups``\nsurface: customer-curated catalogs addressable at ``/g/<name>``.\nPlatform groups remain read-only here. The ``name`` slug is unique\nper owner scope; a duplicate in the same scope returns 409. A personal\ncollection may coexist with a same-named shared one (#1471).",
         "operationId": "customer-groups-create_customer_group",
         "parameters": [
+          {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "When true, create a shared team collection visible/editable by all org members. When false (default), create a personal collection owned by this user.",
+              "default": false,
+              "title": "Shared"
+            },
+            "description": "When true, create a shared team collection visible/editable by all org members. When false (default), create a personal collection owned by this user."
+          },
           {
             "name": "authorization",
             "in": "header",
@@ -4339,7 +4435,7 @@
           "customer-secrets"
         ],
         "summary": "Set Secret",
-        "description": "Set a customer secret to ``value`` (idempotent create-or-replace).\n\nReturns ``201 Created`` on insert and ``200 OK`` on update.\nThe value is encrypted at rest. **The value cannot be retrieved\nafter this call** \u2014 store it securely if you need a copy.\n\nThe customer's routing cache is invalidated so the gateway picks\nup the new value immediately.",
+        "description": "Set a customer secret to ``value`` (idempotent create-or-replace).\n\nReturns ``201 Created`` on insert and ``200 OK`` on update.\nThe value is encrypted at rest. **The value cannot be retrieved\nafter this call** \u2014 store it securely if you need a copy.\n\nThe customer's context cache is invalidated so the gateway picks\nup the new value immediately.",
         "operationId": "customer-secrets-set_secret",
         "parameters": [
           {
@@ -4435,7 +4531,7 @@
           "customer-secrets"
         ],
         "summary": "Delete Secret",
-        "description": "Delete a customer secret by name.\n\n**Warning:** this action cannot be undone. Any active enrollments\nthat reference this secret will stop working immediately. The\ncustomer's routing cache is invalidated.",
+        "description": "Delete a customer secret by name.\n\n**Warning:** this action cannot be undone. Any active enrollments\nthat reference this secret will stop working immediately. The\ncustomer's context cache is invalidated.",
         "operationId": "customer-secrets-delete_secret",
         "parameters": [
           {
@@ -4997,6 +5093,18 @@
             "format": "uuid",
             "title": "Customer Id"
           },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
           "name": {
             "type": "string",
             "title": "Name"
@@ -5280,6 +5388,18 @@
             "type": "string",
             "format": "uuid",
             "title": "Customer Id"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
           },
           "name": {
             "type": "string",
@@ -7254,6 +7374,18 @@
             "type": "string",
             "format": "uuid",
             "title": "Customer Id"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
           },
           "name": {
             "type": "string",

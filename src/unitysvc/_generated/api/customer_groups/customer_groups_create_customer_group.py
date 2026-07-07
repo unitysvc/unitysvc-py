@@ -15,6 +15,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     body: ServiceCollectionCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -25,9 +26,16 @@ def _get_kwargs(
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
+    params: dict[str, Any] = {}
+
+    params["shared"] = shared
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/groups",
+        "params": params,
     }
 
     _kwargs["json"] = body.to_dict()
@@ -72,6 +80,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ServiceCollectionCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[CustomerGroupView | HTTPValidationError]:
@@ -82,9 +91,13 @@ def sync_detailed(
     Collections are the editable half of the unified ``/customer/groups``
     surface: customer-curated catalogs addressable at ``/g/<name>``.
     Platform groups remain read-only here. The ``name`` slug is unique
-    per customer; a duplicate returns 409.
+    per owner scope; a duplicate in the same scope returns 409. A personal
+    collection may coexist with a same-named shared one (#1471).
 
     Args:
+        shared (bool | Unset): When true, create a shared team collection visible/editable by all
+            org members. When false (default), create a personal collection owned by this user.
+            Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ServiceCollectionCreate): Schema for creating a ServiceCollection.
@@ -99,6 +112,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -114,6 +128,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     body: ServiceCollectionCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> CustomerGroupView | HTTPValidationError | None:
@@ -124,9 +139,13 @@ def sync(
     Collections are the editable half of the unified ``/customer/groups``
     surface: customer-curated catalogs addressable at ``/g/<name>``.
     Platform groups remain read-only here. The ``name`` slug is unique
-    per customer; a duplicate returns 409.
+    per owner scope; a duplicate in the same scope returns 409. A personal
+    collection may coexist with a same-named shared one (#1471).
 
     Args:
+        shared (bool | Unset): When true, create a shared team collection visible/editable by all
+            org members. When false (default), create a personal collection owned by this user.
+            Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ServiceCollectionCreate): Schema for creating a ServiceCollection.
@@ -142,6 +161,7 @@ def sync(
     return sync_detailed(
         client=client,
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -151,6 +171,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ServiceCollectionCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[CustomerGroupView | HTTPValidationError]:
@@ -161,9 +182,13 @@ async def asyncio_detailed(
     Collections are the editable half of the unified ``/customer/groups``
     surface: customer-curated catalogs addressable at ``/g/<name>``.
     Platform groups remain read-only here. The ``name`` slug is unique
-    per customer; a duplicate returns 409.
+    per owner scope; a duplicate in the same scope returns 409. A personal
+    collection may coexist with a same-named shared one (#1471).
 
     Args:
+        shared (bool | Unset): When true, create a shared team collection visible/editable by all
+            org members. When false (default), create a personal collection owned by this user.
+            Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ServiceCollectionCreate): Schema for creating a ServiceCollection.
@@ -178,6 +203,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         body=body,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -191,6 +217,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     body: ServiceCollectionCreate,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> CustomerGroupView | HTTPValidationError | None:
@@ -201,9 +228,13 @@ async def asyncio(
     Collections are the editable half of the unified ``/customer/groups``
     surface: customer-curated catalogs addressable at ``/g/<name>``.
     Platform groups remain read-only here. The ``name`` slug is unique
-    per customer; a duplicate returns 409.
+    per owner scope; a duplicate in the same scope returns 409. A personal
+    collection may coexist with a same-named shared one (#1471).
 
     Args:
+        shared (bool | Unset): When true, create a shared team collection visible/editable by all
+            org members. When false (default), create a personal collection owned by this user.
+            Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (ServiceCollectionCreate): Schema for creating a ServiceCollection.
@@ -220,6 +251,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             body=body,
+            shared=shared,
             authorization=authorization,
             x_role_id=x_role_id,
         )

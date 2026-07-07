@@ -17,6 +17,7 @@ def _get_kwargs(
     limit: int | Unset = 100,
     name: None | str | Unset = UNSET,
     include_deactivated: bool | Unset = False,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -41,6 +42,8 @@ def _get_kwargs(
     params["name"] = json_name
 
     params["include_deactivated"] = include_deactivated
+
+    params["shared"] = shared
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -91,6 +94,7 @@ def sync_detailed(
     limit: int | Unset = 100,
     name: None | str | Unset = UNSET,
     include_deactivated: bool | Unset = False,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | ServiceAliasesPublic]:
@@ -103,6 +107,8 @@ def sync_detailed(
         limit (int | Unset):  Default: 100.
         name (None | str | Unset):
         include_deactivated (bool | Unset):  Default: False.
+        shared (bool | Unset): When true, list shared team aliases only. When false (default),
+            list the caller's personal aliases plus shared ones. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -119,6 +125,7 @@ def sync_detailed(
         limit=limit,
         name=name,
         include_deactivated=include_deactivated,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -137,6 +144,7 @@ def sync(
     limit: int | Unset = 100,
     name: None | str | Unset = UNSET,
     include_deactivated: bool | Unset = False,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | ServiceAliasesPublic | None:
@@ -149,6 +157,8 @@ def sync(
         limit (int | Unset):  Default: 100.
         name (None | str | Unset):
         include_deactivated (bool | Unset):  Default: False.
+        shared (bool | Unset): When true, list shared team aliases only. When false (default),
+            list the caller's personal aliases plus shared ones. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -166,6 +176,7 @@ def sync(
         limit=limit,
         name=name,
         include_deactivated=include_deactivated,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -178,6 +189,7 @@ async def asyncio_detailed(
     limit: int | Unset = 100,
     name: None | str | Unset = UNSET,
     include_deactivated: bool | Unset = False,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | ServiceAliasesPublic]:
@@ -190,6 +202,8 @@ async def asyncio_detailed(
         limit (int | Unset):  Default: 100.
         name (None | str | Unset):
         include_deactivated (bool | Unset):  Default: False.
+        shared (bool | Unset): When true, list shared team aliases only. When false (default),
+            list the caller's personal aliases plus shared ones. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -206,6 +220,7 @@ async def asyncio_detailed(
         limit=limit,
         name=name,
         include_deactivated=include_deactivated,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -222,6 +237,7 @@ async def asyncio(
     limit: int | Unset = 100,
     name: None | str | Unset = UNSET,
     include_deactivated: bool | Unset = False,
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | ServiceAliasesPublic | None:
@@ -234,6 +250,8 @@ async def asyncio(
         limit (int | Unset):  Default: 100.
         name (None | str | Unset):
         include_deactivated (bool | Unset):  Default: False.
+        shared (bool | Unset): When true, list shared team aliases only. When false (default),
+            list the caller's personal aliases plus shared ones. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -252,6 +270,7 @@ async def asyncio(
             limit=limit,
             name=name,
             include_deactivated=include_deactivated,
+            shared=shared,
             authorization=authorization,
             x_role_id=x_role_id,
         )
