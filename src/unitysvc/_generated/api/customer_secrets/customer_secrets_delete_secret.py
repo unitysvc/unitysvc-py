@@ -87,7 +87,7 @@ def sync_detailed(
 
     **Warning:** this action cannot be undone. Any active enrollments
     that reference this secret will stop working immediately. The
-    customer's routing cache is invalidated.
+    customer's context cache is invalidated.
 
     Args:
         name (str):
@@ -132,7 +132,7 @@ def sync(
 
     **Warning:** this action cannot be undone. Any active enrollments
     that reference this secret will stop working immediately. The
-    customer's routing cache is invalidated.
+    customer's context cache is invalidated.
 
     Args:
         name (str):
@@ -172,7 +172,7 @@ async def asyncio_detailed(
 
     **Warning:** this action cannot be undone. Any active enrollments
     that reference this secret will stop working immediately. The
-    customer's routing cache is invalidated.
+    customer's context cache is invalidated.
 
     Args:
         name (str):
@@ -215,7 +215,7 @@ async def asyncio(
 
     **Warning:** this action cannot be undone. Any active enrollments
     that reference this secret will stop working immediately. The
-    customer's routing cache is invalidated.
+    customer's context cache is invalidated.
 
     Args:
         name (str):

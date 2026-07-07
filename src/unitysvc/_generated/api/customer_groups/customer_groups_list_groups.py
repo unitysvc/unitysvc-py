@@ -15,6 +15,7 @@ def _get_kwargs(
     *,
     name: None | str | Unset = UNSET,
     owner: str | Unset = "all",
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -35,6 +36,8 @@ def _get_kwargs(
     params["name"] = json_name
 
     params["owner"] = owner
+
+    params["shared"] = shared
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -83,6 +86,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     name: None | str | Unset = UNSET,
     owner: str | Unset = "all",
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[CustomerGroupListResponse | HTTPValidationError]:
@@ -112,6 +116,8 @@ def sync_detailed(
         name (None | str | Unset): Filter by name (partial match)
         owner (str | Unset): Which rows to return: 'all' (platform + own), 'system' (platform
             only), or 'own' (collections only). Default: 'all'.
+        shared (bool | Unset): When true, list shared team collections only. When false (default),
+            list the caller's personal collections plus shared ones. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -126,6 +132,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         name=name,
         owner=owner,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -142,6 +149,7 @@ def sync(
     client: AuthenticatedClient | Client,
     name: None | str | Unset = UNSET,
     owner: str | Unset = "all",
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> CustomerGroupListResponse | HTTPValidationError | None:
@@ -171,6 +179,8 @@ def sync(
         name (None | str | Unset): Filter by name (partial match)
         owner (str | Unset): Which rows to return: 'all' (platform + own), 'system' (platform
             only), or 'own' (collections only). Default: 'all'.
+        shared (bool | Unset): When true, list shared team collections only. When false (default),
+            list the caller's personal collections plus shared ones. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -186,6 +196,7 @@ def sync(
         client=client,
         name=name,
         owner=owner,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -196,6 +207,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     name: None | str | Unset = UNSET,
     owner: str | Unset = "all",
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[CustomerGroupListResponse | HTTPValidationError]:
@@ -225,6 +237,8 @@ async def asyncio_detailed(
         name (None | str | Unset): Filter by name (partial match)
         owner (str | Unset): Which rows to return: 'all' (platform + own), 'system' (platform
             only), or 'own' (collections only). Default: 'all'.
+        shared (bool | Unset): When true, list shared team collections only. When false (default),
+            list the caller's personal collections plus shared ones. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -239,6 +253,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         name=name,
         owner=owner,
+        shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -253,6 +268,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     name: None | str | Unset = UNSET,
     owner: str | Unset = "all",
+    shared: bool | Unset = False,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> CustomerGroupListResponse | HTTPValidationError | None:
@@ -282,6 +298,8 @@ async def asyncio(
         name (None | str | Unset): Filter by name (partial match)
         owner (str | Unset): Which rows to return: 'all' (platform + own), 'system' (platform
             only), or 'own' (collections only). Default: 'all'.
+        shared (bool | Unset): When true, list shared team collections only. When false (default),
+            list the caller's personal collections plus shared ones. Default: False.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -298,6 +316,7 @@ async def asyncio(
             client=client,
             name=name,
             owner=owner,
+            shared=shared,
             authorization=authorization,
             x_role_id=x_role_id,
         )

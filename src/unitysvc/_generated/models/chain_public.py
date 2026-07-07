@@ -26,6 +26,7 @@ class ChainPublic:
     default_timeout_ms: int
     enabled: bool
     created_at: datetime.datetime
+    owner_id: None | Unset | UUID = UNSET
     description: None | str | Unset = UNSET
     updated_at: datetime.datetime | None | Unset = UNSET
     steps: list[ChainStepPublic] | Unset = UNSET
@@ -45,6 +46,14 @@ class ChainPublic:
         enabled = self.enabled
 
         created_at = self.created_at.isoformat()
+
+        owner_id: None | str | Unset
+        if isinstance(self.owner_id, Unset):
+            owner_id = UNSET
+        elif isinstance(self.owner_id, UUID):
+            owner_id = str(self.owner_id)
+        else:
+            owner_id = self.owner_id
 
         description: None | str | Unset
         if isinstance(self.description, Unset):
@@ -79,6 +88,8 @@ class ChainPublic:
                 "created_at": created_at,
             }
         )
+        if owner_id is not UNSET:
+            field_dict["owner_id"] = owner_id
         if description is not UNSET:
             field_dict["description"] = description
         if updated_at is not UNSET:
@@ -104,6 +115,23 @@ class ChainPublic:
         enabled = d.pop("enabled")
 
         created_at = isoparse(d.pop("created_at"))
+
+        def _parse_owner_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                owner_id_type_0 = UUID(data)
+
+                return owner_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
+
+        owner_id = _parse_owner_id(d.pop("owner_id", UNSET))
 
         def _parse_description(data: object) -> None | str | Unset:
             if data is None:
@@ -147,6 +175,7 @@ class ChainPublic:
             default_timeout_ms=default_timeout_ms,
             enabled=enabled,
             created_at=created_at,
+            owner_id=owner_id,
             description=description,
             updated_at=updated_at,
             steps=steps,
