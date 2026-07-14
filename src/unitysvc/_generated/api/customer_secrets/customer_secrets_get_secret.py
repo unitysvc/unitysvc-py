@@ -76,8 +76,9 @@ def sync_detailed(
 
      Get metadata for one of the current customer's secrets by name.
 
-    Returns the effective secret for the caller — personal takes precedence
-    over shared. Returns metadata only — the value is never returned.
+    Returns the effective secret or variable for the caller — personal takes
+    precedence over shared. Sensitive values are masked; variable values are
+    returned.
 
     Args:
         name (str):
@@ -116,8 +117,9 @@ def sync(
 
      Get metadata for one of the current customer's secrets by name.
 
-    Returns the effective secret for the caller — personal takes precedence
-    over shared. Returns metadata only — the value is never returned.
+    Returns the effective secret or variable for the caller — personal takes
+    precedence over shared. Sensitive values are masked; variable values are
+    returned.
 
     Args:
         name (str):
@@ -151,8 +153,9 @@ async def asyncio_detailed(
 
      Get metadata for one of the current customer's secrets by name.
 
-    Returns the effective secret for the caller — personal takes precedence
-    over shared. Returns metadata only — the value is never returned.
+    Returns the effective secret or variable for the caller — personal takes
+    precedence over shared. Sensitive values are masked; variable values are
+    returned.
 
     Args:
         name (str):
@@ -189,8 +192,9 @@ async def asyncio(
 
      Get metadata for one of the current customer's secrets by name.
 
-    Returns the effective secret for the caller — personal takes precedence
-    over shared. Returns metadata only — the value is never returned.
+    Returns the effective secret or variable for the caller — personal takes
+    precedence over shared. Sensitive values are masked; variable values are
+    returned.
 
     Args:
         name (str):

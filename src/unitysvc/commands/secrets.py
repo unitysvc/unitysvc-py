@@ -64,14 +64,19 @@ def list_secrets(
         console.print(json.dumps(secrets, indent=2, default=str))
         return
 
-    table = Table(title="Secrets")
+    table = Table(title="Secrets & variables")
     table.add_column("Name", style="bold")
-    table.add_column("ID", style="dim")
+    table.add_column("Kind")
+    table.add_column("Value")
     table.add_column("Owner type")
     for s in secrets:
+        is_secret = s.get("sensitive", True)
+        # Variables (sensitive=false) return their value; secrets are masked.
+        value = "[dim]•••[/dim]" if is_secret else str(s.get("value") or "")
         table.add_row(
             str(s.get("name", "")),
-            str(s.get("id", "")),
+            "secret" if is_secret else "[cyan]variable[/cyan]",
+            value,
             str(s.get("owner_type", "")),
         )
     console.print(table)
@@ -90,14 +95,25 @@ def set_secret(
             "Secret value. If omitted: reads from stdin when piped, prompts with hidden input when run interactively."
         ),
     ),
+    variable: bool = typer.Option(
+        False,
+        "--variable",
+        help=(
+            "Store as a viewable variable (value is returned by list/get) "
+            "rather than a write-only secret. Honored only when creating."
+        ),
+    ),
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),
 ) -> None:
-    """Set a secret by name (idempotent — creates or rotates).
+    """Set a secret or variable by name (idempotent — creates or rotates).
 
     Maps to ``PUT /v1/customer/secrets/{name}``. The value is encrypted
-    server-side and cannot be retrieved later. Resolution order for
-    the value, in order of precedence:
+    server-side. A **secret** (default) is write-only and cannot be retrieved;
+    pass ``--variable`` to store a viewable **variable** instead (its value is
+    returned by ``list``/``get`` — useful for non-sensitive config like a
+    notification email). ``--variable`` is honored only when the row is created.
+    Resolution order for the value, in order of precedence:
 
       1. ``--value VALUE``                     — explicit literal (or
                                                  ``--value "$ENV_NAME"``
@@ -122,12 +138,19 @@ def set_secret(
                 confirmation_prompt=True,
             )
 
+    # ``--variable`` => sensitive=False (viewable); otherwise leave unset so the
+    # server default (a secret) applies and existing rows keep their kind.
+    sensitive = False if variable else None
+
     async def _impl() -> dict[str, Any]:
         async with async_client(api_key, base_url) as client:
-            return model_to_dict(await client.secrets.set(name, value))
+            return model_to_dict(await client.secrets.set(name, value, sensitive=sensitive))
 
     result = run_async(_impl(), error_prefix="Failed to set secret")
-    console.print(f"[green]✓[/green] set secret [bold]{result.get('name', name)}[/bold] ({result.get('id', '')})")
+    kind = "variable" if result.get("sensitive") is False else "secret"
+    console.print(
+        f"[green]✓[/green] set {kind} [bold]{result.get('name', name)}[/bold] ({result.get('id', '')})"
+    )
 
 
 # ---------------------------------------------------------------------------

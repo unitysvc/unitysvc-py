@@ -90,8 +90,9 @@ def sync_detailed(
 
      List the current customer's secrets (shared + personal).
 
-    Returns secret metadata only — values are never returned. ``limit``
-    defaults to ``None`` (every secret); pass one to paginate.
+    Returns metadata for secrets and variables. Sensitive values are masked;
+    variable values are returned. ``limit`` defaults to ``None`` (every row);
+    pass one to paginate.
 
     Args:
         skip (int | Unset):  Default: 0.
@@ -133,8 +134,9 @@ def sync(
 
      List the current customer's secrets (shared + personal).
 
-    Returns secret metadata only — values are never returned. ``limit``
-    defaults to ``None`` (every secret); pass one to paginate.
+    Returns metadata for secrets and variables. Sensitive values are masked;
+    variable values are returned. ``limit`` defaults to ``None`` (every row);
+    pass one to paginate.
 
     Args:
         skip (int | Unset):  Default: 0.
@@ -171,8 +173,9 @@ async def asyncio_detailed(
 
      List the current customer's secrets (shared + personal).
 
-    Returns secret metadata only — values are never returned. ``limit``
-    defaults to ``None`` (every secret); pass one to paginate.
+    Returns metadata for secrets and variables. Sensitive values are masked;
+    variable values are returned. ``limit`` defaults to ``None`` (every row);
+    pass one to paginate.
 
     Args:
         skip (int | Unset):  Default: 0.
@@ -212,8 +215,9 @@ async def asyncio(
 
      List the current customer's secrets (shared + personal).
 
-    Returns secret metadata only — values are never returned. ``limit``
-    defaults to ``None`` (every secret); pass one to paginate.
+    Returns metadata for secrets and variables. Sensitive values are masked;
+    variable values are returned. ``limit`` defaults to ``None`` (every row);
+    pass one to paginate.
 
     Args:
         skip (int | Unset):  Default: 0.

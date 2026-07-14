@@ -4270,7 +4270,7 @@
           "customer-secrets"
         ],
         "summary": "List Secrets",
-        "description": "List the current customer's secrets (shared + personal).\n\nReturns secret metadata only \u2014 values are never returned. ``limit``\ndefaults to ``None`` (every secret); pass one to paginate.",
+        "description": "List the current customer's secrets (shared + personal).\n\nReturns metadata for secrets and variables. Sensitive values are masked;\nvariable values are returned. ``limit`` defaults to ``None`` (every row);\npass one to paginate.",
         "operationId": "customer-secrets-list_secrets",
         "parameters": [
           {
@@ -4362,7 +4362,7 @@
           "customer-secrets"
         ],
         "summary": "Get Secret",
-        "description": "Get metadata for one of the current customer's secrets by name.\n\nReturns the effective secret for the caller \u2014 personal takes precedence\nover shared. Returns metadata only \u2014 the value is never returned.",
+        "description": "Get metadata for one of the current customer's secrets by name.\n\nReturns the effective secret or variable for the caller \u2014 personal takes\nprecedence over shared. Sensitive values are masked; variable values are\nreturned.",
         "operationId": "customer-secrets-get_secret",
         "parameters": [
           {
@@ -4435,7 +4435,7 @@
           "customer-secrets"
         ],
         "summary": "Set Secret",
-        "description": "Set a customer secret to ``value`` (idempotent create-or-replace).\n\nReturns ``201 Created`` on insert and ``200 OK`` on update.\nThe value is encrypted at rest. **The value cannot be retrieved\nafter this call** \u2014 store it securely if you need a copy.\n\nThe customer's context cache is invalidated so the gateway picks\nup the new value immediately.",
+        "description": "Set a customer secret or variable to ``value``.\n\nReturns ``201 Created`` on insert and ``200 OK`` on update.\nThe value is encrypted at rest. Set ``sensitive=false`` on creation to make\nthe value viewable as a variable. Existing rows cannot change between\nsecret and variable in place.\n\nThe customer's context cache is invalidated so the gateway picks\nup the new value immediately.",
         "operationId": "customer-secrets-set_secret",
         "parameters": [
           {
@@ -7215,6 +7215,21 @@
             ],
             "title": "Owner Id"
           },
+          "sensitive": {
+            "type": "boolean",
+            "title": "Sensitive"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -7252,12 +7267,13 @@
           "owner_type",
           "role_id",
           "owner_id",
+          "sensitive",
           "created_at",
           "updated_at",
           "last_used_at"
         ],
         "title": "SecretPublic",
-        "description": "Public schema for secret info (excludes value - write-only)."
+        "description": "Public schema for secret info.\n\nSensitive rows keep ``value`` omitted/null. Non-sensitive variables include\ntheir decrypted value for authorized callers."
       },
       "SecretUpdate": {
         "properties": {
@@ -7267,6 +7283,18 @@
             "minLength": 0,
             "title": "Value",
             "description": "Secret value (will be encrypted). May be empty."
+          },
+          "sensitive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sensitive",
+            "description": "Whether the value is write-only. Defaults to true on create and cannot be changed after creation."
           }
         },
         "type": "object",
@@ -7274,7 +7302,7 @@
           "value"
         ],
         "title": "SecretUpdate",
-        "description": "Request body for ``PUT /secrets/{name}``.\n\nCarries only the value \u2014 the name comes from the URL path. The same\nschema is used for both create and update because ``PUT`` is\nidempotent (see issue #798).\n\nEmpty string is allowed: a customer may deliberately store ``\"\"``\nto override a non-empty default in a ``${ secrets.X ?? default }``\nreference. ``??`` coalesces on null only, so the explicit empty\nvalue is preserved."
+        "description": "Request body for variable-capable ``PUT /secrets/{name}`` endpoints.\n\n``sensitive`` is only honored when creating rows; an existing row cannot be\nchanged between secret and variable in place."
       },
       "SecretsPublic": {
         "properties": {
