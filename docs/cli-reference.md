@@ -28,6 +28,7 @@ $ usvc [OPTIONS] COMMAND [ARGS]...
 * `aliases`: Remote service-alias operations (list,...
 * `recurrent-requests`: Remote recurrent-request operations (list,...
 * `groups`: Service-group operations (list, show,...
+* `files`: Account files (ls, get, put, url).
 * `services`: Per-service operations (show, interfaces,...
 * `enrollments`: Enrollment management (list, show, cancel).
 
@@ -459,6 +460,114 @@ $ usvc groups dispatch [OPTIONS] NAME
 * `-d, --data TEXT`: Raw request body. Prefix with &#x27;@&#x27; to read from a file.
 * `-H, --header TEXT`: Extra header &#x27;Key: Value&#x27;. Repeatable.
 * `--timeout FLOAT`: Per-request timeout in seconds.
+* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+## `usvc files`
+
+Account files (ls, get, put, url). Paths start with personal/ or shared/.
+
+**Usage**:
+
+```console
+$ usvc files [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `ls`: List one folder level of account files.
+* `get`: Download one file (bytes stream storage →...
+* `put`: Upload one file into a folder (bytes go...
+* `url`: Print a short-TTL presigned download URL...
+
+### `usvc files ls`
+
+List one folder level of account files.
+
+**Usage**:
+
+```console
+$ usvc files ls [OPTIONS] [PATH]
+```
+
+**Arguments**:
+
+* `[PATH]`: Virtual folder path (personal/... or shared/...); empty shows the roots.
+
+**Options**:
+
+* `-f, --format TEXT`: table | json.  [default: table]
+* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc files get`
+
+Download one file (bytes stream storage → disk directly).
+
+**Usage**:
+
+```console
+$ usvc files get [OPTIONS] PATH [DEST]
+```
+
+**Arguments**:
+
+* `PATH`: Virtual file path (personal/... or shared/...).  [required]
+* `[DEST]`: Destination file or directory (default: basename in cwd).
+
+**Options**:
+
+* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc files put`
+
+Upload one file into a folder (bytes go disk → storage directly).
+
+The size ceiling is enforced by the server-signed upload policy;
+uploading to an existing name overwrites it.
+
+**Usage**:
+
+```console
+$ usvc files put [OPTIONS] SRC [PATH]
+```
+
+**Arguments**:
+
+* `SRC`: Local file to upload.  [required]
+* `[PATH]`: Virtual folder to upload into, e.g. personal, personal/reports, shared.  [default: personal]
+
+**Options**:
+
+* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc files url`
+
+Print a short-TTL presigned download URL (for scripts / sharing).
+
+**Usage**:
+
+```console
+$ usvc files url [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: Virtual file path (personal/... or shared/...).  [required]
+
+**Options**:
+
+* `--expires INTEGER`: URL validity in seconds (60-3600).  [default: 900]
 * `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.

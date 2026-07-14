@@ -2343,6 +2343,279 @@
         }
       }
     },
+    "/files/list": {
+      "get": {
+        "tags": [
+          "customer",
+          "account-files"
+        ],
+        "summary": "List Account Files",
+        "description": "List the caller's account files (one folder level per call).\n\n``scope=personal`` lists the member's own folder; ``scope=shared``\nlists the team folder and requires a team/enterprise plan. Returned\nkeys and prefixes are relative to the scope root. A missing bucket\nreads as an empty listing (the bucket is provisioned out of band).",
+        "operationId": "customer-list_account_files",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "personal",
+                "shared"
+              ],
+              "type": "string",
+              "description": "Which folder tree to list",
+              "default": "personal",
+              "title": "Scope"
+            },
+            "description": "Which folder tree to list"
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Folder path relative to the scope root",
+              "default": "",
+              "title": "Path"
+            },
+            "description": "Folder path relative to the scope root"
+          },
+          {
+            "name": "max_keys",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 100,
+              "title": "Max Keys"
+            }
+          },
+          {
+            "name": "continuation_token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Continuation Token"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountFilesListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/files/download": {
+      "get": {
+        "tags": [
+          "customer",
+          "account-files"
+        ],
+        "summary": "Download Account File",
+        "description": "Generate a short-TTL presigned download URL for one account file.\n\nThe object must exist (404 otherwise) and always resolves under the\ncaller's own scope root \u2014 ``key`` is relative, so other members'\nfolders cannot be addressed.",
+        "operationId": "customer-download_account_file",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Object key relative to the scope root",
+              "title": "Key"
+            },
+            "description": "Object key relative to the scope root"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "personal",
+                "shared"
+              ],
+              "type": "string",
+              "description": "Which folder tree",
+              "default": "personal",
+              "title": "Scope"
+            },
+            "description": "Which folder tree"
+          },
+          {
+            "name": "expires_in",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 3600,
+              "minimum": 60,
+              "default": 900,
+              "title": "Expires In"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountFileDownloadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/files/upload": {
+      "post": {
+        "tags": [
+          "customer",
+          "account-files"
+        ],
+        "summary": "Upload Account File",
+        "description": "Mint a presigned-POST ticket for one direct-to-storage upload.\n\nBytes never transit this API: POST the returned ``fields`` plus the\nfile (last, field name ``file``) as multipart form data to ``url``.\nThe key lands under the caller's scope root at ``{path}{filename}``\n(existing objects with the same key are overwritten, like a home\ndirectory); the size ceiling is enforced by the signed policy, not\nthe declared ``size``. ``scope=shared`` requires a team/enterprise\nplan.",
+        "operationId": "customer-upload_account_file",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountFileUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountFileUploadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/groups": {
       "get": {
         "tags": [
@@ -5028,6 +5301,214 @@
         ],
         "title": "AccessInterface",
         "description": "Access interface entry exposed to customers.\n\nIdentified by ``name`` (per ``service`` for service-bound\ninterfaces, per ``group`` for group-level ones). The DB primary\nkey is intentionally not exposed \u2014 interface UUIDs change when\nadmins recreate parent rows, so an ``id`` field would tempt SDK\nconsumers to cache an unstable handle.\n\nThe actual ``api_key`` is never included \u2014 secrets are\nwrite-only. ``base_url`` is resolved against the active gateway\nconfig so the client can dispatch without further substitution.\n\nScoping fields let the SDK filter the returned list:\n\n- ``enrollment_id`` \u2014 set when the interface is bound to a\n  specific enrollment (BYOK/BYOE services); ``None`` for shared\n  interfaces. SDK uses this for\n  ``service.dispatch(enrollment=enr)`` resolution.\n- ``group_name`` \u2014 set when the interface is declared on a\n  service group rather than on the service itself; ``None`` for\n  per-service interfaces. Identified by name (not UUID) because\n  group UUIDs are not stable across admin recreations.\n\nIntentionally omits:\n- ``is_primary`` \u2014 multiple public interfaces on the same\n  service map to the same upstream, so ``service.dispatch()``\n  auto-picks one and a \"primary\" flag is unnecessary. The\n  ``interface=`` argument on ``service.dispatch()`` is only\n  needed to disambiguate when the customer has multiple\n  enrollments on the service.\n- ``is_active`` \u2014 only active interfaces are returned, so the\n  field would always be ``True``.\n- ``sort_order`` \u2014 seller-internal ordering hint, used to\n  sort this response but not surfaced to the customer."
+      },
+      "AccountFileDownloadResponse": {
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "personal",
+              "shared"
+            ],
+            "title": "Scope"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scope",
+          "key",
+          "url",
+          "expires_in"
+        ],
+        "title": "AccountFileDownloadResponse",
+        "description": "Presigned download URL for one account file."
+      },
+      "AccountFileObject": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "last_modified": {
+            "type": "string",
+            "title": "Last Modified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "size",
+          "last_modified"
+        ],
+        "title": "AccountFileObject",
+        "description": "One object in an account-files listing (key relative to the scope root)."
+      },
+      "AccountFileUploadRequest": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "content_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Type"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "default": ""
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "personal",
+              "shared"
+            ],
+            "title": "Scope",
+            "default": "personal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "filename",
+          "size"
+        ],
+        "title": "AccountFileUploadRequest",
+        "description": "Mint request for one direct-to-storage upload."
+      },
+      "AccountFileUploadResponse": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "fields": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Fields"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          },
+          "max_bytes": {
+            "type": "integer",
+            "title": "Max Bytes"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "personal",
+              "shared"
+            ],
+            "title": "Scope"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "url",
+          "fields",
+          "expires_in",
+          "max_bytes",
+          "scope"
+        ],
+        "title": "AccountFileUploadResponse",
+        "description": "Presigned-POST ticket, echoing the scope it was minted for."
+      },
+      "AccountFilesListResponse": {
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "personal",
+              "shared"
+            ],
+            "title": "Scope"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "objects": {
+            "items": {
+              "$ref": "#/components/schemas/AccountFileObject"
+            },
+            "type": "array",
+            "title": "Objects"
+          },
+          "common_prefixes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Common Prefixes"
+          },
+          "is_truncated": {
+            "type": "boolean",
+            "title": "Is Truncated"
+          },
+          "next_continuation_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Continuation Token"
+          },
+          "shared_enabled": {
+            "type": "boolean",
+            "title": "Shared Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scope",
+          "path",
+          "objects",
+          "common_prefixes",
+          "is_truncated",
+          "next_continuation_token",
+          "shared_enabled"
+        ],
+        "title": "AccountFilesListResponse",
+        "description": "One page of an account-files listing."
       },
       "BroadcastCreate": {
         "properties": {
@@ -8204,6 +8685,17 @@
           "type"
         ],
         "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {},
+            "tokenUrl": "http://localhost:8080/realms/unitysvc/protocol/openid-connect/token"
+          }
+        }
       }
     }
   },
