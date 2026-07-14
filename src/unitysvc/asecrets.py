@@ -50,16 +50,26 @@ class AsyncSecrets:
             )
         )
 
-    async def set(self, name: str, value: str) -> SecretPublic:
-        """Idempotently set ``name`` to ``value``. See sync ``Secrets.set``."""
+    async def set(
+        self, name: str, value: str, *, sensitive: bool | None = None
+    ) -> SecretPublic:
+        """Idempotently set ``name`` to ``value``. See sync ``Secrets.set``.
+
+        ``sensitive=False`` creates a viewable **variable**; ``None`` (default)
+        stores a **secret**. Honored on create only.
+        """
         from ._generated.api.customer_secrets import customer_secrets_set_secret
         from ._generated.models.secret_update import SecretUpdate
+        from ._generated.types import UNSET
 
         return unwrap(
             await customer_secrets_set_secret.asyncio_detailed(
                 name=name,
                 client=self._client,
-                body=SecretUpdate(value=value),
+                body=SecretUpdate(
+                    value=value,
+                    sensitive=UNSET if sensitive is None else sensitive,
+                ),
             )
         )
 

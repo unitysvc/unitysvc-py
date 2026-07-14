@@ -82,7 +82,7 @@ $ usvc secrets [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `list`: List secrets owned by the authenticated...
-* `set`: Set a secret by name (idempotent — creates...
+* `set`: Set a secret or variable by name...
 * `delete`: Delete a secret by name.
 
 ### `usvc secrets list`
@@ -106,11 +106,14 @@ $ usvc secrets list [OPTIONS]
 
 ### `usvc secrets set`
 
-Set a secret by name (idempotent — creates or rotates).
+Set a secret or variable by name (idempotent — creates or rotates).
 
 Maps to ``PUT /v1/customer/secrets/{name}``. The value is encrypted
-server-side and cannot be retrieved later. Resolution order for
-the value, in order of precedence:
+server-side. A **secret** (default) is write-only and cannot be retrieved;
+pass ``--variable`` to store a viewable **variable** instead (its value is
+returned by ``list``/``get`` — useful for non-sensitive config like a
+notification email). ``--variable`` is honored only when the row is created.
+Resolution order for the value, in order of precedence:
 
   1. ``--value VALUE``                     — explicit literal (or
                                              ``--value &quot;$ENV_NAME&quot;``
@@ -135,6 +138,7 @@ $ usvc secrets set [OPTIONS] NAME
 **Options**:
 
 * `--value TEXT`: Secret value. If omitted: reads from stdin when piped, prompts with hidden input when run interactively.
+* `--variable`: Store as a viewable variable (value is returned by list/get) rather than a write-only secret. Honored only when creating.
 * `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.

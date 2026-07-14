@@ -57,7 +57,11 @@ class Secrets:
         )
 
     def get(self, name: str) -> SecretPublic:
-        """Get a single secret by name (metadata only — value is never returned)."""
+        """Get a single secret by name.
+
+        Metadata for a **secret** (``.value`` is ``None`` — write-only); a
+        **variable** additionally returns its decrypted ``.value``.
+        """
         from ._generated.api.customer_secrets import customer_secrets_get_secret
 
         return unwrap(
@@ -70,28 +74,43 @@ class Secrets:
     # ------------------------------------------------------------------
     # Write
     # ------------------------------------------------------------------
-    def set(self, name: str, value: str) -> SecretPublic:
+    def set(
+        self, name: str, value: str, *, sensitive: bool | None = None
+    ) -> SecretPublic:
         """Set ``name`` to ``value`` (idempotent — creates or replaces).
 
-        Maps to ``PUT /v1/customer/secrets/{name}``. Returns the secret's
-        public metadata; the value itself is never echoed back. The
-        encryption is handled server-side.
+        Maps to ``PUT /v1/customer/secrets/{name}``. The value is encrypted
+        server-side.
+
+        ``sensitive`` controls whether this is a **secret** (write-only; the
+        default) or a **variable** (its value is returned to authorized callers,
+        e.g. so you can confirm what you stored). It is honored only when the
+        row is **created** — an existing row cannot switch between secret and
+        variable (attempting to changes raises a 409 ``ApiError``). Leave it
+        ``None`` to accept the default (a secret) or preserve an existing row's
+        kind on update.
 
         Args:
             name: Secret name (must match ``^[A-Z_][A-Z0-9_]*$``).
             value: Secret value. May be empty.
+            sensitive: ``False`` creates a viewable variable, ``True`` an
+                explicit secret, ``None`` (default) leaves it unset.
 
         Returns:
-            ``SecretPublic`` metadata for the stored secret.
+            ``SecretPublic`` metadata. For a variable, ``.value`` is populated.
         """
         from ._generated.api.customer_secrets import customer_secrets_set_secret
         from ._generated.models.secret_update import SecretUpdate
+        from ._generated.types import UNSET
 
         return unwrap(
             customer_secrets_set_secret.sync_detailed(
                 name=name,
                 client=self._client,
-                body=SecretUpdate(value=value),
+                body=SecretUpdate(
+                    value=value,
+                    sensitive=UNSET if sensitive is None else sensitive,
+                ),
             )
         )
 
