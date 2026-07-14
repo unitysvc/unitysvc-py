@@ -55,6 +55,7 @@ if TYPE_CHECKING:
     from .broadcasts import Broadcasts
     from .chains import Chains
     from .enrollments import Enrollments
+    from .files import Files
     from .groups import Groups
     from .recurrent_requests import RecurrentRequests
     from .request_logs import RequestLogs
@@ -130,6 +131,7 @@ class Client:
         self._broadcasts: Broadcasts | None = None
         self._chains: Chains | None = None
         self._enrollments: Enrollments | None = None
+        self._files: Files | None = None
         self._groups: Groups | None = None
         self._recurrent_requests: RecurrentRequests | None = None
         self._request_logs: RequestLogs | None = None
@@ -189,6 +191,14 @@ class Client:
 
             self._enrollments = Enrollments(self._client, parent=self)
         return self._enrollments
+
+    @property
+    def files(self) -> Files:
+        if self._files is None:
+            from .files import Files
+
+            self._files = Files(self._client)
+        return self._files
 
     @property
     def groups(self) -> Groups:

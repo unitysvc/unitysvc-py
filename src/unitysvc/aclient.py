@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from .abroadcasts import AsyncBroadcasts
     from .achains import AsyncChains
     from .aenrollments import AsyncEnrollments
+    from .afiles import AsyncFiles
     from .agroups import AsyncGroups
     from .arecurrent_requests import AsyncRecurrentRequests
     from .arequest_logs import AsyncRequestLogs
@@ -101,6 +102,7 @@ class AsyncClient:
         self._broadcasts: AsyncBroadcasts | None = None
         self._chains: AsyncChains | None = None
         self._enrollments: AsyncEnrollments | None = None
+        self._files: AsyncFiles | None = None
         self._groups: AsyncGroups | None = None
         self._recurrent_requests: AsyncRecurrentRequests | None = None
         self._request_logs: AsyncRequestLogs | None = None
@@ -155,6 +157,14 @@ class AsyncClient:
 
             self._enrollments = AsyncEnrollments(self._client, parent=self)
         return self._enrollments
+
+    @property
+    def files(self) -> AsyncFiles:
+        if self._files is None:
+            from .afiles import AsyncFiles
+
+            self._files = AsyncFiles(self._client)
+        return self._files
 
     @property
     def groups(self) -> AsyncGroups:

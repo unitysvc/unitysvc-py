@@ -54,6 +54,12 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
     options:
       show_root_heading: true
 
+### Files
+
+::: unitysvc.files.Files
+    options:
+      show_root_heading: true
+
 ### Secrets
 
 ::: unitysvc.secrets.Secrets
