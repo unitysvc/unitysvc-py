@@ -8,6 +8,7 @@ import os
 import typer
 from rich.console import Console
 
+from ._experimental import experimental_enabled
 from .client import (
     DEFAULT_API_URL,
     ENV_API_BASE_URL,
@@ -92,6 +93,17 @@ app.add_typer(enrollments_cmd.app, name="enrollments")
 app.command("resolve", help="Dry-run resolve a gateway path to its candidates.")(
     resolve_cmd.resolve_cmd
 )
+
+# Experimental command groups (#1540) are registered only when the user opts in
+# via UNITYSVC_EXPERIMENTAL, so `usvc --help` hides them by default and they only
+# work against a deployment that serves them (staging). Pattern for future
+# experimental sub-apps (e.g. the order-based S3 delivery model):
+#
+#     from ._experimental import experimental_enabled
+#     if experimental_enabled():
+#         app.add_typer(orders_cmd.app, name="orders")
+if experimental_enabled():
+    pass  # no experimental commands yet — register them here when they land
 
 
 if __name__ == "__main__":
