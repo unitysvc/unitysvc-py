@@ -31,6 +31,7 @@ production (``https://api.unitysvc.com``); override with the
 ``base_url`` constructor argument or the ``UNITYSVC_API_URL`` env var.
 """
 
+from ._experimental import experimental_enabled, require_experimental
 from .aclient import AsyncClient
 from .client import (
     DEFAULT_API_URL,
@@ -45,6 +46,7 @@ from .exceptions import (
     APIError,
     AuthenticationError,
     ConflictError,
+    ExperimentalDisabledError,
     NotFoundError,
     PermissionError,
     RateLimitError,
@@ -76,4 +78,8 @@ __all__ = [
     "ConflictError",
     "RateLimitError",
     "ServerError",
+    "ExperimentalDisabledError",
+    # Experimental gating (#1540)
+    "experimental_enabled",
+    "require_experimental",
 ]
