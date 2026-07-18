@@ -37,15 +37,33 @@ for s in secrets.data:
 client.secrets.create({"name": "openai-key", "value": "sk-..."})
 ```
 
+### Browsing the catalog without an API key
+
+The public catalog is readable anonymously — construct a client with no
+`api_key`:
+
+```python
+from unitysvc import Client
+
+with Client() as client:
+    groups = client.groups.list()                        # platform groups
+    services = client.groups.services("all_services")    # services in a group
+    detail = client.services.get(services.data[0].id)
+```
+
+Anonymous clients use the same host as authenticated ones, so there is no
+separate public endpoint to configure. Everything beyond those catalog
+reads raises `AuthenticationError`.
+
 ### Configuration
 
-The SDK is configured via a small set of environment variables. Only
-`UNITYSVC_API_KEY` is required; everything else has a sensible
-default.
+The SDK is configured via a small set of environment variables. All have
+sensible defaults; `UNITYSVC_API_KEY` is required for everything except
+anonymous catalog browsing.
 
 | Variable                 | Purpose                                     | Default                                      |
 |--------------------------|---------------------------------------------|----------------------------------------------|
-| `UNITYSVC_API_KEY`       | Customer API key (`svcpass_...`)            | (required)                                   |
+| `UNITYSVC_API_KEY`       | Customer API key (`svcpass_...`)            | (required, except for catalog browsing)      |
 | `UNITYSVC_API_URL`       | Control-plane API base URL                  | `https://api.unitysvc.com/v1`   |
 | `UNITYSVC_API_BASE_URL`  | HTTP API gateway base URL (inference)       | (unset)                                      |
 | `UNITYSVC_S3_BASE_URL`   | S3-compatible gateway base URL              | (unset)                                      |

@@ -11,12 +11,13 @@ SDK and CLI need.
 
 ## Configure
 
-All configuration comes from environment variables. Only
-`UNITYSVC_API_KEY` is required.
+All configuration comes from environment variables. `UNITYSVC_API_KEY`
+is required for everything except anonymous catalog browsing (see the
+[SDK Guide](sdk-guide.md)).
 
 | Variable                 | Purpose                                     | Default                                      |
 |--------------------------|---------------------------------------------|----------------------------------------------|
-| `UNITYSVC_API_KEY`       | Customer API key (`svcpass_...`)            | (required)                                   |
+| `UNITYSVC_API_KEY`       | Customer API key (`svcpass_...`)            | (required, except for catalog browsing)      |
 | `UNITYSVC_API_URL`       | Control-plane API base URL                  | `https://api.unitysvc.com/v1`   |
 | `UNITYSVC_API_BASE_URL`  | HTTP API gateway base URL (inference)       | (unset)                                      |
 | `UNITYSVC_S3_BASE_URL`   | S3-compatible gateway base URL              | (unset)                                      |
