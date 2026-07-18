@@ -6,11 +6,10 @@ import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 from .request_logs import _or_unset
 
 if TYPE_CHECKING:
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.logging_status_response import LoggingStatusResponse
     from ._generated.models.ops_customer_request_log_detail import OpsCustomerRequestLogDetail
     from ._generated.models.request_log_detail import RequestLogDetail
@@ -25,7 +24,7 @@ class AsyncRequestLogs:
     rationale.
     """
 
-    def __init__(self, client: AuthenticatedClient) -> None:
+    def __init__(self, client: LowLevelClient) -> None:
         self._client = client
 
     async def start(

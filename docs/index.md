@@ -13,6 +13,11 @@ It wraps the customer-tagged backend API with a typed sync
     (aliases, recurrent requests, secrets). The SDK tracks those today
     and will grow as the backend adds more.
 
+!!! tip "No API key? Browse the catalog anyway"
+    `Client()` with no `api_key` reads the public catalog —
+    `groups.list()`, `groups.services(name)`, and `services.get(id)`.
+    See the [SDK Guide](sdk-guide.md#anonymous-browsing-no-api-key).
+
 ## Quick links
 
 - [Getting Started](getting-started.md) — install, configure, first request

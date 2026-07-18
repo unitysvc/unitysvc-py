@@ -20,13 +20,12 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from ._generated.types import UNSET as _UNSET
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 from ._wrappers import _Wrappable
 
 if TYPE_CHECKING:
     import httpx
 
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.chain_public import ChainPublic
     from ._generated.models.chain_step_public import ChainStepPublic
     from .client import Client
@@ -205,7 +204,7 @@ class Chains:
         resp = ch.dispatch(json={"messages": [...]})   # POST /c/llm-failover
     """
 
-    def __init__(self, client: AuthenticatedClient, *, parent: Client) -> None:
+    def __init__(self, client: LowLevelClient, *, parent: Client) -> None:
         self._client = client
         self._parent = parent
 

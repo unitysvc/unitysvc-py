@@ -25,10 +25,17 @@ Quick start::
     # Or at the group level (gateway picks a member service):
     resp = client.groups.dispatch(llm.id, json={"messages": [...]})
 
+The public catalog is browsable without credentials — omit ``api_key``::
+
+    with Client() as client:
+        groups = client.groups.list()
+        services = client.groups.services("all_services")
+
 The customer context is encoded entirely in the API key, so no
 separate ``customer_id`` is required. The default base URL points at
 production (``https://api.unitysvc.com``); override with the
 ``base_url`` constructor argument or the ``UNITYSVC_API_URL`` env var.
+Anonymous and authenticated calls share that host.
 """
 
 from ._experimental import experimental_enabled, require_experimental

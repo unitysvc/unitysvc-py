@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Literal
 
 import httpx
 
+from ._generated.client import AuthenticatedClient
 from ._http import unwrap
 from .exceptions import APIError
 

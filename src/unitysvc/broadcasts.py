@@ -20,13 +20,12 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from ._generated.types import UNSET as _UNSET
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 from ._wrappers import _Wrappable
 
 if TYPE_CHECKING:
     import httpx
 
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.broadcast_public import BroadcastPublic
     from ._generated.models.broadcast_target_public import BroadcastTargetPublic
     from .client import Client
@@ -187,7 +186,7 @@ class Broadcasts:
         resp = bc.dispatch(json={"messages": [...]})   # POST /b/eval-fanout
     """
 
-    def __init__(self, client: AuthenticatedClient, *, parent: Client) -> None:
+    def __init__(self, client: LowLevelClient, *, parent: Client) -> None:
         self._client = client
         self._parent = parent
 

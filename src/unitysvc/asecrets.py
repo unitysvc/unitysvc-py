@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 
 if TYPE_CHECKING:
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.message import Message
     from ._generated.models.secret_public import SecretPublic
     from ._generated.models.secrets_public import SecretsPublic
@@ -21,7 +20,7 @@ class AsyncSecrets:
     (unitysvc#798).
     """
 
-    def __init__(self, client: AuthenticatedClient) -> None:
+    def __init__(self, client: LowLevelClient) -> None:
         self._client = client
 
     async def list(

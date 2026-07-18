@@ -6,10 +6,9 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 
 if TYPE_CHECKING:
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.customer_enrollment import CustomerEnrollment
     from ._generated.models.customer_enrollment_cancel_response import (
         CustomerEnrollmentCancelResponse,
@@ -58,7 +57,7 @@ class AsyncEnrollmentList:
 class AsyncEnrollments:
     """Async operations on the customer's enrollments."""
 
-    def __init__(self, client: AuthenticatedClient, *, parent: AsyncClient) -> None:
+    def __init__(self, client: LowLevelClient, *, parent: AsyncClient) -> None:
         self._client = client
         self._parent = parent
 

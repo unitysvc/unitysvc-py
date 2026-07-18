@@ -67,6 +67,43 @@ asyncio.run(main())
 Every method on `AsyncClient.<resource>.*` is an `async def` with the
 same signature as its sync counterpart on `Client`.
 
+## Anonymous browsing (no API key)
+
+The public catalog is readable without credentials. Construct a client
+with no `api_key` and browse:
+
+```python
+from unitysvc import Client
+
+with Client() as client:
+    groups = client.groups.list()          # platform groups
+    services = client.groups.services("all_services", limit=10)
+    detail = client.services.get(services.data[0].id)
+```
+
+`AsyncClient` behaves the same way. Anonymous clients talk to the same
+host as authenticated ones (`UNITYSVC_API_URL`, default
+`https://api.unitysvc.com/v1`) — there is no separate public endpoint to
+configure.
+
+What an anonymous client can reach:
+
+| Call | Anonymous | Notes |
+|------|-----------|-------|
+| `client.groups.list()` | ✅ | Platform groups only; `owner="own"` raises `AuthenticationError` |
+| `client.groups.services(name)` | ✅ | Active + public services in the group |
+| `client.services.get(id)` | ✅ | Same payload an authenticated customer sees |
+| everything else | ❌ | `AuthenticationError` |
+
+Two deliberate distinctions:
+
+- **Omitting `api_key` means anonymous; `api_key=""` is an error.** An
+  empty string almost always means a missing environment variable got
+  passed through, and silently downgrading that to anonymous would turn a
+  misconfiguration into a confusingly narrow catalog.
+- **`Client.from_env()` still requires `UNITYSVC_API_KEY`.** It is the
+  authenticated entry point; use `Client()` when you mean anonymous.
+
 ## `groups`
 
 Groups are the entry point for service discovery. A group is a

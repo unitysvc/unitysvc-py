@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 import httpx
 
+from ._generated.client import AuthenticatedClient
 from ._http import unwrap
 from .exceptions import APIError
 from .files import _STORAGE_TIMEOUT, FileScope

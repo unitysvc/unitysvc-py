@@ -11,12 +11,13 @@ SDK and CLI need.
 
 ## Configure
 
-All configuration comes from environment variables. Only
-`UNITYSVC_API_KEY` is required.
+All configuration comes from environment variables. `UNITYSVC_API_KEY`
+is required for everything except anonymous catalog browsing (see the
+[SDK Guide](sdk-guide.md)).
 
 | Variable                 | Purpose                                     | Default                                      |
 |--------------------------|---------------------------------------------|----------------------------------------------|
-| `UNITYSVC_API_KEY`       | Customer API key (`svcpass_...`)            | (required)                                   |
+| `UNITYSVC_API_KEY`       | Customer API key (`svcpass_...`)            | (required, except for catalog browsing)      |
 | `UNITYSVC_API_URL`       | Control-plane API base URL                  | `https://api.unitysvc.com/v1`   |
 | `UNITYSVC_API_BASE_URL`  | HTTP API gateway base URL (inference)       | (unset)                                      |
 | `UNITYSVC_S3_BASE_URL`   | S3-compatible gateway base URL              | (unset)                                      |
@@ -26,8 +27,12 @@ Typical shell setup:
 
 ```bash
 export UNITYSVC_API_KEY="svcpass_..."
-export UNITYSVC_API_URL="https://customer.unitysvc.com/v1"
+export UNITYSVC_API_URL="https://api.unitysvc.com/v1"
 ```
+
+`api.unitysvc.com` is the customer API host, and it is also the SDK
+default — you only need to set `UNITYSVC_API_URL` to point at another
+environment.
 
 The customer context is encoded entirely in the API key — no separate
 `customer_id` argument is required.
