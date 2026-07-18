@@ -23,7 +23,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 from ._streaming import StreamingResponse, build_stream_kwargs
 from ._wrappers import _Wrappable
 from .groups import _http_dispatch
@@ -31,7 +31,6 @@ from .groups import _http_dispatch
 if TYPE_CHECKING:
     import httpx
 
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.access_interface import AccessInterface
     from ._generated.models.recurrent_request_public import RecurrentRequestPublic
     from ._generated.models.service_detail import ServiceDetail
@@ -232,7 +231,7 @@ class Services:
     is just a convenience that pre-binds the id.
     """
 
-    def __init__(self, client: AuthenticatedClient, *, parent: Client) -> None:
+    def __init__(self, client: LowLevelClient, *, parent: Client) -> None:
         self._client = client
         self._parent = parent
 

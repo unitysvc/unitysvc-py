@@ -28,14 +28,13 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from ._generated.types import UNSET as _UNSET
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 from ._streaming import StreamingResponse, build_stream_kwargs
 from ._wrappers import _Wrappable
 
 if TYPE_CHECKING:
     import httpx
 
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.customer_group_detail import CustomerGroupDetail
     from ._generated.models.customer_group_view import CustomerGroupView
     from ._generated.models.service_collection_member_public import (
@@ -254,7 +253,7 @@ class Groups:
     convenience that pre-binds the slug.
     """
 
-    def __init__(self, client: AuthenticatedClient, *, parent: Client) -> None:
+    def __init__(self, client: LowLevelClient, *, parent: Client) -> None:
         self._client = client
         self._parent = parent
 
@@ -611,7 +610,7 @@ class Groups:
 
 
 def _http_dispatch(
-    low_level_client: AuthenticatedClient,
+    low_level_client: LowLevelClient,
     *,
     base_url: str | None,
     path: str,

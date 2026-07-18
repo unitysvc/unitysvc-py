@@ -48,6 +48,9 @@ from typing import TYPE_CHECKING
 import httpx
 
 from ._generated.client import AuthenticatedClient as _LowLevelClient
+from ._generated.client import Client as _AnonymousLowLevelClient
+from ._http import LowLevelClient
+from .exceptions import AuthenticationError
 
 if TYPE_CHECKING:
     from ._generated.models.resolve_response import ResolveResponse
@@ -75,7 +78,7 @@ class Client:
     """Synchronous customer SDK client.
 
     Args:
-        api_key: A customer API key (``svcpass_...``). Encodes the
+        api_key: A customer API key (``svcpass_...``). Omit it (or pass Encodes the
             customer context, so no separate ``customer_id`` is
             required.
         base_url: Override the default control-plane URL. Falls back to
@@ -92,7 +95,7 @@ class Client:
 
     def __init__(
         self,
-        api_key: str,
+        api_key: str | None = None,
         *,
         base_url: str | None = None,
         api_base_url: str | None = None,
@@ -101,8 +104,15 @@ class Client:
         timeout: float | httpx.Timeout | None = 30.0,
         verify_ssl: bool = True,
     ) -> None:
-        if not api_key:
-            raise ValueError("api_key is required")
+        # `None` (or omitted) means "browse anonymously". An empty string
+        # almost always means a missing env var got passed through, so it
+        # stays an error rather than silently downgrading the caller to
+        # anonymous and returning a confusingly narrow catalog.
+        if api_key is not None and not api_key:
+            raise ValueError(
+                "api_key is required. Pass api_key=None (or omit it) to "
+                "browse the public catalog anonymously."
+            )
 
         resolved_base_url = base_url or os.environ.get(ENV_API_URL) or DEFAULT_API_URL
 
@@ -111,13 +121,27 @@ class Client:
         else:
             timeout_obj = timeout  # type: ignore[assignment]
 
-        self._client = _LowLevelClient(
-            base_url=resolved_base_url,
-            token=api_key,
-            timeout=timeout_obj,
-            verify_ssl=verify_ssl,
-            raise_on_unexpected_status=False,
-        )
+        # Without a key, use the generated unauthenticated client: it sends
+        # no Authorization header at all, which is what the customer API
+        # reads as "anonymous" (unitysvc#1610). An empty-token
+        # AuthenticatedClient would send a malformed `Bearer ` header and
+        # earn a 401 instead.
+        self._client: LowLevelClient
+        if api_key:
+            self._client = _LowLevelClient(
+                base_url=resolved_base_url,
+                token=api_key,
+                timeout=timeout_obj,
+                verify_ssl=verify_ssl,
+                raise_on_unexpected_status=False,
+            )
+        else:
+            self._client = _AnonymousLowLevelClient(
+                base_url=resolved_base_url,
+                timeout=timeout_obj,
+                verify_ssl=verify_ssl,
+                raise_on_unexpected_status=False,
+            )
         self._api_key = api_key
         self._base_url = resolved_base_url
 
@@ -160,6 +184,24 @@ class Client:
     # ------------------------------------------------------------------
     # Resource namespaces (lazy)
     # ------------------------------------------------------------------
+    def _authenticated(self) -> _LowLevelClient:
+        """Return the low-level client, or explain that a key is needed.
+
+        Only reached from resources whose every operation requires
+        credentials. Catalog reads stay reachable anonymously, and mixed
+        resources (``groups`` exposes both public reads and authenticated
+        writes) let the server decide with a 401 — gating those at the
+        resource level would wrongly block the public half.
+        """
+        if not isinstance(self._client, _LowLevelClient):
+            raise AuthenticationError(
+                "This operation requires an api_key. Construct the client "
+                "with api_key=... — the no-key client can only browse the "
+                "public catalog.",
+                status_code=401,
+            )
+        return self._client
+
     @property
     def aliases(self) -> Aliases:
         if self._aliases is None:
@@ -197,7 +239,7 @@ class Client:
         if self._files is None:
             from .files import Files
 
-            self._files = Files(self._client)
+            self._files = Files(self._authenticated())
         return self._files
 
     @property

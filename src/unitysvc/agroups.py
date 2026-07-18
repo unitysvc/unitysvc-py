@@ -13,13 +13,12 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from ._generated.types import UNSET as _UNSET
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 from ._streaming import AsyncStreamingResponse, build_stream_kwargs
 
 if TYPE_CHECKING:
     import httpx
 
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.customer_group_detail import CustomerGroupDetail
     from ._generated.models.customer_group_view import CustomerGroupView
     from ._generated.models.service_collection_member_public import (
@@ -166,7 +165,7 @@ class AsyncServiceListPage:
 class AsyncGroups:
     """Async operations on customer-visible service groups."""
 
-    def __init__(self, client: AuthenticatedClient, *, parent: AsyncClient) -> None:
+    def __init__(self, client: LowLevelClient, *, parent: AsyncClient) -> None:
         self._client = client
         self._parent = parent
 
@@ -434,7 +433,7 @@ class AsyncGroups:
 
 
 async def _http_dispatch_async(
-    low_level_client: AuthenticatedClient,
+    low_level_client: LowLevelClient,
     *,
     base_url: str | None,
     path: str,

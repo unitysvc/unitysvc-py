@@ -5,14 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 from ._streaming import AsyncStreamingResponse, build_stream_kwargs
 from .agroups import _http_dispatch_async
 
 if TYPE_CHECKING:
     import httpx
 
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.access_interface import AccessInterface
     from ._generated.models.recurrent_request_public import RecurrentRequestPublic
     from ._generated.models.service_detail import ServiceDetail
@@ -148,7 +147,7 @@ class AsyncService:
 class AsyncServices:
     """Async operations on customer-visible services."""
 
-    def __init__(self, client: AuthenticatedClient, *, parent: AsyncClient) -> None:
+    def __init__(self, client: LowLevelClient, *, parent: AsyncClient) -> None:
         self._client = client
         self._parent = parent
 

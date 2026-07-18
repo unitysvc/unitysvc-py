@@ -26,8 +26,12 @@ Typical shell setup:
 
 ```bash
 export UNITYSVC_API_KEY="svcpass_..."
-export UNITYSVC_API_URL="https://customer.unitysvc.com/v1"
+export UNITYSVC_API_URL="https://api.unitysvc.com/v1"
 ```
+
+`api.unitysvc.com` is the customer API host, and it is also the SDK
+default — you only need to set `UNITYSVC_API_URL` to point at another
+environment.
 
 The customer context is encoded entirely in the API key — no separate
 `customer_id` argument is required.

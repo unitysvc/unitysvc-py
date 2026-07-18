@@ -14,9 +14,19 @@ from __future__ import annotations
 import json
 from typing import Any, TypeVar
 
+from ._generated.client import AuthenticatedClient
+from ._generated.client import Client as _UnauthenticatedClient
 from .exceptions import APIError, error_for_status
 
 T = TypeVar("T")
+
+# The low-level client a resource facade holds. ``AuthenticatedClient``
+# sends ``Authorization: Bearer <key>`` on every request; the plain
+# generated ``Client`` sends no credential at all, which is how the SDK
+# browses the public catalog anonymously (unitysvc#1610). The generated
+# endpoint functions already accept either, so facades only need to be
+# annotated widely enough to pass one through.
+LowLevelClient = AuthenticatedClient | _UnauthenticatedClient
 
 
 def unwrap(response: Any) -> Any:

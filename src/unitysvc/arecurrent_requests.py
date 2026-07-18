@@ -5,10 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 
 if TYPE_CHECKING:
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.recurrent_request_create import RecurrentRequestCreate
     from ._generated.models.recurrent_request_public import RecurrentRequestPublic
     from ._generated.models.recurrent_request_status_enum import RecurrentRequestStatusEnum
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
 class AsyncRecurrentRequests:
     """Async operations on the customer's recurrent requests."""
 
-    def __init__(self, client: AuthenticatedClient) -> None:
+    def __init__(self, client: LowLevelClient) -> None:
         self._client = client
 
     async def list(

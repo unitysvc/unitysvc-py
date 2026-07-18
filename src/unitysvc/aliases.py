@@ -17,10 +17,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 
 if TYPE_CHECKING:
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.service_alias_create import ServiceAliasCreate
     from ._generated.models.service_alias_update import ServiceAliasUpdate
 
@@ -28,7 +27,7 @@ if TYPE_CHECKING:
 class Aliases:
     """Operations on the customer's service aliases (``/v1/customer/aliases``)."""
 
-    def __init__(self, client: AuthenticatedClient) -> None:
+    def __init__(self, client: LowLevelClient) -> None:
         self._client = client
 
     # ------------------------------------------------------------------

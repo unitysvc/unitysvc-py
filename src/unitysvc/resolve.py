@@ -11,15 +11,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 
 if TYPE_CHECKING:
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.resolve_response import ResolveResponse
 
 
 def resolve(
-    client: AuthenticatedClient,
+    client: LowLevelClient,
     *,
     path: str,
     routing_key: dict[str, Any] | None = None,

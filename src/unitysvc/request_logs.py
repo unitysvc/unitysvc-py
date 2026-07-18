@@ -22,12 +22,11 @@ from typing import TYPE_CHECKING, TypeVar
 from uuid import UUID
 
 from ._generated.types import UNSET, Unset
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 
 T = TypeVar("T")
 
 if TYPE_CHECKING:
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.logging_status_response import LoggingStatusResponse
     from ._generated.models.ops_customer_request_log_detail import OpsCustomerRequestLogDetail
     from ._generated.models.request_log_detail import RequestLogDetail
@@ -38,7 +37,7 @@ class RequestLogs:
     """Operations on the customer's request log
     (``/v1/customer/request-logs``)."""
 
-    def __init__(self, client: AuthenticatedClient) -> None:
+    def __init__(self, client: LowLevelClient) -> None:
         self._client = client
 
     # ------------------------------------------------------------------

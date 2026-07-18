@@ -14,13 +14,12 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from ._generated.types import UNSET as _UNSET
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 from .broadcasts import _target_create
 
 if TYPE_CHECKING:
     import httpx
 
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.broadcast_public import BroadcastPublic
     from ._generated.models.broadcast_target_public import BroadcastTargetPublic
     from .aclient import AsyncClient
@@ -139,7 +138,7 @@ class AsyncBroadcasts:
     See :class:`unitysvc.broadcasts.Broadcasts` for the contract.
     """
 
-    def __init__(self, client: AuthenticatedClient, *, parent: AsyncClient) -> None:
+    def __init__(self, client: LowLevelClient, *, parent: AsyncClient) -> None:
         self._client = client
         self._parent = parent
 

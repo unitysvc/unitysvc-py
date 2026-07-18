@@ -14,13 +14,12 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from ._generated.types import UNSET as _UNSET
-from ._http import unwrap
+from ._http import LowLevelClient, unwrap
 from .chains import _step_create
 
 if TYPE_CHECKING:
     import httpx
 
-    from ._generated.client import AuthenticatedClient
     from ._generated.models.chain_public import ChainPublic
     from ._generated.models.chain_step_public import ChainStepPublic
     from .aclient import AsyncClient
@@ -164,7 +163,7 @@ class AsyncChains:
     See :class:`unitysvc.chains.Chains` for the contract.
     """
 
-    def __init__(self, client: AuthenticatedClient, *, parent: AsyncClient) -> None:
+    def __init__(self, client: LowLevelClient, *, parent: AsyncClient) -> None:
         self._client = client
         self._parent = parent
 
