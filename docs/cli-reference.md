@@ -58,12 +58,12 @@ $ usvc resolve [OPTIONS]
 
 **Options**:
 
-* `--path TEXT`: Gateway request path, e.g. &#x27;v1/chat/completions&#x27;.  [required]
-* `--routing-key TEXT`: Optional routing key as inline JSON, e.g. &#x27;{&quot;model&quot;: &quot;gpt-4&quot;}&#x27;.
-* `--gateway TEXT`: Gateway prefix the path belongs to: api | s3 | smtp.  [default: api]
-* `--strategy TEXT`: Override the group&#x27;s configured routing strategy (e.g. &#x27;by_price&#x27;).
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--path <str>`: Gateway request path, e.g. &#x27;v1/chat/completions&#x27;.  [required]
+* `--routing-key <str>`: Optional routing key as inline JSON, e.g. &#x27;{&quot;model&quot;: &quot;gpt-4&quot;}&#x27;.
+* `--gateway <str>`: Gateway prefix the path belongs to: api | s3 | smtp.  [default: api]
+* `--strategy <str>`: Override the group&#x27;s configured routing strategy (e.g. &#x27;by_price&#x27;).
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ## `usvc secrets`
@@ -98,11 +98,11 @@ $ usvc secrets list [OPTIONS]
 
 **Options**:
 
-* `--skip INTEGER`: Offset for pagination.  [default: 0]
-* `--limit INTEGER`: Max records to return.  [default: 100]
-* `-f, --format TEXT`: Output format: table | json.  [default: table]
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--skip <int>`: Offset for pagination.  [default: 0]
+* `--limit <int>`: Max records to return.  [default: 100]
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc secrets set`
@@ -129,19 +129,19 @@ and similar tools.
 **Usage**:
 
 ```console
-$ usvc secrets set [OPTIONS] NAME
+$ usvc secrets set [OPTIONS] {name}
 ```
 
 **Arguments**:
 
-* `NAME`: Secret name (unique per customer).  [required]
+* `name`: Secret name (unique per customer).  [required]
 
 **Options**:
 
-* `--value TEXT`: Secret value. If omitted: reads from stdin when piped, prompts with hidden input when run interactively.
+* `--value <str>`: Secret value. If omitted: reads from stdin when piped, prompts with hidden input when run interactively.
 * `--variable`: Store as a viewable variable (value is returned by list/get) rather than a write-only secret. Honored only when creating.
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc secrets delete`
@@ -151,18 +151,18 @@ Delete a secret by name.
 **Usage**:
 
 ```console
-$ usvc secrets delete [OPTIONS] NAME
+$ usvc secrets delete [OPTIONS] {name}
 ```
 
 **Arguments**:
 
-* `NAME`: Secret name.  [required]
+* `name`: Secret name.  [required]
 
 **Options**:
 
 * `-y, --yes`: Skip confirmation prompt.
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ## `usvc aliases`
@@ -197,13 +197,13 @@ $ usvc aliases list [OPTIONS]
 
 **Options**:
 
-* `--skip INTEGER`: Offset for pagination.  [default: 0]
-* `--limit INTEGER`: Max records to return.  [default: 100]
-* `-n, --name TEXT`: Filter by alias name.
+* `--skip <int>`: Offset for pagination.  [default: 0]
+* `--limit <int>`: Max records to return.  [default: 100]
+* `-n, --name <str>`: Filter by alias name.
 * `--include-deactivated`: Include deactivated aliases.
-* `-f, --format TEXT`: Output format: table | json.  [default: table]
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc aliases show`
@@ -213,17 +213,17 @@ Show a single alias as JSON.
 **Usage**:
 
 ```console
-$ usvc aliases show [OPTIONS] ALIAS_ID
+$ usvc aliases show [OPTIONS] {alias_id}
 ```
 
 **Arguments**:
 
-* `ALIAS_ID`: Alias ID.  [required]
+* `alias_id`: Alias ID.  [required]
 
 **Options**:
 
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc aliases delete`
@@ -233,18 +233,18 @@ Delete an alias by id.
 **Usage**:
 
 ```console
-$ usvc aliases delete [OPTIONS] ALIAS_ID
+$ usvc aliases delete [OPTIONS] {alias_id}
 ```
 
 **Arguments**:
 
-* `ALIAS_ID`: Alias ID.  [required]
+* `alias_id`: Alias ID.  [required]
 
 **Options**:
 
 * `-y, --yes`: Skip confirmation prompt.
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ## `usvc recurrent-requests`
@@ -280,14 +280,14 @@ $ usvc recurrent-requests list [OPTIONS]
 
 **Options**:
 
-* `--service-id TEXT`: Filter by service id.
-* `--enrollment-id TEXT`: Filter by enrollment id.
-* `--status TEXT`: Filter by status.
-* `--skip INTEGER`: Offset for pagination.  [default: 0]
-* `--limit INTEGER`: Max records to return.  [default: 100]
-* `-f, --format TEXT`: Output format: table | json.  [default: table]
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--service-id <str>`: Filter by service id.
+* `--enrollment-id <str>`: Filter by enrollment id.
+* `--status <str>`: Filter by status.
+* `--skip <int>`: Offset for pagination.  [default: 0]
+* `--limit <int>`: Max records to return.  [default: 100]
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc recurrent-requests show`
@@ -297,17 +297,17 @@ Show a single recurrent request as JSON.
 **Usage**:
 
 ```console
-$ usvc recurrent-requests show [OPTIONS] REQUEST_ID
+$ usvc recurrent-requests show [OPTIONS] {request_id}
 ```
 
 **Arguments**:
 
-* `REQUEST_ID`: Recurrent request ID.  [required]
+* `request_id`: Recurrent request ID.  [required]
 
 **Options**:
 
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc recurrent-requests trigger`
@@ -317,17 +317,17 @@ Force an immediate run of a recurrent request.
 **Usage**:
 
 ```console
-$ usvc recurrent-requests trigger [OPTIONS] REQUEST_ID
+$ usvc recurrent-requests trigger [OPTIONS] {request_id}
 ```
 
 **Arguments**:
 
-* `REQUEST_ID`: Recurrent request ID.  [required]
+* `request_id`: Recurrent request ID.  [required]
 
 **Options**:
 
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc recurrent-requests delete`
@@ -337,18 +337,18 @@ Delete a recurrent request by id.
 **Usage**:
 
 ```console
-$ usvc recurrent-requests delete [OPTIONS] REQUEST_ID
+$ usvc recurrent-requests delete [OPTIONS] {request_id}
 ```
 
 **Arguments**:
 
-* `REQUEST_ID`: Recurrent request ID.  [required]
+* `request_id`: Recurrent request ID.  [required]
 
 **Options**:
 
 * `-y, --yes`: Skip confirmation prompt.
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ## `usvc groups`
@@ -384,10 +384,10 @@ $ usvc groups list [OPTIONS]
 
 **Options**:
 
-* `-n, --name TEXT`: Filter by partial-substring match on the slug.
-* `-f, --format TEXT`: Output format: table | json.  [default: table]
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `-n, --name <str>`: Filter by partial-substring match on the slug.
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc groups show`
@@ -397,17 +397,17 @@ Show full detail for one group as JSON.
 **Usage**:
 
 ```console
-$ usvc groups show [OPTIONS] NAME
+$ usvc groups show [OPTIONS] {name}
 ```
 
 **Arguments**:
 
-* `NAME`: Group slug name.  [required]
+* `name`: Group slug name.  [required]
 
 **Options**:
 
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc groups services`
@@ -417,21 +417,21 @@ List services that belong to a group (cursor-paginated).
 **Usage**:
 
 ```console
-$ usvc groups services [OPTIONS] NAME
+$ usvc groups services [OPTIONS] {name}
 ```
 
 **Arguments**:
 
-* `NAME`: Group slug name.  [required]
+* `name`: Group slug name.  [required]
 
 **Options**:
 
-* `--cursor TEXT`: Pagination cursor from a previous page.
-* `--limit INTEGER`: Page size (max records per page).  [default: 50]
-* `--search TEXT`: Filter by partial service name.
-* `-f, --format TEXT`: Output format: table | json.  [default: table]
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--cursor <str>`: Pagination cursor from a previous page.
+* `--limit <int>`: Page size (max records per page).  [default: 50]
+* `--search <str>`: Filter by partial service name.
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc groups dispatch`
@@ -445,23 +445,23 @@ captures only the response body.
 **Usage**:
 
 ```console
-$ usvc groups dispatch [OPTIONS] NAME
+$ usvc groups dispatch [OPTIONS] {name}
 ```
 
 **Arguments**:
 
-* `NAME`: Group slug name.  [required]
+* `name`: Group slug name.  [required]
 
 **Options**:
 
-* `--path TEXT`: Sub-path appended to the group interface base URL.
-* `-X, --method TEXT`: HTTP method.  [default: POST]
-* `--json TEXT`: Request body as inline JSON.
-* `-d, --data TEXT`: Raw request body. Prefix with &#x27;@&#x27; to read from a file.
-* `-H, --header TEXT`: Extra header &#x27;Key: Value&#x27;. Repeatable.
-* `--timeout FLOAT`: Per-request timeout in seconds.
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--path <str>`: Sub-path appended to the group interface base URL.
+* `-X, --method <str>`: HTTP method.  [default: POST]
+* `--json <str>`: Request body as inline JSON.
+* `-d, --data <str>`: Raw request body. Prefix with &#x27;@&#x27; to read from a file.
+* `-H, --header <str>`: Extra header &#x27;Key: Value&#x27;. Repeatable.
+* `--timeout <float>`: Per-request timeout in seconds.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ## `usvc files`
@@ -492,18 +492,18 @@ List one folder level of account files.
 **Usage**:
 
 ```console
-$ usvc files ls [OPTIONS] [PATH]
+$ usvc files ls [OPTIONS] [path]
 ```
 
 **Arguments**:
 
-* `[PATH]`: Virtual folder path (personal/... or shared/...); empty shows the roots.
+* `path`: Virtual folder path (personal/... or shared/...); empty shows the roots.
 
 **Options**:
 
-* `-f, --format TEXT`: table | json.  [default: table]
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `-f, --format <str>`: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc files get`
@@ -513,18 +513,18 @@ Download one file (bytes stream storage → disk directly).
 **Usage**:
 
 ```console
-$ usvc files get [OPTIONS] PATH [DEST]
+$ usvc files get [OPTIONS] {path} [dest]
 ```
 
 **Arguments**:
 
-* `PATH`: Virtual file path (personal/... or shared/...).  [required]
-* `[DEST]`: Destination file or directory (default: basename in cwd).
+* `path`: Virtual file path (personal/... or shared/...).  [required]
+* `dest`: Destination file or directory (default: basename in cwd).
 
 **Options**:
 
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc files put`
@@ -537,18 +537,18 @@ uploading to an existing name overwrites it.
 **Usage**:
 
 ```console
-$ usvc files put [OPTIONS] SRC [PATH]
+$ usvc files put [OPTIONS] {src} [path]
 ```
 
 **Arguments**:
 
-* `SRC`: Local file to upload.  [required]
-* `[PATH]`: Virtual folder to upload into, e.g. personal, personal/reports, shared.  [default: personal]
+* `src`: Local file to upload.  [required]
+* `path`: Virtual folder to upload into, e.g. personal, personal/reports, shared.  [default: personal]
 
 **Options**:
 
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc files url`
@@ -558,18 +558,18 @@ Print a short-TTL presigned download URL (for scripts / sharing).
 **Usage**:
 
 ```console
-$ usvc files url [OPTIONS] PATH
+$ usvc files url [OPTIONS] {path}
 ```
 
 **Arguments**:
 
-* `PATH`: Virtual file path (personal/... or shared/...).  [required]
+* `path`: Virtual file path (personal/... or shared/...).  [required]
 
 **Options**:
 
-* `--expires INTEGER`: URL validity in seconds (60-3600).  [default: 900]
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--expires <int>`: URL validity in seconds (60-3600).  [default: 900]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ## `usvc services`
@@ -603,17 +603,17 @@ Show full service detail as JSON.
 **Usage**:
 
 ```console
-$ usvc services show [OPTIONS] SERVICE_ID
+$ usvc services show [OPTIONS] {service_id}
 ```
 
 **Arguments**:
 
-* `SERVICE_ID`: Service UUID.  [required]
+* `service_id`: Service UUID.  [required]
 
 **Options**:
 
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc services interfaces`
@@ -623,18 +623,18 @@ List access interfaces dispatchable by this customer.
 **Usage**:
 
 ```console
-$ usvc services interfaces [OPTIONS] SERVICE_ID
+$ usvc services interfaces [OPTIONS] {service_id}
 ```
 
 **Arguments**:
 
-* `SERVICE_ID`: Service UUID.  [required]
+* `service_id`: Service UUID.  [required]
 
 **Options**:
 
-* `-f, --format TEXT`: Output format: table | json.  [default: table]
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc services dispatch`
@@ -646,25 +646,25 @@ Body is written raw to stdout; HTTP status line goes to stderr.
 **Usage**:
 
 ```console
-$ usvc services dispatch [OPTIONS] SERVICE_ID
+$ usvc services dispatch [OPTIONS] {service_id}
 ```
 
 **Arguments**:
 
-* `SERVICE_ID`: Service UUID.  [required]
+* `service_id`: Service UUID.  [required]
 
 **Options**:
 
-* `--interface TEXT`: Pick an interface by name (required when ambiguous).
-* `--enrollment TEXT`: Pick the interface bound to this enrollment UUID.
-* `--path TEXT`: Sub-path appended to the interface base URL.
-* `-X, --method TEXT`: HTTP method.  [default: POST]
-* `--json TEXT`: Request body as inline JSON.
-* `-d, --data TEXT`: Raw request body. Prefix with &#x27;@&#x27; to read from a file.
-* `-H, --header TEXT`: Extra header &#x27;Key: Value&#x27;. Repeatable.
-* `--timeout FLOAT`: Per-request timeout in seconds.
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--interface <str>`: Pick an interface by name (required when ambiguous).
+* `--enrollment <str>`: Pick the interface bound to this enrollment UUID.
+* `--path <str>`: Sub-path appended to the interface base URL.
+* `-X, --method <str>`: HTTP method.  [default: POST]
+* `--json <str>`: Request body as inline JSON.
+* `-d, --data <str>`: Raw request body. Prefix with &#x27;@&#x27; to read from a file.
+* `-H, --header <str>`: Extra header &#x27;Key: Value&#x27;. Repeatable.
+* `--timeout <float>`: Per-request timeout in seconds.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc services schedule`
@@ -676,28 +676,28 @@ Pick exactly one of ``--recurrence``, ``--interval``, or ``--cron``.
 **Usage**:
 
 ```console
-$ usvc services schedule [OPTIONS] SERVICE_ID
+$ usvc services schedule [OPTIONS] {service_id}
 ```
 
 **Arguments**:
 
-* `SERVICE_ID`: Service UUID.  [required]
+* `service_id`: Service UUID.  [required]
 
 **Options**:
 
-* `--recurrence TEXT`: Schedule as inline JSON (advanced — see SDK docs).
-* `--interval INTEGER`: Sugar: fixed-interval schedule, in seconds.
-* `--cron TEXT`: Sugar: cron expression, e.g. &#x27;*/5 * * * *&#x27;.
-* `--timezone TEXT`: Timezone for --cron (ignored for --interval / --recurrence).  [default: UTC]
-* `--interface TEXT`: Pick interface by name.
-* `--enrollment TEXT`: Pick interface by enrollment UUID.
-* `--path TEXT`: Sub-path appended to interface base URL.
-* `-X, --method TEXT`: HTTP method.  [default: POST]
-* `--json TEXT`: Request body template as inline JSON.
-* `-H, --header TEXT`: Extra header &#x27;Key: Value&#x27;. Repeatable.
-* `--name TEXT`: Optional human-friendly label.
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--recurrence <str>`: Schedule as inline JSON (advanced — see SDK docs).
+* `--interval <int>`: Sugar: fixed-interval schedule, in seconds.
+* `--cron <str>`: Sugar: cron expression, e.g. &#x27;*/5 * * * *&#x27;.
+* `--timezone <str>`: Timezone for --cron (ignored for --interval / --recurrence).  [default: UTC]
+* `--interface <str>`: Pick interface by name.
+* `--enrollment <str>`: Pick interface by enrollment UUID.
+* `--path <str>`: Sub-path appended to interface base URL.
+* `-X, --method <str>`: HTTP method.  [default: POST]
+* `--json <str>`: Request body template as inline JSON.
+* `-H, --header <str>`: Extra header &#x27;Key: Value&#x27;. Repeatable.
+* `--name <str>`: Optional human-friendly label.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc services enroll`
@@ -707,20 +707,20 @@ Enroll in a service. Prints the new enrollment ID + status.
 **Usage**:
 
 ```console
-$ usvc services enroll [OPTIONS] SERVICE_ID
+$ usvc services enroll [OPTIONS] {service_id}
 ```
 
 **Arguments**:
 
-* `SERVICE_ID`: Service UUID.  [required]
+* `service_id`: Service UUID.  [required]
 
 **Options**:
 
-* `--parameters TEXT`: Enrollment parameters as inline JSON object.
-* `-p, --parameter TEXT`: Single &#x27;key=value&#x27; parameter (string-valued). Repeatable; merged with --parameters.
+* `--parameters <str>`: Enrollment parameters as inline JSON object.
+* `-p, --parameter <str>`: Single &#x27;key=value&#x27; parameter (string-valued). Repeatable; merged with --parameters.
 * `--shared`: Create a shared team enrollment instead of a personal enrollment.
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc services required-secrets`
@@ -733,18 +733,18 @@ are required.
 **Usage**:
 
 ```console
-$ usvc services required-secrets [OPTIONS] SERVICE_ID
+$ usvc services required-secrets [OPTIONS] {service_id}
 ```
 
 **Arguments**:
 
-* `SERVICE_ID`: Service UUID.  [required]
+* `service_id`: Service UUID.  [required]
 
 **Options**:
 
-* `--interface TEXT`: Inspect a specific interface by name.
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--interface <str>`: Inspect a specific interface by name.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc services optional-secrets`
@@ -754,19 +754,19 @@ List customer secrets the picked interface can use but doesn&#x27;t require.
 **Usage**:
 
 ```console
-$ usvc services optional-secrets [OPTIONS] SERVICE_ID
+$ usvc services optional-secrets [OPTIONS] {service_id}
 ```
 
 **Arguments**:
 
-* `SERVICE_ID`: Service UUID.  [required]
+* `service_id`: Service UUID.  [required]
 
 **Options**:
 
-* `--interface TEXT`: Inspect a specific interface by name.
-* `-f, --format TEXT`: Output format: table | json.  [default: table]
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--interface <str>`: Inspect a specific interface by name.
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ## `usvc enrollments`
@@ -801,13 +801,13 @@ $ usvc enrollments list [OPTIONS]
 
 **Options**:
 
-* `--skip INTEGER`: Offset for pagination.  [default: 0]
-* `--limit INTEGER`: Max records to return.  [default: 100]
+* `--skip <int>`: Offset for pagination.  [default: 0]
+* `--limit <int>`: Max records to return.  [default: 100]
 * `--no-service-details`: Skip embedding the service detail payload (faster).
 * `--shared / --personal`: List shared team enrollments or personal enrollments.  [default: shared]
-* `-f, --format TEXT`: Output format: table | json.  [default: table]
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc enrollments show`
@@ -817,18 +817,18 @@ Show one enrollment as JSON.
 **Usage**:
 
 ```console
-$ usvc enrollments show [OPTIONS] ENROLLMENT_ID
+$ usvc enrollments show [OPTIONS] {enrollment_id}
 ```
 
 **Arguments**:
 
-* `ENROLLMENT_ID`: Enrollment UUID.  [required]
+* `enrollment_id`: Enrollment UUID.  [required]
 
 **Options**:
 
 * `--no-service-details`: Skip embedding the service detail payload (faster).
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
 ### `usvc enrollments cancel`
@@ -838,16 +838,16 @@ Cancel an enrollment (sets status=cancelled; preserves parameters).
 **Usage**:
 
 ```console
-$ usvc enrollments cancel [OPTIONS] ENROLLMENT_ID
+$ usvc enrollments cancel [OPTIONS] {enrollment_id}
 ```
 
 **Arguments**:
 
-* `ENROLLMENT_ID`: Enrollment UUID.  [required]
+* `enrollment_id`: Enrollment UUID.  [required]
 
 **Options**:
 
 * `-y, --yes`: Skip confirmation prompt.
-* `--api-key TEXT`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url TEXT`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.

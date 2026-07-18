@@ -41,6 +41,13 @@ dev = [
   "ipdb",
 ]
 docs = [
+  # Pinned: docs-check regenerates docs/cli-reference.md and diffs it
+  # against the committed copy, so the generator has to be reproducible.
+  # Typer changes option metavar rendering between releases (`--skip
+  # INTEGER` became `--skip <int>`), which would otherwise fail unrelated
+  # PRs the moment a new typer ships. Bump this deliberately and commit
+  # the regenerated reference alongside it.
+  "typer==0.27.0",
   "mkdocs",
   "mkdocs-material",
   "mkdocs-autorefs",
