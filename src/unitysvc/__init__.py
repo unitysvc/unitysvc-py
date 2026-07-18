@@ -33,6 +33,7 @@ production (``https://api.unitysvc.com``); override with the
 
 from ._experimental import experimental_enabled, require_experimental
 from .aclient import AsyncClient
+from .apublic import AsyncPublicClient
 from .client import (
     DEFAULT_API_URL,
     ENV_API_BASE_URL,
@@ -54,6 +55,15 @@ from .exceptions import (
     UnitysvcSDKError,
     ValidationError,
 )
+from .public import (
+    DEFAULT_PUBLIC_API_URL,
+    ENV_PUBLIC_API_URL,
+    PublicClient,
+    PublicGroup,
+    PublicGroupPage,
+    PublicService,
+    PublicServicePage,
+)
 
 __author__ = """Bo Peng"""
 __email__ = "bo.peng@unitysvc.com"
@@ -68,6 +78,15 @@ __all__ = [
     "ENV_API_BASE_URL",
     "ENV_S3_BASE_URL",
     "ENV_SMTP_BASE_URL",
+    # Public (anonymous) catalog browsing
+    "PublicClient",
+    "AsyncPublicClient",
+    "PublicService",
+    "PublicGroup",
+    "PublicServicePage",
+    "PublicGroupPage",
+    "DEFAULT_PUBLIC_API_URL",
+    "ENV_PUBLIC_API_URL",
     # Exceptions
     "UnitysvcSDKError",
     "APIError",

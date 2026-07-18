@@ -34,6 +34,54 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
         - recurrent_requests
         - request_logs
 
+## Public (anonymous) catalog
+
+The public catalog is browsable without an API key. It is a different
+host and route set from the customer API, so it has its own client —
+see [`unitysvc.public`](#public-anonymous-catalog) for why.
+
+::: unitysvc.PublicClient
+    options:
+      members:
+        - base_url
+        - services
+        - groups
+
+::: unitysvc.AsyncPublicClient
+    options:
+      members:
+        - base_url
+        - services
+        - groups
+
+### Public resources
+
+::: unitysvc.public.PublicServices
+    options:
+      show_root_heading: true
+
+::: unitysvc.public.PublicGroups
+    options:
+      show_root_heading: true
+
+### Public models
+
+::: unitysvc.public.PublicService
+    options:
+      show_root_heading: true
+
+::: unitysvc.public.PublicGroup
+    options:
+      show_root_heading: true
+
+::: unitysvc.public.PublicServicePage
+    options:
+      show_root_heading: true
+
+::: unitysvc.public.PublicGroupPage
+    options:
+      show_root_heading: true
+
 ## Resources
 
 ### Groups

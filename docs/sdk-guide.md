@@ -67,6 +67,48 @@ asyncio.run(main())
 Every method on `AsyncClient.<resource>.*` is an `async def` with the
 same signature as its sync counterpart on `Client`.
 
+## `PublicClient` — anonymous catalog browsing
+
+The marketplace catalog is readable without an API key. This is a
+separate client because it targets a different host *and* a different
+route set: the customer API (`api.unitysvc.com`) requires auth on every
+route, while the public catalog is served by the site host.
+
+```python
+from unitysvc import PublicClient
+
+with PublicClient() as client:
+    page = client.services.list(limit=10)
+    print(page.count)                      # total across all pages
+    for service in page.data:
+        print(service.name, service.display_name, service.currency)
+
+    service = client.services.get(page.data[0].id)
+    groups = client.groups.list()
+```
+
+These routes paginate by offset rather than cursor. Follow pages with
+`next_skip`, or let `iter_all()` do it:
+
+```python
+with PublicClient() as client:
+    for service in client.services.iter_all():
+        print(service.name)
+```
+
+`AsyncPublicClient` mirrors it; `iter_all()` is an async iterator:
+
+```python
+from unitysvc import AsyncPublicClient
+
+async with AsyncPublicClient() as client:
+    async for service in client.services.iter_all():
+        print(service.name)
+```
+
+Override the host with `base_url=` or `UNITYSVC_PUBLIC_API_URL`. Errors
+raise the same `unitysvc.exceptions` types as the authenticated clients.
+
 ## `groups`
 
 Groups are the entry point for service discovery. A group is a
