@@ -15,9 +15,13 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     body: AccountFileUploadRequest,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
+    if not isinstance(authorization, Unset):
+        headers["authorization"] = authorization
+
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
@@ -66,8 +70,9 @@ def _build_response(
 
 def sync_detailed(
     *,
-    client: AuthenticatedClient,
+    client: AuthenticatedClient | Client,
     body: AccountFileUploadRequest,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[AccountFileUploadResponse | HTTPValidationError]:
     """Upload Account File
@@ -83,6 +88,7 @@ def sync_detailed(
     plan.
 
     Args:
+        authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (AccountFileUploadRequest): Mint request for one direct-to-storage upload.
 
@@ -96,6 +102,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         body=body,
+        authorization=authorization,
         x_role_id=x_role_id,
     )
 
@@ -108,8 +115,9 @@ def sync_detailed(
 
 def sync(
     *,
-    client: AuthenticatedClient,
+    client: AuthenticatedClient | Client,
     body: AccountFileUploadRequest,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> AccountFileUploadResponse | HTTPValidationError | None:
     """Upload Account File
@@ -125,6 +133,7 @@ def sync(
     plan.
 
     Args:
+        authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (AccountFileUploadRequest): Mint request for one direct-to-storage upload.
 
@@ -139,14 +148,16 @@ def sync(
     return sync_detailed(
         client=client,
         body=body,
+        authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
-    client: AuthenticatedClient,
+    client: AuthenticatedClient | Client,
     body: AccountFileUploadRequest,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[AccountFileUploadResponse | HTTPValidationError]:
     """Upload Account File
@@ -162,6 +173,7 @@ async def asyncio_detailed(
     plan.
 
     Args:
+        authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (AccountFileUploadRequest): Mint request for one direct-to-storage upload.
 
@@ -175,6 +187,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         body=body,
+        authorization=authorization,
         x_role_id=x_role_id,
     )
 
@@ -185,8 +198,9 @@ async def asyncio_detailed(
 
 async def asyncio(
     *,
-    client: AuthenticatedClient,
+    client: AuthenticatedClient | Client,
     body: AccountFileUploadRequest,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> AccountFileUploadResponse | HTTPValidationError | None:
     """Upload Account File
@@ -202,6 +216,7 @@ async def asyncio(
     plan.
 
     Args:
+        authorization (None | str | Unset):
         x_role_id (None | str | Unset):
         body (AccountFileUploadRequest): Mint request for one direct-to-storage upload.
 
@@ -217,6 +232,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             body=body,
+            authorization=authorization,
             x_role_id=x_role_id,
         )
     ).parsed

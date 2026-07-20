@@ -20,7 +20,7 @@ Dispatch and schedule share one interface-resolution rule:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
 from ._http import LowLevelClient, unwrap
@@ -32,11 +32,20 @@ if TYPE_CHECKING:
     import httpx
 
     from ._generated.models.access_interface import AccessInterface
+    from ._generated.models.document_category_enum import DocumentCategoryEnum
     from ._generated.models.recurrent_request_public import RecurrentRequestPublic
     from ._generated.models.service_detail import ServiceDetail
+    from ._generated.models.service_documents_response import (
+        ServiceDocumentsResponse,
+    )
     from ._generated.models.service_summary import ServiceSummary
     from .client import Client
     from .enrollments import Enrollment
+
+
+def _as_uuid(value: str | UUID) -> UUID:
+    """Coerce a service/document id (str or UUID) to a UUID."""
+    return value if isinstance(value, UUID) else UUID(str(value))
 
 
 class Service(_Wrappable):
@@ -92,6 +101,27 @@ class Service(_Wrappable):
     def interfaces(self) -> list[AccessInterface]:
         """List access interfaces for this service. See :meth:`Services.interfaces`."""
         return self._parent.services.interfaces(self._raw.id)
+
+    def usage(self, *, links: bool = False) -> str:
+        """The "how to use this service" guide (markdown). See :meth:`Services.usage`."""
+        return self._parent.services.usage(self._raw.id, links=links)
+
+    def documents(
+        self,
+        *,
+        category: str | None = None,
+        mime_type: str | None = None,
+        include_content: bool = False,
+        interface: str | None = None,
+    ) -> ServiceDocumentsResponse:
+        """List this service's documents. See :meth:`Services.documents`."""
+        return self._parent.services.documents(
+            self._raw.id,
+            category=category,
+            mime_type=mime_type,
+            include_content=include_content,
+            interface=interface,
+        )
 
     def dispatch(
         self,
@@ -270,6 +300,92 @@ class Services:
             customer_services_list_service_interfaces.sync_detailed(
                 service_id=UUID(str(service_id)) if not isinstance(service_id, UUID) else service_id,
                 client=self._client,
+            )
+        )
+
+    # ------------------------------------------------------------------
+    # Documentation & usage (anonymous-readable)
+    # ------------------------------------------------------------------
+    def usage(self, service_id: str | UUID, *, links: bool = False) -> str:
+        """Return the derived "how to use this service" guide as markdown.
+
+        A generic, per-channel walkthrough — free/paid, secrets to set,
+        enrollment steps — synthesized from metadata, so no API key is
+        needed. ``links=True`` emits the browser flavor (markdown links to
+        the secrets page and code examples); the default is plain text,
+        which is what a terminal or an LLM wants.
+        """
+        from ._generated.api.customer_services import (
+            customer_services_get_service_usage,
+        )
+
+        result = unwrap(
+            customer_services_get_service_usage.sync_detailed(
+                service_id=_as_uuid(service_id),
+                client=self._client,
+                links=links,
+            )
+        )
+        return result.markdown
+
+    def documents(
+        self,
+        service_id: str | UUID,
+        *,
+        category: str | None = None,
+        mime_type: str | None = None,
+        include_content: bool = False,
+        interface: str | None = None,
+    ) -> ServiceDocumentsResponse:
+        """List a service's public documents (code examples, guides, tutorials).
+
+        Anonymous-readable. ``category`` / ``mime_type`` narrow the set
+        (``mime_type`` is the language for code examples — ``python``,
+        ``bash``, …); ``include_content=True`` returns each document rendered
+        inline. ``interface`` picks which user interface examples render
+        against (by key, e.g. ``canonical``); the response also lists the
+        alternatives in ``available_interfaces``.
+        """
+        from ._generated.api.customer_services import (
+            customer_services_list_service_documents,
+        )
+        from ._generated.types import UNSET
+
+        return unwrap(
+            customer_services_list_service_documents.sync_detailed(
+                service_id=_as_uuid(service_id),
+                client=self._client,
+                category=cast("DocumentCategoryEnum", category) if category is not None else UNSET,
+                mime_type=mime_type if mime_type is not None else UNSET,
+                include_content=include_content,
+                interface=interface if interface is not None else UNSET,
+            )
+        )
+
+    def document(
+        self,
+        service_id: str | UUID,
+        document_id: str | UUID,
+        *,
+        interface: str | None = None,
+    ) -> ServiceDocumentsResponse:
+        """Fetch one public document, with its content rendered.
+
+        Returns the same envelope as :meth:`documents` with a single entry,
+        so ``available_interfaces`` is available alongside it. ``interface``
+        picks the user interface the example renders against.
+        """
+        from ._generated.api.customer_services import (
+            customer_services_get_service_document,
+        )
+        from ._generated.types import UNSET
+
+        return unwrap(
+            customer_services_get_service_document.sync_detailed(
+                service_id=_as_uuid(service_id),
+                document_id=_as_uuid(document_id),
+                client=self._client,
+                interface=interface if interface is not None else UNSET,
             )
         )
 

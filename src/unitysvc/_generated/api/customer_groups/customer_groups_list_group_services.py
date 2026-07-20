@@ -116,6 +116,11 @@ def sync_detailed(
     to match the seller ``services_list`` endpoint — clients echo
     ``next_cursor`` back unchanged to fetch subsequent pages.
 
+    Readable without an API key (unitysvc#1610). The visibility rule
+    above is defined entirely by service and group state, so an
+    anonymous caller sees exactly what an authenticated customer sees —
+    caller identity was never used for scoping here.
+
     Args:
         name (str):
         cursor (None | str | Unset): Opaque pagination cursor from a previous response's
@@ -177,6 +182,11 @@ def sync(
     to match the seller ``services_list`` endpoint — clients echo
     ``next_cursor`` back unchanged to fetch subsequent pages.
 
+    Readable without an API key (unitysvc#1610). The visibility rule
+    above is defined entirely by service and group state, so an
+    anonymous caller sees exactly what an authenticated customer sees —
+    caller identity was never used for scoping here.
+
     Args:
         name (str):
         cursor (None | str | Unset): Opaque pagination cursor from a previous response's
@@ -232,6 +242,11 @@ async def asyncio_detailed(
     Uses keyset pagination on ``(created_at DESC, service_id DESC)``
     to match the seller ``services_list`` endpoint — clients echo
     ``next_cursor`` back unchanged to fetch subsequent pages.
+
+    Readable without an API key (unitysvc#1610). The visibility rule
+    above is defined entirely by service and group state, so an
+    anonymous caller sees exactly what an authenticated customer sees —
+    caller identity was never used for scoping here.
 
     Args:
         name (str):
@@ -291,6 +306,11 @@ async def asyncio(
     Uses keyset pagination on ``(created_at DESC, service_id DESC)``
     to match the seller ``services_list`` endpoint — clients echo
     ``next_cursor`` back unchanged to fetch subsequent pages.
+
+    Readable without an API key (unitysvc#1610). The visibility rule
+    above is defined entirely by service and group state, so an
+    anonymous caller sees exactly what an authenticated customer sees —
+    caller identity was never used for scoping here.
 
     Args:
         name (str):

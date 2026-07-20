@@ -80,9 +80,12 @@ def sync_detailed(
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[BroadcastPublic | HTTPValidationError]:
-    """Update Broadcast
+    r"""Update Broadcast
 
-     Update a broadcast's config (mode, timeout, enabled, description).
+     Update a broadcast's config (timeout, enabled, description).
+
+    ``mode`` may be set to ``\"sync\"`` but not ``\"async\"`` (rejected with 422
+    until async is built — see #1553).
 
     Args:
         broadcast_id (UUID):
@@ -120,9 +123,12 @@ def sync(
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> BroadcastPublic | HTTPValidationError | None:
-    """Update Broadcast
+    r"""Update Broadcast
 
-     Update a broadcast's config (mode, timeout, enabled, description).
+     Update a broadcast's config (timeout, enabled, description).
+
+    ``mode`` may be set to ``\"sync\"`` but not ``\"async\"`` (rejected with 422
+    until async is built — see #1553).
 
     Args:
         broadcast_id (UUID):
@@ -155,9 +161,12 @@ async def asyncio_detailed(
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[BroadcastPublic | HTTPValidationError]:
-    """Update Broadcast
+    r"""Update Broadcast
 
-     Update a broadcast's config (mode, timeout, enabled, description).
+     Update a broadcast's config (timeout, enabled, description).
+
+    ``mode`` may be set to ``\"sync\"`` but not ``\"async\"`` (rejected with 422
+    until async is built — see #1553).
 
     Args:
         broadcast_id (UUID):
@@ -193,9 +202,12 @@ async def asyncio(
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> BroadcastPublic | HTTPValidationError | None:
-    """Update Broadcast
+    r"""Update Broadcast
 
-     Update a broadcast's config (mode, timeout, enabled, description).
+     Update a broadcast's config (timeout, enabled, description).
+
+    ``mode`` may be set to ``\"sync\"`` but not ``\"async\"`` (rejected with 422
+    until async is built — see #1553).
 
     Args:
         broadcast_id (UUID):

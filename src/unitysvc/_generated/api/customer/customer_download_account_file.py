@@ -20,9 +20,13 @@ def _get_kwargs(
     key: str,
     scope: CustomerDownloadAccountFileScope | Unset = "personal",
     expires_in: int | Unset = 900,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
+    if not isinstance(authorization, Unset):
+        headers["authorization"] = authorization
+
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
@@ -82,10 +86,11 @@ def _build_response(
 
 def sync_detailed(
     *,
-    client: AuthenticatedClient,
+    client: AuthenticatedClient | Client,
     key: str,
     scope: CustomerDownloadAccountFileScope | Unset = "personal",
     expires_in: int | Unset = 900,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[AccountFileDownloadResponse | HTTPValidationError]:
     """Download Account File
@@ -100,6 +105,7 @@ def sync_detailed(
         key (str): Object key relative to the scope root
         scope (CustomerDownloadAccountFileScope | Unset): Which folder tree Default: 'personal'.
         expires_in (int | Unset):  Default: 900.
+        authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
     Raises:
@@ -114,6 +120,7 @@ def sync_detailed(
         key=key,
         scope=scope,
         expires_in=expires_in,
+        authorization=authorization,
         x_role_id=x_role_id,
     )
 
@@ -126,10 +133,11 @@ def sync_detailed(
 
 def sync(
     *,
-    client: AuthenticatedClient,
+    client: AuthenticatedClient | Client,
     key: str,
     scope: CustomerDownloadAccountFileScope | Unset = "personal",
     expires_in: int | Unset = 900,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> AccountFileDownloadResponse | HTTPValidationError | None:
     """Download Account File
@@ -144,6 +152,7 @@ def sync(
         key (str): Object key relative to the scope root
         scope (CustomerDownloadAccountFileScope | Unset): Which folder tree Default: 'personal'.
         expires_in (int | Unset):  Default: 900.
+        authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
     Raises:
@@ -159,16 +168,18 @@ def sync(
         key=key,
         scope=scope,
         expires_in=expires_in,
+        authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
-    client: AuthenticatedClient,
+    client: AuthenticatedClient | Client,
     key: str,
     scope: CustomerDownloadAccountFileScope | Unset = "personal",
     expires_in: int | Unset = 900,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[AccountFileDownloadResponse | HTTPValidationError]:
     """Download Account File
@@ -183,6 +194,7 @@ async def asyncio_detailed(
         key (str): Object key relative to the scope root
         scope (CustomerDownloadAccountFileScope | Unset): Which folder tree Default: 'personal'.
         expires_in (int | Unset):  Default: 900.
+        authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
     Raises:
@@ -197,6 +209,7 @@ async def asyncio_detailed(
         key=key,
         scope=scope,
         expires_in=expires_in,
+        authorization=authorization,
         x_role_id=x_role_id,
     )
 
@@ -207,10 +220,11 @@ async def asyncio_detailed(
 
 async def asyncio(
     *,
-    client: AuthenticatedClient,
+    client: AuthenticatedClient | Client,
     key: str,
     scope: CustomerDownloadAccountFileScope | Unset = "personal",
     expires_in: int | Unset = 900,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> AccountFileDownloadResponse | HTTPValidationError | None:
     """Download Account File
@@ -225,6 +239,7 @@ async def asyncio(
         key (str): Object key relative to the scope root
         scope (CustomerDownloadAccountFileScope | Unset): Which folder tree Default: 'personal'.
         expires_in (int | Unset):  Default: 900.
+        authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
     Raises:
@@ -241,6 +256,7 @@ async def asyncio(
             key=key,
             scope=scope,
             expires_in=expires_in,
+            authorization=authorization,
             x_role_id=x_role_id,
         )
     ).parsed
