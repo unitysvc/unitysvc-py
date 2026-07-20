@@ -799,7 +799,7 @@
           "customer-broadcasts"
         ],
         "summary": "Update Broadcast",
-        "description": "Update a broadcast's config (mode, timeout, enabled, description).",
+        "description": "Update a broadcast's config (timeout, enabled, description).\n\n``mode`` may be set to ``\"sync\"`` but not ``\"async\"`` (rejected with 422\nuntil async is built \u2014 see #1553).",
         "operationId": "customer-broadcasts-update_broadcast",
         "parameters": [
           {
@@ -2352,11 +2352,6 @@
         "summary": "List Account Files",
         "description": "List the caller's account files (one folder level per call).\n\n``scope=personal`` lists the member's own folder; ``scope=shared``\nlists the team folder and requires a team/enterprise plan. Returned\nkeys and prefixes are relative to the scope root. A missing bucket\nreads as an empty listing (the bucket is provisioned out of band).",
         "operationId": "customer-list_account_files",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
         "parameters": [
           {
             "name": "scope",
@@ -2415,6 +2410,22 @@
             }
           },
           {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
             "name": "x-role-id",
             "in": "header",
             "required": false,
@@ -2464,11 +2475,6 @@
         "summary": "Download Account File",
         "description": "Generate a short-TTL presigned download URL for one account file.\n\nThe object must exist (404 otherwise) and always resolves under the\ncaller's own scope root \u2014 ``key`` is relative, so other members'\nfolders cannot be addressed.",
         "operationId": "customer-download_account_file",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
         "parameters": [
           {
             "name": "key",
@@ -2507,6 +2513,22 @@
               "minimum": 60,
               "default": 900,
               "title": "Expires In"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -2559,12 +2581,23 @@
         "summary": "Upload Account File",
         "description": "Mint a presigned-POST ticket for one direct-to-storage upload.\n\nBytes never transit this API: POST the returned ``fields`` plus the\nfile (last, field name ``file``) as multipart form data to ``url``.\nThe key lands under the caller's scope root at ``{path}{filename}``\n(existing objects with the same key are overwritten, like a home\ndirectory); the size ceiling is enforced by the signed policy, not\nthe declared ``size``. ``scope=shared`` requires a team/enterprise\nplan.",
         "operationId": "customer-upload_account_file",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
         "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
           {
             "name": "x-role-id",
             "in": "header",
@@ -2622,7 +2655,7 @@
           "customer-groups"
         ],
         "summary": "List Groups",
-        "description": "List service groups visible to the customer as a ``{data, count}``\nenvelope.\n\nMerges two kinds of rows into one ``CustomerGroupView`` shape under\n``data`` (``count`` is ``len(data)``):\n\n- **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)\n  \u2014 active platform groups with at least one service. Excludes\n  draft/archived/private groups, empty nodes, and seller-owned\n  groups. ``member_count`` comes from the cached ``num_services``.\n  Ordered with ``misc`` groups last, then by ``sort_order``, then\n  alphabetically by name \u2014 matching the marketplace browse order.\n- **Own collections** (``owner_type=\"customer\"``, ``editable=True``)\n  \u2014 the customer's own ``ServiceCollection`` rows. ``member_count``\n  is counted live.\n\nThe ``owner`` filter narrows this: ``system`` returns platform\ngroups only, ``own`` returns collections only, ``all`` (default)\nreturns both (platform first, then collections).",
+        "description": "List service groups visible to the customer as a ``{data, count}``\nenvelope.\n\nMerges two kinds of rows into one ``CustomerGroupView`` shape under\n``data`` (``count`` is ``len(data)``):\n\n- **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)\n  \u2014 active platform groups with at least one service. Excludes\n  draft/archived/private groups, empty nodes, and seller-owned\n  groups. ``member_count`` comes from the cached ``num_services``.\n  Ordered with ``misc`` groups last, then by ``sort_order``, then\n  alphabetically by name \u2014 matching the marketplace browse order.\n- **Own collections** (``owner_type=\"customer\"``, ``editable=True``)\n  \u2014 the customer's own ``ServiceCollection`` rows. ``member_count``\n  is counted live.\n\nThe ``owner`` filter narrows this: ``system`` returns platform\ngroups only, ``own`` returns collections only, ``all`` (default)\nreturns both (platform first, then collections).\n\nPlatform groups are readable without an API key (unitysvc#1610).\nCollections are per-customer, so an anonymous caller is narrowed to\nthe platform set and ``owner='own'`` is rejected outright rather\nthan silently returning an empty list \u2014 an empty list would read as\n\"you have no collections\" instead of \"you are not authenticated\".",
         "operationId": "customer-groups-list_groups",
         "parameters": [
           {
@@ -3045,7 +3078,7 @@
           "customer-groups"
         ],
         "summary": "List Group Services",
-        "description": "List customer-visible services that belong to a group.\n\nThe group is addressable by id or name; both are returned in the\ngroup detail shape. Names stay valid across admin recreations of a\ngroup, so SDK scripts that use the name keep working.\nMirrors the visibility rule used by the GraphQL\n``resolve_group_services`` resolver for non-admin / non-seller\ncallers: service must be ``status='active'`` and\n``visibility='public'``. The group itself must be in the\ncustomer-visible set (active + platform + non-empty).\n\nUses keyset pagination on ``(created_at DESC, service_id DESC)``\nto match the seller ``services_list`` endpoint \u2014 clients echo\n``next_cursor`` back unchanged to fetch subsequent pages.",
+        "description": "List customer-visible services that belong to a group.\n\nThe group is addressable by id or name; both are returned in the\ngroup detail shape. Names stay valid across admin recreations of a\ngroup, so SDK scripts that use the name keep working.\nMirrors the visibility rule used by the GraphQL\n``resolve_group_services`` resolver for non-admin / non-seller\ncallers: service must be ``status='active'`` and\n``visibility='public'``. The group itself must be in the\ncustomer-visible set (active + platform + non-empty).\n\nUses keyset pagination on ``(created_at DESC, service_id DESC)``\nto match the seller ``services_list`` endpoint \u2014 clients echo\n``next_cursor`` back unchanged to fetch subsequent pages.\n\nReadable without an API key (unitysvc#1610). The visibility rule\nabove is defined entirely by service and group state, so an\nanonymous caller sees exactly what an authenticated customer sees \u2014\ncaller identity was never used for scoping here.",
         "operationId": "customer-groups-list_group_services",
         "parameters": [
           {
@@ -4891,7 +4924,7 @@
           "customer-services"
         ],
         "summary": "Get Service",
-        "description": "Get details of a single service visible to the customer.\n\nHot path: read from ``service_mview`` for active + public services.\n\nCold path: if the mview misses, fall back to a base-tables query\nthat matches ``status = 'deprecated' AND visibility = 'public'``.\nThis enables statement / invoice back-reference URLs to keep\nrendering after a service has been deprecated (the service still\nexists in the base tables; only the mview filters it out). See\nunitysvc#1027.\n\nReturns 404 for non-public services, or for statuses other than\n``active`` / ``deprecated`` \u2014 the visible set is intentionally\nnarrow so the endpoint doesn't leak the existence of unlisted\nor draft services.",
+        "description": "Get details of a single service in the public catalog.\n\nHot path: read from ``service_mview`` for active + public services.\n\nCold path: if the mview misses, fall back to a base-tables query\nthat matches ``status = 'deprecated' AND visibility = 'public'``.\nThis enables statement / invoice back-reference URLs to keep\nrendering after a service has been deprecated (the service still\nexists in the base tables; only the mview filters it out). See\nunitysvc#1027.\n\nReturns 404 for non-public services, or for statuses other than\n``active`` / ``deprecated`` \u2014 the visible set is intentionally\nnarrow so the endpoint doesn't leak the existence of unlisted\nor draft services.\n\nReadable without an API key (unitysvc#1610). The visible set is\ndefined purely by service status and visibility, so an anonymous\ncaller sees exactly what an authenticated customer sees \u2014 caller\nidentity was never used for scoping here.",
         "operationId": "customer-services-get_service",
         "parameters": [
           {
@@ -5200,6 +5233,308 @@
           }
         }
       }
+    },
+    "/services/{service_id}/documents": {
+      "get": {
+        "tags": [
+          "customer-services"
+        ],
+        "summary": "List Service Documents",
+        "description": "List the seller-authored documents for a service.\n\nReadable without an API key (unitysvc#1616), for the same visible set as\nthe rest of this surface: the service must be active and public. Only\ndocuments explicitly marked ``is_public`` are returned \u2014 that flag defaults\nto false, so a seller's internal notes stay internal without extra work.\n\nThis is how a caller answers \"how do I use this service\". With\n``include_content=true`` the whole answer arrives in one request \u2014 an agent\nwanting a tutorial *and* a Python example should not need three round\ntrips, and filters keep the payload to what was actually asked for:\n\n    ?category=code_example&mime_type=python&include_content=true\n    ?category=getting_started&include_content=true\n\nContent is off by default because rendering costs a Jinja pass and a\ncontext load per document, and every language's example at once is a lot\nof an agent's context to spend without being asked.",
+        "operationId": "customer-services-list_service_documents",
+        "parameters": [
+          {
+            "name": "service_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Service Id"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DocumentCategoryEnum"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by category, e.g. code_example, getting_started, tutorial.",
+              "title": "Category"
+            },
+            "description": "Filter by category, e.g. code_example, getting_started, tutorial."
+          },
+          {
+            "name": "mime_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by mime type, which is the language for code examples: python, javascript, bash.",
+              "title": "Mime Type"
+            },
+            "description": "Filter by mime type, which is the language for code examples: python, javascript, bash."
+          },
+          {
+            "name": "include_content",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Return each document's content inline, rendered where applicable. Combine with the filters to fetch exactly what you need in one call.",
+              "default": false,
+              "title": "Include Content"
+            },
+            "description": "Return each document's content inline, rendered where applicable. Combine with the filters to fetch exactly what you need in one call."
+          },
+          {
+            "name": "interface",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Render examples against this interface, named by its key (e.g. canonical, latest). Omit to use the service's default interface; the other keys come back in available_interfaces.",
+              "title": "Interface"
+            },
+            "description": "Render examples against this interface, named by its key (e.g. canonical, latest). Omit to use the service's default interface; the other keys come back in available_interfaces."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceDocumentsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/{service_id}/documents/{document_id}": {
+      "get": {
+        "tags": [
+          "customer-services"
+        ],
+        "summary": "Get Service Document",
+        "description": "Fetch one public document for a service, with its content.\n\n``content`` is returned for text-ish documents; URL-backed and binary\ndocuments return None and the caller follows ``external_url``.\n\nCode examples and connectivity tests are **rendered before returning**,\nagainst one user access interface \u2014 so the caller gets a runnable snippet\nwith the real gateway base URL rather than a Jinja template. Pass\n``interface`` to pick a specific key; without it the service's default is\nused, and ``available_interfaces`` lists the alternatives so the caller\ncan re-request another.\n\nReturns the same envelope as the listing endpoint, with the single\nrequested document, so both share one response shape.\n\nRendering reuses ``render_document_for_test`` \u2014 the same code path behind\nthe frontend's rendered examples \u2014 so the two cannot drift.",
+        "operationId": "customer-services-get_service_document",
+        "parameters": [
+          {
+            "name": "service_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Service Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Document Id"
+            }
+          },
+          {
+            "name": "interface",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Render against this interface, named by its key (e.g. canonical, latest). Omit to use the service's default interface; the other keys come back in available_interfaces.",
+              "title": "Interface"
+            },
+            "description": "Render against this interface, named by its key (e.g. canonical, latest). Omit to use the service's default interface; the other keys come back in available_interfaces."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceDocumentsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/{service_id}/usage": {
+      "get": {
+        "tags": [
+          "customer-services"
+        ],
+        "summary": "Get Service Usage",
+        "description": "Return a derived, markdown \"how to use this service\" guide.\n\nReadable without an API key, for the same visible set as the rest of this\nsurface (active + public). It composes existing metadata: the per-channel\nfacts from ``derive_channels`` (type, secrets), the listing's pricing and\n``parameters_schema``, the secret acquisition guidance surfaced on the\ninterfaces response (#1618), and the default user interface (#1617). It\nowns no new data \u2014 see ``app.core.service_usage``.\n\n**Generic and anonymous by design (#1622).** The guide describes how\n*anyone* signs up for and calls the service, per channel; it is identical\nfor every caller, so it is ``public``-cacheable (the hosted MCP and the CDN\ncache it). Per-customer state (\"you already set this / you're enrolled\") is\ndeliberately not here \u2014 a consumer applies it from the customer context it\nalready holds (e.g. the frontend hydrates the secret links from\n``secretExistence``), rather than the endpoint doing a per-caller,\nper-service lookup.",
+        "operationId": "customer-services-get_service_usage",
+        "parameters": [
+          {
+            "name": "service_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Service Id"
+            }
+          },
+          {
+            "name": "links",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Emit markdown links for secrets (/secrets?name=\u2026) and code examples \u2014 the browser flavor, where the frontend hydrates the secret links into live status pills. Default false renders plain text, which is what MCP / CLI consumers want.",
+              "default": false,
+              "title": "Links"
+            },
+            "description": "Emit markdown links for secrets (/secrets?name=\u2026) and code examples \u2014 the browser flavor, where the frontend hydrates the secret links into live status pills. Default false renders plain text, which is what MCP / CLI consumers want."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUsageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5293,6 +5628,20 @@
               }
             ],
             "title": "Customer Secrets Optional"
+          },
+          "customer_secrets_info": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Secrets Info"
           }
         },
         "type": "object",
@@ -6680,6 +7029,34 @@
         "title": "CustomerGroupView",
         "description": "Unified shape for the merged /customer/groups list \u2014 either a read-only\nplatform ServiceGroup or the customer's own editable ServiceCollection."
       },
+      "DocumentCategoryEnum": {
+        "type": "string",
+        "enum": [
+          "getting_started",
+          "api_reference",
+          "tutorial",
+          "code_example",
+          "code_example_output",
+          "connectivity_test",
+          "request_template",
+          "use_case",
+          "troubleshooting",
+          "changelog",
+          "best_practice",
+          "specification",
+          "service_level_agreement",
+          "terms_of_service",
+          "statement",
+          "invoice",
+          "logo",
+          "avatar",
+          "blog_content",
+          "blog_banner",
+          "attachment",
+          "other"
+        ],
+        "title": "DocumentCategoryEnum"
+      },
       "GatewayKind": {
         "type": "string",
         "enum": [
@@ -7664,6 +8041,19 @@
             "title": "Name",
             "description": "Secret name (e.g., OPENAI_API_KEY). Must be uppercase letters, digits, and underscores; must start with a letter or underscore."
           },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Markdown explaining what this secret is and how to obtain one. Shown to customers who must supply it; never contains a value."
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -7776,6 +8166,19 @@
             ],
             "title": "Sensitive",
             "description": "Whether the value is write-only. Defaults to true on create and cannot be changed after creation."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Markdown explaining how a customer obtains this secret. Omit to leave unchanged; send an empty string to clear."
           }
         },
         "type": "object",
@@ -8411,6 +8814,138 @@
         "title": "ServiceDetail",
         "description": "Full customer-facing service details.\n\nSourced from ``service_mview``. Intentionally narrow:\n\n- Omits seller-internal fields (``seller_id``, ``routing_vars``,\n  ``payout_price``, ``ops_subscription_id``, ``ops_customer_id``)\n  and draft-only fields (``pending_revision_id``).\n- Omits review stats (``review_count``, ``average_rating``) and\n  logo URLs (``provider_logo``, ``offering_logo``,\n  ``seller_logo``); those belong to the marketing/dashboard\n  surface, not the SDK.\n- Omits ``tagline`` as marketing copy not used for dispatch."
       },
+      "ServiceDocumentDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "category": {
+            "$ref": "#/components/schemas/DocumentCategoryEnum"
+          },
+          "mime_type": {
+            "type": "string",
+            "title": "Mime Type"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "sort_order": {
+            "type": "integer",
+            "title": "Sort Order",
+            "default": 0
+          },
+          "external_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Url"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "render_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Render Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "category",
+          "mime_type"
+        ],
+        "title": "ServiceDocumentDetail",
+        "description": "A document plus its content.\n\nRenderable documents (code examples, connectivity tests) come back\n**rendered against one user access interface** \u2014 gateway base URL\nsubstituted, ``.j2`` stripped from the filename \u2014 so ``content`` is\nsomething the caller can run, not a template full of placeholders. This\nmatches what the frontend asks for when it renders an example.\n\nThe interface the content was rendered against is a response-level fact \u2014\nevery renderable document in a response uses the same one \u2014 so it lives on\nthe enclosing ``ServiceDocumentsResponse.interface`` rather than being\nrepeated here.\n\n``content`` is None when the document is stored as a URL or a binary the\ncaller should fetch itself; follow ``external_url`` in that case."
+      },
+      "ServiceDocumentsResponse": {
+        "properties": {
+          "interface": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interface"
+          },
+          "available_interfaces": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Available Interfaces"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceDocumentDetail"
+            },
+            "type": "array",
+            "title": "Documents"
+          }
+        },
+        "type": "object",
+        "title": "ServiceDocumentsResponse",
+        "description": "A service's documents, plus which interface they speak to (#1617).\n\nA service can expose several user access interfaces \u2014 a stable\n``canonical`` URL, a ``latest`` alias \u2014 that usually differ only in\n``base_url``. The documents are rendered against one of them, named by its\nkey; the rest come back in ``available_interfaces`` so a caller can say\n\"reachable via canonical / latest\" and re-request another with\n``?interface=<key>``."
+      },
       "ServiceEnrollmentCreate": {
         "properties": {
           "service_id": {
@@ -8524,6 +9059,20 @@
         ],
         "title": "ServiceSummary",
         "description": "Minimal service info used when listing services inside a group.\n\nIntentionally narrow: enough to render a picker and drill in,\nnothing that customers don't need at browse time. Fetch\n``ServiceDetail`` for the full schema.\n\n``status`` is intentionally not exposed \u2014 customers only ever\nsee ``active`` services (the visibility filter guarantees it),\nso a field whose only valid value is ``\"active\"`` carries no\ninformation. Same reasoning for ``is_active`` on\n``AccessInterface``."
+      },
+      "ServiceUsageResponse": {
+        "properties": {
+          "markdown": {
+            "type": "string",
+            "title": "Markdown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "markdown"
+        ],
+        "title": "ServiceUsageResponse",
+        "description": "A derived \"how to use this service\" guide (#1622).\n\n``markdown`` is the whole answer \u2014 which channels the service offers, what\neach costs, whether it needs secrets or enrollment, and how to call it \u2014\nsynthesized from metadata so no seller has to author it. The structured\nplan it is rendered from stays server-side (canonical, testable); only the\nmarkdown is exposed."
       },
       "SwitchRoutingResponse": {
         "properties": {
@@ -8685,17 +9234,6 @@
           "type"
         ],
         "title": "ValidationError"
-      }
-    },
-    "securitySchemes": {
-      "OAuth2PasswordBearer": {
-        "type": "oauth2",
-        "flows": {
-          "password": {
-            "scopes": {},
-            "tokenUrl": "http://localhost:8080/realms/unitysvc/protocol/openid-connect/token"
-          }
-        }
       }
     }
   },

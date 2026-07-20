@@ -75,7 +75,7 @@ def sync_detailed(
 ) -> Response[HTTPValidationError | ServiceDetail]:
     """Get Service
 
-     Get details of a single service visible to the customer.
+     Get details of a single service in the public catalog.
 
     Hot path: read from ``service_mview`` for active + public services.
 
@@ -90,6 +90,11 @@ def sync_detailed(
     ``active`` / ``deprecated`` — the visible set is intentionally
     narrow so the endpoint doesn't leak the existence of unlisted
     or draft services.
+
+    Readable without an API key (unitysvc#1610). The visible set is
+    defined purely by service status and visibility, so an anonymous
+    caller sees exactly what an authenticated customer sees — caller
+    identity was never used for scoping here.
 
     Args:
         service_id (UUID):
@@ -126,7 +131,7 @@ def sync(
 ) -> HTTPValidationError | ServiceDetail | None:
     """Get Service
 
-     Get details of a single service visible to the customer.
+     Get details of a single service in the public catalog.
 
     Hot path: read from ``service_mview`` for active + public services.
 
@@ -141,6 +146,11 @@ def sync(
     ``active`` / ``deprecated`` — the visible set is intentionally
     narrow so the endpoint doesn't leak the existence of unlisted
     or draft services.
+
+    Readable without an API key (unitysvc#1610). The visible set is
+    defined purely by service status and visibility, so an anonymous
+    caller sees exactly what an authenticated customer sees — caller
+    identity was never used for scoping here.
 
     Args:
         service_id (UUID):
@@ -172,7 +182,7 @@ async def asyncio_detailed(
 ) -> Response[HTTPValidationError | ServiceDetail]:
     """Get Service
 
-     Get details of a single service visible to the customer.
+     Get details of a single service in the public catalog.
 
     Hot path: read from ``service_mview`` for active + public services.
 
@@ -187,6 +197,11 @@ async def asyncio_detailed(
     ``active`` / ``deprecated`` — the visible set is intentionally
     narrow so the endpoint doesn't leak the existence of unlisted
     or draft services.
+
+    Readable without an API key (unitysvc#1610). The visible set is
+    defined purely by service status and visibility, so an anonymous
+    caller sees exactly what an authenticated customer sees — caller
+    identity was never used for scoping here.
 
     Args:
         service_id (UUID):
@@ -221,7 +236,7 @@ async def asyncio(
 ) -> HTTPValidationError | ServiceDetail | None:
     """Get Service
 
-     Get details of a single service visible to the customer.
+     Get details of a single service in the public catalog.
 
     Hot path: read from ``service_mview`` for active + public services.
 
@@ -236,6 +251,11 @@ async def asyncio(
     ``active`` / ``deprecated`` — the visible set is intentionally
     narrow so the endpoint doesn't leak the existence of unlisted
     or draft services.
+
+    Readable without an API key (unitysvc#1610). The visible set is
+    defined purely by service status and visibility, so an anonymous
+    caller sees exactly what an authenticated customer sees — caller
+    identity was never used for scoping here.
 
     Args:
         service_id (UUID):

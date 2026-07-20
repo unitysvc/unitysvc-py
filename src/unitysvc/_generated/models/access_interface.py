@@ -9,6 +9,10 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
+if TYPE_CHECKING:
+    from ..models.access_interface_customer_secrets_info_type_0 import AccessInterfaceCustomerSecretsInfoType0
+
+
 T = TypeVar("T", bound="AccessInterface")
 
 
@@ -59,9 +63,12 @@ class AccessInterface:
     enrollment_id: None | Unset | UUID = UNSET
     customer_secrets_needed: list[str] | None | Unset = UNSET
     customer_secrets_optional: list[str] | None | Unset = UNSET
+    customer_secrets_info: AccessInterfaceCustomerSecretsInfoType0 | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.access_interface_customer_secrets_info_type_0 import AccessInterfaceCustomerSecretsInfoType0
+
         name = self.name
 
         description: None | str | Unset
@@ -114,6 +121,14 @@ class AccessInterface:
         else:
             customer_secrets_optional = self.customer_secrets_optional
 
+        customer_secrets_info: dict[str, Any] | None | Unset
+        if isinstance(self.customer_secrets_info, Unset):
+            customer_secrets_info = UNSET
+        elif isinstance(self.customer_secrets_info, AccessInterfaceCustomerSecretsInfoType0):
+            customer_secrets_info = self.customer_secrets_info.to_dict()
+        else:
+            customer_secrets_info = self.customer_secrets_info
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -135,11 +150,15 @@ class AccessInterface:
             field_dict["customer_secrets_needed"] = customer_secrets_needed
         if customer_secrets_optional is not UNSET:
             field_dict["customer_secrets_optional"] = customer_secrets_optional
+        if customer_secrets_info is not UNSET:
+            field_dict["customer_secrets_info"] = customer_secrets_info
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.access_interface_customer_secrets_info_type_0 import AccessInterfaceCustomerSecretsInfoType0
+
         d = dict(src_dict)
         name = d.pop("name")
 
@@ -230,6 +249,23 @@ class AccessInterface:
 
         customer_secrets_optional = _parse_customer_secrets_optional(d.pop("customer_secrets_optional", UNSET))
 
+        def _parse_customer_secrets_info(data: object) -> AccessInterfaceCustomerSecretsInfoType0 | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                customer_secrets_info_type_0 = AccessInterfaceCustomerSecretsInfoType0.from_dict(data)
+
+                return customer_secrets_info_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(AccessInterfaceCustomerSecretsInfoType0 | None | Unset, data)
+
+        customer_secrets_info = _parse_customer_secrets_info(d.pop("customer_secrets_info", UNSET))
+
         access_interface = cls(
             name=name,
             description=description,
@@ -239,6 +275,7 @@ class AccessInterface:
             enrollment_id=enrollment_id,
             customer_secrets_needed=customer_secrets_needed,
             customer_secrets_optional=customer_secrets_optional,
+            customer_secrets_info=customer_secrets_info,
         )
 
         access_interface.additional_properties = d

@@ -112,6 +112,12 @@ def sync_detailed(
     groups only, ``own`` returns collections only, ``all`` (default)
     returns both (platform first, then collections).
 
+    Platform groups are readable without an API key (unitysvc#1610).
+    Collections are per-customer, so an anonymous caller is narrowed to
+    the platform set and ``owner='own'`` is rejected outright rather
+    than silently returning an empty list — an empty list would read as
+    \"you have no collections\" instead of \"you are not authenticated\".
+
     Args:
         name (None | str | Unset): Filter by name (partial match)
         owner (str | Unset): Which rows to return: 'all' (platform + own), 'system' (platform
@@ -175,6 +181,12 @@ def sync(
     groups only, ``own`` returns collections only, ``all`` (default)
     returns both (platform first, then collections).
 
+    Platform groups are readable without an API key (unitysvc#1610).
+    Collections are per-customer, so an anonymous caller is narrowed to
+    the platform set and ``owner='own'`` is rejected outright rather
+    than silently returning an empty list — an empty list would read as
+    \"you have no collections\" instead of \"you are not authenticated\".
+
     Args:
         name (None | str | Unset): Filter by name (partial match)
         owner (str | Unset): Which rows to return: 'all' (platform + own), 'system' (platform
@@ -232,6 +244,12 @@ async def asyncio_detailed(
     The ``owner`` filter narrows this: ``system`` returns platform
     groups only, ``own`` returns collections only, ``all`` (default)
     returns both (platform first, then collections).
+
+    Platform groups are readable without an API key (unitysvc#1610).
+    Collections are per-customer, so an anonymous caller is narrowed to
+    the platform set and ``owner='own'`` is rejected outright rather
+    than silently returning an empty list — an empty list would read as
+    \"you have no collections\" instead of \"you are not authenticated\".
 
     Args:
         name (None | str | Unset): Filter by name (partial match)
@@ -293,6 +311,12 @@ async def asyncio(
     The ``owner`` filter narrows this: ``system`` returns platform
     groups only, ``own`` returns collections only, ``all`` (default)
     returns both (platform first, then collections).
+
+    Platform groups are readable without an API key (unitysvc#1610).
+    Collections are per-customer, so an anonymous caller is narrowed to
+    the platform set and ``owner='own'`` is rejected outright rather
+    than silently returning an empty list — an empty list would read as
+    \"you have no collections\" instead of \"you are not authenticated\".
 
     Args:
         name (None | str | Unset): Filter by name (partial match)

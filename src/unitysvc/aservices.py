@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
 from ._http import LowLevelClient, unwrap
@@ -13,11 +13,20 @@ if TYPE_CHECKING:
     import httpx
 
     from ._generated.models.access_interface import AccessInterface
+    from ._generated.models.document_category_enum import DocumentCategoryEnum
     from ._generated.models.recurrent_request_public import RecurrentRequestPublic
     from ._generated.models.service_detail import ServiceDetail
+    from ._generated.models.service_documents_response import (
+        ServiceDocumentsResponse,
+    )
     from ._generated.models.service_summary import ServiceSummary
     from .aclient import AsyncClient
     from .aenrollments import AsyncEnrollment
+
+
+def _aservice_uuid(value: str | UUID) -> UUID:
+    """Coerce a service/document id (str or UUID) to a UUID."""
+    return value if isinstance(value, UUID) else UUID(str(value))
 
 
 class AsyncService:
@@ -38,6 +47,27 @@ class AsyncService:
 
     async def interfaces(self) -> list[AccessInterface]:
         return await self._parent.services.interfaces(self._raw.id)
+
+    async def usage(self, *, links: bool = False) -> str:
+        """The "how to use this service" guide (markdown). See :meth:`Services.usage`."""
+        return await self._parent.services.usage(self._raw.id, links=links)
+
+    async def documents(
+        self,
+        *,
+        category: str | None = None,
+        mime_type: str | None = None,
+        include_content: bool = False,
+        interface: str | None = None,
+    ) -> ServiceDocumentsResponse:
+        """List this service's documents. See :meth:`Services.documents`."""
+        return await self._parent.services.documents(
+            self._raw.id,
+            category=category,
+            mime_type=mime_type,
+            include_content=include_content,
+            interface=interface,
+        )
 
     async def dispatch(
         self,
@@ -125,22 +155,14 @@ class AsyncService:
             shared=shared,
         )
 
-    async def required_secrets(
-        self, *, interface: str | UUID | None = None
-    ) -> list[str]:
+    async def required_secrets(self, *, interface: str | UUID | None = None) -> list[str]:
         """See :meth:`unitysvc.services.Service.required_secrets`."""
-        iface = await self._parent.services._pick_interface(
-            self._raw.id, interface=interface, enrollment=None
-        )
+        iface = await self._parent.services._pick_interface(self._raw.id, interface=interface, enrollment=None)
         return list(iface.customer_secrets_needed or [])
 
-    async def optional_secrets(
-        self, *, interface: str | UUID | None = None
-    ) -> list[Any]:
+    async def optional_secrets(self, *, interface: str | UUID | None = None) -> list[Any]:
         """See :meth:`unitysvc.services.Service.optional_secrets`."""
-        iface = await self._parent.services._pick_interface(
-            self._raw.id, interface=interface, enrollment=None
-        )
+        iface = await self._parent.services._pick_interface(self._raw.id, interface=interface, enrollment=None)
         return list(iface.customer_secrets_optional or [])
 
 
@@ -171,6 +193,78 @@ class AsyncServices:
             await customer_services_list_service_interfaces.asyncio_detailed(
                 service_id=UUID(str(service_id)) if not isinstance(service_id, UUID) else service_id,
                 client=self._client,
+            )
+        )
+
+    async def usage(self, service_id: str | UUID, *, links: bool = False) -> str:
+        """Return the "how to use this service" guide as markdown (async).
+
+        See :meth:`unitysvc.services.Services.usage`.
+        """
+        from ._generated.api.customer_services import (
+            customer_services_get_service_usage,
+        )
+
+        result = unwrap(
+            await customer_services_get_service_usage.asyncio_detailed(
+                service_id=_aservice_uuid(service_id),
+                client=self._client,
+                links=links,
+            )
+        )
+        return result.markdown
+
+    async def documents(
+        self,
+        service_id: str | UUID,
+        *,
+        category: str | None = None,
+        mime_type: str | None = None,
+        include_content: bool = False,
+        interface: str | None = None,
+    ) -> ServiceDocumentsResponse:
+        """List a service's public documents (async).
+
+        See :meth:`unitysvc.services.Services.documents`.
+        """
+        from ._generated.api.customer_services import (
+            customer_services_list_service_documents,
+        )
+        from ._generated.types import UNSET
+
+        return unwrap(
+            await customer_services_list_service_documents.asyncio_detailed(
+                service_id=_aservice_uuid(service_id),
+                client=self._client,
+                category=cast("DocumentCategoryEnum", category) if category is not None else UNSET,
+                mime_type=mime_type if mime_type is not None else UNSET,
+                include_content=include_content,
+                interface=interface if interface is not None else UNSET,
+            )
+        )
+
+    async def document(
+        self,
+        service_id: str | UUID,
+        document_id: str | UUID,
+        *,
+        interface: str | None = None,
+    ) -> ServiceDocumentsResponse:
+        """Fetch one public document, rendered (async).
+
+        See :meth:`unitysvc.services.Services.document`.
+        """
+        from ._generated.api.customer_services import (
+            customer_services_get_service_document,
+        )
+        from ._generated.types import UNSET
+
+        return unwrap(
+            await customer_services_get_service_document.asyncio_detailed(
+                service_id=_aservice_uuid(service_id),
+                document_id=_aservice_uuid(document_id),
+                client=self._client,
+                interface=interface if interface is not None else UNSET,
             )
         )
 

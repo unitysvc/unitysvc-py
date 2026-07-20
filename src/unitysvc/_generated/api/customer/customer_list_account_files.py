@@ -21,9 +21,13 @@ def _get_kwargs(
     path: str | Unset = "",
     max_keys: int | Unset = 100,
     continuation_token: None | str | Unset = UNSET,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
+    if not isinstance(authorization, Unset):
+        headers["authorization"] = authorization
+
     if not isinstance(x_role_id, Unset):
         headers["x-role-id"] = x_role_id
 
@@ -90,11 +94,12 @@ def _build_response(
 
 def sync_detailed(
     *,
-    client: AuthenticatedClient,
+    client: AuthenticatedClient | Client,
     scope: CustomerListAccountFilesScope | Unset = "personal",
     path: str | Unset = "",
     max_keys: int | Unset = 100,
     continuation_token: None | str | Unset = UNSET,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[AccountFilesListResponse | HTTPValidationError]:
     """List Account Files
@@ -112,6 +117,7 @@ def sync_detailed(
         path (str | Unset): Folder path relative to the scope root Default: ''.
         max_keys (int | Unset):  Default: 100.
         continuation_token (None | str | Unset):
+        authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
     Raises:
@@ -127,6 +133,7 @@ def sync_detailed(
         path=path,
         max_keys=max_keys,
         continuation_token=continuation_token,
+        authorization=authorization,
         x_role_id=x_role_id,
     )
 
@@ -139,11 +146,12 @@ def sync_detailed(
 
 def sync(
     *,
-    client: AuthenticatedClient,
+    client: AuthenticatedClient | Client,
     scope: CustomerListAccountFilesScope | Unset = "personal",
     path: str | Unset = "",
     max_keys: int | Unset = 100,
     continuation_token: None | str | Unset = UNSET,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> AccountFilesListResponse | HTTPValidationError | None:
     """List Account Files
@@ -161,6 +169,7 @@ def sync(
         path (str | Unset): Folder path relative to the scope root Default: ''.
         max_keys (int | Unset):  Default: 100.
         continuation_token (None | str | Unset):
+        authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
     Raises:
@@ -177,17 +186,19 @@ def sync(
         path=path,
         max_keys=max_keys,
         continuation_token=continuation_token,
+        authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
-    client: AuthenticatedClient,
+    client: AuthenticatedClient | Client,
     scope: CustomerListAccountFilesScope | Unset = "personal",
     path: str | Unset = "",
     max_keys: int | Unset = 100,
     continuation_token: None | str | Unset = UNSET,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[AccountFilesListResponse | HTTPValidationError]:
     """List Account Files
@@ -205,6 +216,7 @@ async def asyncio_detailed(
         path (str | Unset): Folder path relative to the scope root Default: ''.
         max_keys (int | Unset):  Default: 100.
         continuation_token (None | str | Unset):
+        authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
     Raises:
@@ -220,6 +232,7 @@ async def asyncio_detailed(
         path=path,
         max_keys=max_keys,
         continuation_token=continuation_token,
+        authorization=authorization,
         x_role_id=x_role_id,
     )
 
@@ -230,11 +243,12 @@ async def asyncio_detailed(
 
 async def asyncio(
     *,
-    client: AuthenticatedClient,
+    client: AuthenticatedClient | Client,
     scope: CustomerListAccountFilesScope | Unset = "personal",
     path: str | Unset = "",
     max_keys: int | Unset = 100,
     continuation_token: None | str | Unset = UNSET,
+    authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> AccountFilesListResponse | HTTPValidationError | None:
     """List Account Files
@@ -252,6 +266,7 @@ async def asyncio(
         path (str | Unset): Folder path relative to the scope root Default: ''.
         max_keys (int | Unset):  Default: 100.
         continuation_token (None | str | Unset):
+        authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
     Raises:
@@ -269,6 +284,7 @@ async def asyncio(
             path=path,
             max_keys=max_keys,
             continuation_token=continuation_token,
+            authorization=authorization,
             x_role_id=x_role_id,
         )
     ).parsed
