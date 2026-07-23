@@ -29,7 +29,7 @@ $ usvc [OPTIONS] COMMAND [ARGS]...
 * `recurrent-requests`: Remote recurrent-request operations (list,...
 * `groups`: Service-group operations (list, show,...
 * `files`: Account files (ls, get, put, url).
-* `services`: Per-service operations (show, interfaces,...
+* `services`: Per-service operations (show, usage,...
 * `enrollments`: Enrollment management (list, show, cancel).
 
 ## `usvc env`
@@ -574,7 +574,7 @@ $ usvc files url [OPTIONS] {path}
 
 ## `usvc services`
 
-Per-service operations (show, interfaces, dispatch, schedule, enroll, required-secrets, optional-secrets).
+Per-service operations (show, usage, interfaces, dispatch, schedule, enroll, required-secrets, optional-secrets).
 
 **Usage**:
 
@@ -589,6 +589,7 @@ $ usvc services [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `show`: Show full service detail as JSON.
+* `usage`: Show the structured access plan (how to...
 * `interfaces`: List access interfaces dispatchable by...
 * `dispatch`: One-shot HTTP through the service&#x27;s...
 * `schedule`: Schedule a recurring dispatch.
@@ -604,6 +605,31 @@ Show full service detail as JSON.
 
 ```console
 $ usvc services show [OPTIONS] {service_id}
+```
+
+**Arguments**:
+
+* `service_id`: Service UUID.  [required]
+
+**Options**:
+
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc services usage`
+
+Show the structured access plan (how to use this service) as JSON.
+
+The plan is generic and context-free (#1638) — the enrollment posture,
+how to call the service, and per-channel pricing and secrets. It needs no
+API key. Rendering it to prose is the client&#x27;s job; this prints the raw
+structure.
+
+**Usage**:
+
+```console
+$ usvc services usage [OPTIONS] {service_id}
 ```
 
 **Arguments**:

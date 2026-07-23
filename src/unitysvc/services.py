@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     import httpx
 
     from ._generated.models.access_interface import AccessInterface
+    from ._generated.models.access_plan import AccessPlan
     from ._generated.models.document_category_enum import DocumentCategoryEnum
     from ._generated.models.recurrent_request_public import RecurrentRequestPublic
     from ._generated.models.service_detail import ServiceDetail
@@ -102,9 +103,9 @@ class Service(_Wrappable):
         """List access interfaces for this service. See :meth:`Services.interfaces`."""
         return self._parent.services.interfaces(self._raw.id)
 
-    def usage(self, *, links: bool = False) -> str:
-        """The "how to use this service" guide (markdown). See :meth:`Services.usage`."""
-        return self._parent.services.usage(self._raw.id, links=links)
+    def access_plan(self) -> AccessPlan:
+        """The structured access plan for this service. See :meth:`Services.access_plan`."""
+        return self._parent.services.access_plan(self._raw.id)
 
     def documents(
         self,
@@ -306,27 +307,25 @@ class Services:
     # ------------------------------------------------------------------
     # Documentation & usage (anonymous-readable)
     # ------------------------------------------------------------------
-    def usage(self, service_id: str | UUID, *, links: bool = False) -> str:
-        """Return the derived "how to use this service" guide as markdown.
+    def access_plan(self, service_id: str | UUID) -> AccessPlan:
+        """Return the structured "how to use this service" access plan (#1638).
 
-        A generic, per-channel walkthrough — free/paid, secrets to set,
-        enrollment steps — synthesized from metadata, so no API key is
-        needed. ``links=True`` emits the browser flavor (markdown links to
-        the secrets page and code examples); the default is plain text,
-        which is what a terminal or an LLM wants.
+        A generic, context-free plan — the enrollment posture, how to call
+        the service (shared interface or per-enrollment ``/e/<CODE>``), and
+        per-channel pricing and secrets — synthesized from metadata, so no
+        API key is needed. The backend serves *structure*, not prose;
+        rendering (to text, UI, or LLM markdown) is the caller's job.
         """
         from ._generated.api.customer_services import (
             customer_services_get_service_usage,
         )
 
-        result = unwrap(
+        return unwrap(
             customer_services_get_service_usage.sync_detailed(
                 service_id=_as_uuid(service_id),
                 client=self._client,
-                links=links,
             )
         )
-        return result.markdown
 
     def documents(
         self,

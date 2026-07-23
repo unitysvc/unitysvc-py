@@ -8,48 +8,26 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="ServiceUsageResponse")
+T = TypeVar("T", bound="AccessInterfacePlanRoutingKeyType0")
 
 
 @_attrs_define
-class ServiceUsageResponse:
-    """A derived "how to use this service" guide (#1622).
-
-    ``markdown`` is the whole answer — which channels the service offers, what
-    each costs, whether it needs secrets or enrollment, and how to call it —
-    synthesized from metadata so no seller has to author it. The structured
-    plan it is rendered from stays server-side (canonical, testable); only the
-    markdown is exposed.
-
-    """
-
-    markdown: str
+class AccessInterfacePlanRoutingKeyType0:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        markdown = self.markdown
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "markdown": markdown,
-            }
-        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        markdown = d.pop("markdown")
+        access_interface_plan_routing_key_type_0 = cls()
 
-        service_usage_response = cls(
-            markdown=markdown,
-        )
-
-        service_usage_response.additional_properties = d
-        return service_usage_response
+        access_interface_plan_routing_key_type_0.additional_properties = d
+        return access_interface_plan_routing_key_type_0
 
     @property
     def additional_keys(self) -> list[str]:

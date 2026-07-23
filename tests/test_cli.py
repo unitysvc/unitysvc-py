@@ -85,6 +85,7 @@ def test_services_help_lists_subcommands() -> None:
     plain = _plain(result.stdout)
     for sub in (
         "show",
+        "usage",
         "interfaces",
         "dispatch",
         "schedule",
