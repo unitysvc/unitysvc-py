@@ -5486,7 +5486,7 @@
           "customer-services"
         ],
         "summary": "Get Service Usage",
-        "description": "Return a derived, markdown \"how to use this service\" guide.\n\nReadable without an API key, for the same visible set as the rest of this\nsurface (active + public). It composes existing metadata: the per-channel\nfacts from ``derive_channels`` (type, secrets), the listing's pricing and\n``parameters_schema``, the secret acquisition guidance surfaced on the\ninterfaces response (#1618), and the default user interface (#1617). It\nowns no new data \u2014 see ``app.core.service_usage``.\n\n**Generic and anonymous by design (#1622).** The guide describes how\n*anyone* signs up for and calls the service, per channel; it is identical\nfor every caller, so it is ``public``-cacheable (the hosted MCP and the CDN\ncache it). Per-customer state (\"you already set this / you're enrolled\") is\ndeliberately not here \u2014 a consumer applies it from the customer context it\nalready holds (e.g. the frontend hydrates the secret links from\n``secretExistence``), rather than the endpoint doing a per-caller,\nper-service lookup.",
+        "description": "Return the generic, structured \"how to use this service\" access plan (#1638).\n\nReadable without an API key, for the same visible set as the rest of this\nsurface (active + public). It composes existing metadata: the per-channel\nfacts from ``derive_channels`` (type, secrets), the listing's pricing and\n``parameters_schema``, the secret acquisition guidance from #1618, and the\n``user_access_interfaces`` templates (which decide ``enrollment_mode``). It\nowns no new data \u2014 see ``app.core.service_usage``.\n\n**Generic and context-free by design (#1638).** The plan describes how\n*anyone* signs up for and calls the service; it is identical for every\ncaller, so it is ``public``-cacheable. Per-customer state (\"you already set\nthis / you're enrolled\") is deliberately not here \u2014 each consumer renders the\nplan and joins its own customer context (the frontend hydrates secret status\nand live enrollment codes; the MCP server renders text). The backend renders\nnothing.",
         "operationId": "customer-services-get_service_usage",
         "parameters": [
           {
@@ -5500,16 +5500,36 @@
             }
           },
           {
-            "name": "links",
-            "in": "query",
+            "name": "authorization",
+            "in": "header",
             "required": false,
             "schema": {
-              "type": "boolean",
-              "description": "Emit markdown links for secrets (/secrets?name=\u2026) and code examples \u2014 the browser flavor, where the frontend hydrates the secret links into live status pills. Default false renders plain text, which is what MCP / CLI consumers want.",
-              "default": false,
-              "title": "Links"
-            },
-            "description": "Emit markdown links for secrets (/secrets?name=\u2026) and code examples \u2014 the browser flavor, where the frontend hydrates the secret links into live status pills. Default false renders plain text, which is what MCP / CLI consumers want."
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
           }
         ],
         "responses": {
@@ -5518,7 +5538,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ServiceUsageResponse"
+                  "$ref": "#/components/schemas/AccessPlan"
                 }
               }
             }
@@ -5650,6 +5670,92 @@
         ],
         "title": "AccessInterface",
         "description": "Access interface entry exposed to customers.\n\nIdentified by ``name`` (per ``service`` for service-bound\ninterfaces, per ``group`` for group-level ones). The DB primary\nkey is intentionally not exposed \u2014 interface UUIDs change when\nadmins recreate parent rows, so an ``id`` field would tempt SDK\nconsumers to cache an unstable handle.\n\nThe actual ``api_key`` is never included \u2014 secrets are\nwrite-only. ``base_url`` is resolved against the active gateway\nconfig so the client can dispatch without further substitution.\n\nScoping fields let the SDK filter the returned list:\n\n- ``enrollment_id`` \u2014 set when the interface is bound to a\n  specific enrollment (BYOK/BYOE services); ``None`` for shared\n  interfaces. SDK uses this for\n  ``service.dispatch(enrollment=enr)`` resolution.\n- ``group_name`` \u2014 set when the interface is declared on a\n  service group rather than on the service itself; ``None`` for\n  per-service interfaces. Identified by name (not UUID) because\n  group UUIDs are not stable across admin recreations.\n\nIntentionally omits:\n- ``is_primary`` \u2014 multiple public interfaces on the same\n  service map to the same upstream, so ``service.dispatch()``\n  auto-picks one and a \"primary\" flag is unnecessary. The\n  ``interface=`` argument on ``service.dispatch()`` is only\n  needed to disambiguate when the customer has multiple\n  enrollments on the service.\n- ``is_active`` \u2014 only active interfaces are returned, so the\n  field would always be ``True``.\n- ``sort_order`` \u2014 seller-internal ordering hint, used to\n  sort this response but not surfaced to the customer."
+      },
+      "AccessInterfacePlan": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "routing_key": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routing Key"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "AccessInterfacePlan",
+        "description": "A user-access interface \u2014 the endpoint a customer calls (#1638).\n\nGeneric (same for every caller): the resolved ``base_url`` and any\n``routing_key`` fields. Populated only for services that expose a **shared**\n(non-enrollment) interface; an enrollment service's interface is materialized\nper enrollment, so its concrete URL is the caller's ``/e/<CODE>`` \u2014 formed by\nthe consumer from its own enrollment context, qualified by ``enrollment_mode``."
+      },
+      "AccessPlan": {
+        "properties": {
+          "enrollment_mode": {
+            "type": "string",
+            "enum": [
+              "disallowed",
+              "optional",
+              "required"
+            ],
+            "title": "Enrollment Mode",
+            "default": "disallowed"
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/components/schemas/ParameterRequirement"
+            },
+            "type": "array",
+            "title": "Parameters"
+          },
+          "interfaces": {
+            "items": {
+              "$ref": "#/components/schemas/AccessInterfacePlan"
+            },
+            "type": "array",
+            "title": "Interfaces"
+          },
+          "channels": {
+            "items": {
+              "$ref": "#/components/schemas/ChannelPlan"
+            },
+            "type": "array",
+            "title": "Channels"
+          }
+        },
+        "type": "object",
+        "title": "AccessPlan",
+        "description": "The generic, context-free access plan served to every consumer (#1638)."
       },
       "AccountFileDownloadResponse": {
         "properties": {
@@ -6528,6 +6634,82 @@
         ],
         "title": "ChainsPublic"
       },
+      "ChannelPlan": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "channel_type": {
+            "type": "string",
+            "title": "Channel Type"
+          },
+          "free": {
+            "type": "boolean",
+            "title": "Free",
+            "default": false
+          },
+          "price_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Description"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "requires_enrollment": {
+            "type": "boolean",
+            "title": "Requires Enrollment",
+            "default": false
+          },
+          "required_secrets": {
+            "items": {
+              "$ref": "#/components/schemas/SecretRequirement"
+            },
+            "type": "array",
+            "title": "Required Secrets"
+          },
+          "optional_secrets": {
+            "items": {
+              "$ref": "#/components/schemas/SecretRequirement"
+            },
+            "type": "array",
+            "title": "Optional Secrets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "channel_type"
+        ],
+        "title": "ChannelPlan",
+        "description": "How one upstream channel of a service can be accessed (generic)."
+      },
       "CursorPage_ServiceSummary_": {
         "properties": {
           "data": {
@@ -7269,6 +7451,35 @@
         ],
         "title": "OpsCustomerRequestLogDetail",
         "description": "Customer request-log detail for ops-customer members.\n\nSellers who are active members of the configured ops customer team may\ninspect the gateway-transformed upstream request for their own routing\ndiagnostics. Regular customers still receive ``RequestLogDetail`` without\nthis field."
+      },
+      "ParameterRequirement": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ParameterRequirement"
       },
       "RecurrentRequestCreate": {
         "properties": {
@@ -8145,6 +8356,41 @@
         ],
         "title": "SecretPublic",
         "description": "Public schema for secret info.\n\nSensitive rows keep ``value`` omitted/null. Non-sensitive variables include\ntheir decrypted value for authorized callers."
+      },
+      "SecretRequirement": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "default": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "SecretRequirement"
       },
       "SecretUpdate": {
         "properties": {
@@ -9059,20 +9305,6 @@
         ],
         "title": "ServiceSummary",
         "description": "Minimal service info used when listing services inside a group.\n\nIntentionally narrow: enough to render a picker and drill in,\nnothing that customers don't need at browse time. Fetch\n``ServiceDetail`` for the full schema.\n\n``status`` is intentionally not exposed \u2014 customers only ever\nsee ``active`` services (the visibility filter guarantees it),\nso a field whose only valid value is ``\"active\"`` carries no\ninformation. Same reasoning for ``is_active`` on\n``AccessInterface``."
-      },
-      "ServiceUsageResponse": {
-        "properties": {
-          "markdown": {
-            "type": "string",
-            "title": "Markdown"
-          }
-        },
-        "type": "object",
-        "required": [
-          "markdown"
-        ],
-        "title": "ServiceUsageResponse",
-        "description": "A derived \"how to use this service\" guide (#1622).\n\n``markdown`` is the whole answer \u2014 which channels the service offers, what\neach costs, whether it needs secrets or enrollment, and how to call it \u2014\nsynthesized from metadata so no seller has to author it. The structured\nplan it is rendered from stays server-side (canonical, testable); only the\nmarkdown is exposed."
       },
       "SwitchRoutingResponse": {
         "properties": {

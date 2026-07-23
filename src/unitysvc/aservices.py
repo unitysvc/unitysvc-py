@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     import httpx
 
     from ._generated.models.access_interface import AccessInterface
+    from ._generated.models.access_plan import AccessPlan
     from ._generated.models.document_category_enum import DocumentCategoryEnum
     from ._generated.models.recurrent_request_public import RecurrentRequestPublic
     from ._generated.models.service_detail import ServiceDetail
@@ -48,9 +49,9 @@ class AsyncService:
     async def interfaces(self) -> list[AccessInterface]:
         return await self._parent.services.interfaces(self._raw.id)
 
-    async def usage(self, *, links: bool = False) -> str:
-        """The "how to use this service" guide (markdown). See :meth:`Services.usage`."""
-        return await self._parent.services.usage(self._raw.id, links=links)
+    async def access_plan(self) -> AccessPlan:
+        """The structured access plan for this service. See :meth:`Services.access_plan`."""
+        return await self._parent.services.access_plan(self._raw.id)
 
     async def documents(
         self,
@@ -196,23 +197,21 @@ class AsyncServices:
             )
         )
 
-    async def usage(self, service_id: str | UUID, *, links: bool = False) -> str:
-        """Return the "how to use this service" guide as markdown (async).
+    async def access_plan(self, service_id: str | UUID) -> AccessPlan:
+        """Return the structured "how to use this service" access plan (async).
 
-        See :meth:`unitysvc.services.Services.usage`.
+        See :meth:`unitysvc.services.Services.access_plan`.
         """
         from ._generated.api.customer_services import (
             customer_services_get_service_usage,
         )
 
-        result = unwrap(
+        return unwrap(
             await customer_services_get_service_usage.asyncio_detailed(
                 service_id=_aservice_uuid(service_id),
                 client=self._client,
-                links=links,
             )
         )
-        return result.markdown
 
     async def documents(
         self,

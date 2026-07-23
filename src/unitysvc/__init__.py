@@ -39,6 +39,11 @@ Anonymous and authenticated calls share that host.
 """
 
 from ._experimental import experimental_enabled, require_experimental
+from ._generated.models.access_interface_plan import AccessInterfacePlan
+from ._generated.models.access_plan import AccessPlan
+from ._generated.models.channel_plan import ChannelPlan
+from ._generated.models.parameter_requirement import ParameterRequirement
+from ._generated.models.secret_requirement import SecretRequirement
 from .aclient import AsyncClient
 from .client import (
     DEFAULT_API_URL,
@@ -75,6 +80,12 @@ __all__ = [
     "ENV_API_BASE_URL",
     "ENV_S3_BASE_URL",
     "ENV_SMTP_BASE_URL",
+    # Access plan (the structured "how to use a service" model, #1638)
+    "AccessPlan",
+    "AccessInterfacePlan",
+    "ChannelPlan",
+    "ParameterRequirement",
+    "SecretRequirement",
     # Exceptions
     "UnitysvcSDKError",
     "APIError",
