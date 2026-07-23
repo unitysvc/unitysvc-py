@@ -4,6 +4,7 @@ Mirrors :class:`unitysvc.services.Services` operations
 (the ``/v1/customer/services/*`` endpoints):
 
 - ``usvc services show SERVICE_ID``                — show service detail
+- ``usvc services usage SERVICE_ID``               — show the structured access plan
 - ``usvc services interfaces SERVICE_ID``          — list access interfaces
 - ``usvc services dispatch SERVICE_ID``            — one-shot HTTP dispatch
 - ``usvc services schedule SERVICE_ID``            — register recurring dispatch
@@ -42,7 +43,10 @@ from ._helpers import (
 console = Console()
 
 app = typer.Typer(
-    help="Per-service operations (show, interfaces, dispatch, schedule, enroll, required-secrets, optional-secrets).",
+    help=(
+        "Per-service operations (show, usage, interfaces, dispatch, schedule, "
+        "enroll, required-secrets, optional-secrets)."
+    ),
 )
 
 
@@ -64,6 +68,32 @@ def show_service(
 
     service = run_async(_impl(), error_prefix="Failed to show service")
     console.print(json.dumps(service, indent=2, default=str))
+
+
+# ---------------------------------------------------------------------------
+# usage (access plan)
+# ---------------------------------------------------------------------------
+@app.command("usage")
+def service_usage(
+    service_id: str = typer.Argument(..., help="Service UUID."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Show the structured access plan (how to use this service) as JSON.
+
+    The plan is generic and context-free (#1638) — the enrollment posture,
+    how to call the service, and per-channel pricing and secrets. It needs no
+    API key. Rendering it to prose is the client's job; this prints the raw
+    structure.
+    """
+
+    async def _impl() -> dict[str, Any]:
+        async with async_client(api_key, base_url) as client:
+            plan = await client.services.access_plan(service_id)
+            return model_to_dict(plan)
+
+    plan = run_async(_impl(), error_prefix="Failed to fetch access plan")
+    console.print(json.dumps(plan, indent=2, default=str))
 
 
 # ---------------------------------------------------------------------------
