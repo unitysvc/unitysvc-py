@@ -74,7 +74,12 @@ class Secrets:
     # Write
     # ------------------------------------------------------------------
     def set(
-        self, name: str, value: str, *, sensitive: bool | None = None
+        self,
+        name: str,
+        value: str,
+        *,
+        sensitive: bool | None = None,
+        description: str | None = None,
     ) -> SecretPublic:
         """Set ``name`` to ``value`` (idempotent — creates or replaces).
 
@@ -94,6 +99,8 @@ class Secrets:
             value: Secret value. May be empty.
             sensitive: ``False`` creates a viewable variable, ``True`` an
                 explicit secret, ``None`` (default) leaves it unset.
+            description: Author guidance stored on the row; ``None`` leaves any
+                existing description untouched.
 
         Returns:
             ``SecretPublic`` metadata. For a variable, ``.value`` is populated.
@@ -109,6 +116,7 @@ class Secrets:
                 body=SecretUpdate(
                     value=value,
                     sensitive=UNSET if sensitive is None else sensitive,
+                    description=UNSET if description is None else description,
                 ),
             )
         )

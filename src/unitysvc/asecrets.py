@@ -50,12 +50,18 @@ class AsyncSecrets:
         )
 
     async def set(
-        self, name: str, value: str, *, sensitive: bool | None = None
+        self,
+        name: str,
+        value: str,
+        *,
+        sensitive: bool | None = None,
+        description: str | None = None,
     ) -> SecretPublic:
         """Idempotently set ``name`` to ``value``. See sync ``Secrets.set``.
 
         ``sensitive=False`` creates a viewable **variable**; ``None`` (default)
-        stores a **secret**. Honored on create only.
+        stores a **secret**. Honored on create only. ``description`` stores
+        author guidance on the row (``None`` leaves any existing one untouched).
         """
         from ._generated.api.customer_secrets import customer_secrets_set_secret
         from ._generated.models.secret_update import SecretUpdate
@@ -68,6 +74,7 @@ class AsyncSecrets:
                 body=SecretUpdate(
                     value=value,
                     sensitive=UNSET if sensitive is None else sensitive,
+                    description=UNSET if description is None else description,
                 ),
             )
         )
