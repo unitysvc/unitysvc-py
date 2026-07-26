@@ -68,7 +68,7 @@ $ usvc resolve [OPTIONS]
 
 ## `usvc secrets`
 
-Customer secret management (list, set, delete).
+Customer secret management (list, set, upload, delete).
 
 **Usage**:
 
@@ -84,6 +84,7 @@ $ usvc secrets [OPTIONS] COMMAND [ARGS]...
 
 * `list`: List secrets owned by the authenticated...
 * `set`: Set a secret or variable by name...
+* `upload`: Bulk-set secrets from an ``.env``-style...
 * `delete`: Delete a secret by name.
 
 ### `usvc secrets list`
@@ -140,6 +141,44 @@ $ usvc secrets set [OPTIONS] {name}
 
 * `--value <str>`: Secret value. If omitted: reads from stdin when piped, prompts with hidden input when run interactively.
 * `--variable`: Store as a viewable variable (value is returned by list/get) rather than a write-only secret. Honored only when creating.
+* `-d, --description <str>`: Author guidance stored on the row (what this secret is / how to obtain one). Omit to leave any existing description untouched. For many secrets at once, use a .env.example manifest with &#x27;secrets upload&#x27;.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc secrets upload`
+
+Bulk-set secrets from an ``.env``-style manifest (idempotent).
+
+Reads a shell-sourceable ``.env.example`` and sets each via
+``PUT /v1/customer/secrets/{name}``, with two conventions:
+
+- **Environment-aware**: ``NAME=${NAME:-default}`` resolves ``NAME`` from the
+  process environment when set, else the default — so the file reuses values
+  already exported in your shell, falling back to test defaults. Opaque
+  literals (``NAME=sk-abc``) are verbatim.
+- **Description-aware**: the contiguous ``#`` comment lines directly above a
+  definition become that secret&#x27;s ``description``. A blank line ends a block,
+  so a file header attaches to no secret.
+
+Every declared entry is set (source semantics; empties included, so the row
+that carries a description is created). Last assignment wins. Input is a file
+or a pipe: ``FILE`` argument, or ``-`` / piped stdin.
+
+**Usage**:
+
+```console
+$ usvc secrets upload [OPTIONS] [file]
+```
+
+**Arguments**:
+
+* `file`: Manifest file (.env.example) to read, or &#x27;-&#x27; for stdin. Omit when piping.
+
+**Options**:
+
+* `--dry-run`: Parse and list; upload nothing.
+* `-f, --format <str>`: Output format: table | json.  [default: table]
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
