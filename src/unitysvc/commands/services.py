@@ -9,8 +9,6 @@ Mirrors :class:`unitysvc.services.Services` operations
 - ``usvc services dispatch SERVICE_ID``            — one-shot HTTP dispatch
 - ``usvc services schedule SERVICE_ID``            — register recurring dispatch
 - ``usvc services enroll SERVICE_ID``              — enroll in this service
-- ``usvc services required-secrets SERVICE_ID``    — list required customer secrets
-- ``usvc services optional-secrets SERVICE_ID``    — list optional customer secrets
 
 Note: there is no flat ``usvc services list`` — the customer API has no
 flat services endpoint by design. Discovery flows through
@@ -43,10 +41,7 @@ from ._helpers import (
 console = Console()
 
 app = typer.Typer(
-    help=(
-        "Per-service operations (show, usage, interfaces, dispatch, schedule, "
-        "enroll, required-secrets, optional-secrets)."
-    ),
+    help="Per-service operations (show, usage, interfaces, dispatch, schedule, enroll).",
 )
 
 
@@ -292,63 +287,3 @@ def enroll_service(
         f"[green]✓[/green] enrolled in service {service_id} "
         f"→ enrollment [bold]{result.get('id', '')}[/bold] (status={result.get('status', '')})"
     )
-
-
-# ---------------------------------------------------------------------------
-# required-secrets / optional-secrets
-# ---------------------------------------------------------------------------
-@app.command("required-secrets")
-def required_secrets(
-    service_id: str = typer.Argument(..., help="Service UUID."),
-    interface: str | None = typer.Option(None, "--interface", help="Inspect a specific interface by name."),
-    api_key: str | None = api_key_option(),
-    base_url: str = base_url_option(),
-) -> None:
-    """List customer secrets the picked interface requires.
-
-    Prints one secret name per line (pipeable). Empty output means none
-    are required.
-    """
-
-    async def _impl() -> list[str]:
-        async with async_client(api_key, base_url) as client:
-            svc = await client.services.get(service_id)
-            return await svc.required_secrets(interface=interface)
-
-    secrets = run_async(_impl(), error_prefix="Failed to fetch required secrets")
-    for name in secrets:
-        console.print(name, highlight=False)
-
-
-@app.command("optional-secrets")
-def optional_secrets(
-    service_id: str = typer.Argument(..., help="Service UUID."),
-    interface: str | None = typer.Option(None, "--interface", help="Inspect a specific interface by name."),
-    output_format: str = typer.Option("table", "--format", "-f", help="Output format: table | json."),
-    api_key: str | None = api_key_option(),
-    base_url: str = base_url_option(),
-) -> None:
-    """List customer secrets the picked interface can use but doesn't require."""
-
-    async def _impl() -> list[dict[str, Any]]:
-        async with async_client(api_key, base_url) as client:
-            svc = await client.services.get(service_id)
-            entries = await svc.optional_secrets(interface=interface)
-            return [model_to_dict(e) if not isinstance(e, dict) else e for e in entries]
-
-    entries = run_async(_impl(), error_prefix="Failed to fetch optional secrets")
-
-    if not entries:
-        console.print("[dim]No optional secrets[/dim]")
-        return
-
-    if output_format == "json":
-        console.print(json.dumps(entries, indent=2, default=str))
-        return
-
-    table = Table(title="Optional secrets")
-    table.add_column("Name", style="bold")
-    table.add_column("Default")
-    for e in entries:
-        table.add_row(str(e.get("name", "")), str(e.get("default", "")))
-    console.print(table)

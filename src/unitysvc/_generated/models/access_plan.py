@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from ..models.access_interface_plan import AccessInterfacePlan
     from ..models.channel_plan import ChannelPlan
     from ..models.parameter_requirement import ParameterRequirement
+    from ..models.routing_endpoint_plan import RoutingEndpointPlan
 
 
 T = TypeVar("T", bound="AccessPlan")
@@ -26,13 +27,10 @@ class AccessPlan:
     parameters: list[ParameterRequirement] | Unset = UNSET
     interfaces: list[AccessInterfacePlan] | Unset = UNSET
     channels: list[ChannelPlan] | Unset = UNSET
+    routing_endpoints: list[RoutingEndpointPlan] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.access_interface_plan import AccessInterfacePlan
-        from ..models.channel_plan import ChannelPlan
-        from ..models.parameter_requirement import ParameterRequirement
-
         enrollment_mode: str | Unset = UNSET
         if not isinstance(self.enrollment_mode, Unset):
             enrollment_mode = self.enrollment_mode
@@ -58,6 +56,13 @@ class AccessPlan:
                 channels_item = channels_item_data.to_dict()
                 channels.append(channels_item)
 
+        routing_endpoints: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.routing_endpoints, Unset):
+            routing_endpoints = []
+            for routing_endpoints_item_data in self.routing_endpoints:
+                routing_endpoints_item = routing_endpoints_item_data.to_dict()
+                routing_endpoints.append(routing_endpoints_item)
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
@@ -69,6 +74,8 @@ class AccessPlan:
             field_dict["interfaces"] = interfaces
         if channels is not UNSET:
             field_dict["channels"] = channels
+        if routing_endpoints is not UNSET:
+            field_dict["routing_endpoints"] = routing_endpoints
 
         return field_dict
 
@@ -77,6 +84,7 @@ class AccessPlan:
         from ..models.access_interface_plan import AccessInterfacePlan
         from ..models.channel_plan import ChannelPlan
         from ..models.parameter_requirement import ParameterRequirement
+        from ..models.routing_endpoint_plan import RoutingEndpointPlan
 
         d = dict(src_dict)
         _enrollment_mode = d.pop("enrollment_mode", UNSET)
@@ -113,11 +121,21 @@ class AccessPlan:
 
                 channels.append(channels_item)
 
+        _routing_endpoints = d.pop("routing_endpoints", UNSET)
+        routing_endpoints: list[RoutingEndpointPlan] | Unset = UNSET
+        if _routing_endpoints is not UNSET:
+            routing_endpoints = []
+            for routing_endpoints_item_data in _routing_endpoints:
+                routing_endpoints_item = RoutingEndpointPlan.from_dict(routing_endpoints_item_data)
+
+                routing_endpoints.append(routing_endpoints_item)
+
         access_plan = cls(
             enrollment_mode=enrollment_mode,
             parameters=parameters,
             interfaces=interfaces,
             channels=channels,
+            routing_endpoints=routing_endpoints,
         )
 
         access_plan.additional_properties = d

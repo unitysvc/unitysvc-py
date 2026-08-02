@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -10,7 +10,6 @@ from ..models.account_files_list_response_scope import (
     AccountFilesListResponseScope,
     check_account_files_list_response_scope,
 )
-from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.account_file_object import AccountFileObject
@@ -33,8 +32,6 @@ class AccountFilesListResponse:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.account_file_object import AccountFileObject
-
         scope: str = self.scope
 
         path = self.path

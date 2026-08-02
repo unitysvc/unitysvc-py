@@ -1,19 +1,17 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
-T = TypeVar("T", bound="AccessInterfaceCustomerSecretsInfoType0")
+T = TypeVar("T", bound="BroadcastPublicDetailsType0")
 
 
 @_attrs_define
-class AccessInterfaceCustomerSecretsInfoType0:
-    additional_properties: dict[str, str] = _attrs_field(init=False, factory=dict)
+class BroadcastPublicDetailsType0:
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         field_dict: dict[str, Any] = {}
@@ -24,19 +22,19 @@ class AccessInterfaceCustomerSecretsInfoType0:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        access_interface_customer_secrets_info_type_0 = cls()
+        broadcast_public_details_type_0 = cls()
 
-        access_interface_customer_secrets_info_type_0.additional_properties = d
-        return access_interface_customer_secrets_info_type_0
+        broadcast_public_details_type_0.additional_properties = d
+        return broadcast_public_details_type_0
 
     @property
     def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
-    def __getitem__(self, key: str) -> str:
+    def __getitem__(self, key: str) -> Any:
         return self.additional_properties[key]
 
-    def __setitem__(self, key: str, value: str) -> None:
+    def __setitem__(self, key: str, value: Any) -> None:
         self.additional_properties[key] = value
 
     def __delitem__(self, key: str) -> None:

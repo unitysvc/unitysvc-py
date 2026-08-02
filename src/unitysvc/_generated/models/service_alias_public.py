@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -12,6 +12,7 @@ from dateutil.parser import isoparse
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.service_alias_public_details_type_0 import ServiceAliasPublicDetailsType0
     from ..models.service_alias_public_request_routing_key_type_0 import ServiceAliasPublicRequestRoutingKeyType0
     from ..models.service_alias_public_routing_key_override_type_0 import ServiceAliasPublicRoutingKeyOverrideType0
 
@@ -33,11 +34,13 @@ class ServiceAliasPublic:
     request_routing_key: None | ServiceAliasPublicRequestRoutingKeyType0 | Unset = UNSET
     routing_key_override: None | ServiceAliasPublicRoutingKeyOverrideType0 | Unset = UNSET
     is_routing: bool | Unset = True
+    details: None | ServiceAliasPublicDetailsType0 | Unset = UNSET
     updated_at: datetime.datetime | None | Unset = UNSET
     deactivated_at: datetime.datetime | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.service_alias_public_details_type_0 import ServiceAliasPublicDetailsType0
         from ..models.service_alias_public_request_routing_key_type_0 import ServiceAliasPublicRequestRoutingKeyType0
         from ..models.service_alias_public_routing_key_override_type_0 import ServiceAliasPublicRoutingKeyOverrideType0
 
@@ -83,6 +86,14 @@ class ServiceAliasPublic:
 
         is_routing = self.is_routing
 
+        details: dict[str, Any] | None | Unset
+        if isinstance(self.details, Unset):
+            details = UNSET
+        elif isinstance(self.details, ServiceAliasPublicDetailsType0):
+            details = self.details.to_dict()
+        else:
+            details = self.details
+
         updated_at: None | str | Unset
         if isinstance(self.updated_at, Unset):
             updated_at = UNSET
@@ -120,6 +131,8 @@ class ServiceAliasPublic:
             field_dict["routing_key_override"] = routing_key_override
         if is_routing is not UNSET:
             field_dict["is_routing"] = is_routing
+        if details is not UNSET:
+            field_dict["details"] = details
         if updated_at is not UNSET:
             field_dict["updated_at"] = updated_at
         if deactivated_at is not UNSET:
@@ -129,6 +142,7 @@ class ServiceAliasPublic:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.service_alias_public_details_type_0 import ServiceAliasPublicDetailsType0
         from ..models.service_alias_public_request_routing_key_type_0 import ServiceAliasPublicRequestRoutingKeyType0
         from ..models.service_alias_public_routing_key_override_type_0 import ServiceAliasPublicRoutingKeyOverrideType0
 
@@ -205,6 +219,23 @@ class ServiceAliasPublic:
 
         is_routing = d.pop("is_routing", UNSET)
 
+        def _parse_details(data: object) -> None | ServiceAliasPublicDetailsType0 | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                details_type_0 = ServiceAliasPublicDetailsType0.from_dict(data)
+
+                return details_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | ServiceAliasPublicDetailsType0 | Unset, data)
+
+        details = _parse_details(d.pop("details", UNSET))
+
         def _parse_updated_at(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
@@ -250,6 +281,7 @@ class ServiceAliasPublic:
             request_routing_key=request_routing_key,
             routing_key_override=routing_key_override,
             is_routing=is_routing,
+            details=details,
             updated_at=updated_at,
             deactivated_at=deactivated_at,
         )

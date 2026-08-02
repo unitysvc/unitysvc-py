@@ -104,20 +104,31 @@ class Aliases:
             )
         )
 
-    def switch_routing(self, alias_id: str | UUID, *, on: bool = True) -> Any:
-        """Switch routing on or off for an alias.
+    def switch(
+        self,
+        identifier: str | UUID,
+        *,
+        target: str | None = None,
+        routing_key: str | None = None,
+        on: bool = True,
+    ) -> Any:
+        """Switch which target routes for an alias — the one-call provider switch.
 
-        When *on* is True, any sibling alias currently routing the same
-        (name, routing_key) combo is atomically demoted.  When False the
-        alias simply stops routing.
+        ``identifier`` is an alias name, a full UUID, or a partial UUID. For a
+        name, ``target`` (target-path substring) and ``routing_key`` (routing-key-
+        value substring) select a specific target; omit both to cycle to the next.
+        ``on=False`` turns the current target off.
         """
         from ._generated.api.customer_aliases import customer_aliases_switch_alias_routing
+        from ._generated.types import UNSET
 
         return unwrap(
             customer_aliases_switch_alias_routing.sync_detailed(
-                alias_id=UUID(str(alias_id)) if not isinstance(alias_id, UUID) else alias_id,
+                identifier=str(identifier),
                 client=self._client,
                 on=on,
+                target=target if target is not None else UNSET,
+                routing_key=routing_key if routing_key is not None else UNSET,
             )
         )
 

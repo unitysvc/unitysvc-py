@@ -156,16 +156,6 @@ class AsyncService:
             shared=shared,
         )
 
-    async def required_secrets(self, *, interface: str | UUID | None = None) -> list[str]:
-        """See :meth:`unitysvc.services.Service.required_secrets`."""
-        iface = await self._parent.services._pick_interface(self._raw.id, interface=interface, enrollment=None)
-        return list(iface.customer_secrets_needed or [])
-
-    async def optional_secrets(self, *, interface: str | UUID | None = None) -> list[Any]:
-        """See :meth:`unitysvc.services.Service.optional_secrets`."""
-        iface = await self._parent.services._pick_interface(self._raw.id, interface=interface, enrollment=None)
-        return list(iface.customer_secrets_optional or [])
-
 
 class AsyncServices:
     """Async operations on customer-visible services."""

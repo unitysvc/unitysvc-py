@@ -27,6 +27,7 @@ GROUPS_PAGE = {
             "display_name": "All Services",
             "owner_type": "platform",
             "editable": False,
+            "group_type": "open",
             "member_count": 11,
         }
     ],

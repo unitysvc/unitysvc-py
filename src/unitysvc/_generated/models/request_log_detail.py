@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -56,7 +56,6 @@ class RequestLogDetail:
         from ..models.sanitized_error_info import SanitizedErrorInfo
         from ..models.upstream_response_info import UpstreamResponseInfo
         from ..models.usage_event_info import UsageEventInfo
-        from ..models.user_request_info import UserRequestInfo
 
         log_id = self.log_id
 

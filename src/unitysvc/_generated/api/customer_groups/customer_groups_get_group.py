@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, cast
+from typing import Any
 from urllib.parse import quote
 
 import httpx
@@ -81,7 +81,8 @@ def sync_detailed(
     1. If ``name`` parses as a UUID that maps to one of the customer's
        own collections, return the collection
        (``owner_type=\"customer\"``, ``editable=True``, ``enabled`` set,
-       ``group_type=\"collection\"``; interface / routing_policy null).
+       ``group_type`` = its derived routability; interface / routing_policy
+       null).
     2. Otherwise resolve a visible platform group by ``id`` or ``name``
        and return it (``owner_type=\"platform\"``, ``editable=False``,
        with embedded interface / routing policy; ``enabled`` null).
@@ -135,7 +136,8 @@ def sync(
     1. If ``name`` parses as a UUID that maps to one of the customer's
        own collections, return the collection
        (``owner_type=\"customer\"``, ``editable=True``, ``enabled`` set,
-       ``group_type=\"collection\"``; interface / routing_policy null).
+       ``group_type`` = its derived routability; interface / routing_policy
+       null).
     2. Otherwise resolve a visible platform group by ``id`` or ``name``
        and return it (``owner_type=\"platform\"``, ``editable=False``,
        with embedded interface / routing policy; ``enabled`` null).
@@ -184,7 +186,8 @@ async def asyncio_detailed(
     1. If ``name`` parses as a UUID that maps to one of the customer's
        own collections, return the collection
        (``owner_type=\"customer\"``, ``editable=True``, ``enabled`` set,
-       ``group_type=\"collection\"``; interface / routing_policy null).
+       ``group_type`` = its derived routability; interface / routing_policy
+       null).
     2. Otherwise resolve a visible platform group by ``id`` or ``name``
        and return it (``owner_type=\"platform\"``, ``editable=False``,
        with embedded interface / routing policy; ``enabled`` null).
@@ -236,7 +239,8 @@ async def asyncio(
     1. If ``name`` parses as a UUID that maps to one of the customer's
        own collections, return the collection
        (``owner_type=\"customer\"``, ``editable=True``, ``enabled`` set,
-       ``group_type=\"collection\"``; interface / routing_policy null).
+       ``group_type`` = its derived routability; interface / routing_policy
+       null).
     2. Otherwise resolve a visible platform group by ``id`` or ``name``
        and return it (``owner_type=\"platform\"``, ``editable=False``,
        with embedded interface / routing policy; ``enabled`` null).

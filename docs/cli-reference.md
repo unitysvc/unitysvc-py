@@ -206,7 +206,7 @@ $ usvc secrets delete [OPTIONS] {name}
 
 ## `usvc aliases`
 
-Remote service-alias operations (list, show, delete).
+Remote service-alias operations (list, show, switch, delete).
 
 **Usage**:
 
@@ -222,6 +222,7 @@ $ usvc aliases [OPTIONS] COMMAND [ARGS]...
 
 * `list`: List aliases owned by the authenticated...
 * `show`: Show a single alias as JSON.
+* `switch`: Switch which target routes for an alias —...
 * `delete`: Delete an alias by id.
 
 ### `usvc aliases list`
@@ -261,6 +262,31 @@ $ usvc aliases show [OPTIONS] {alias_id}
 
 **Options**:
 
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc aliases switch`
+
+Switch which target routes for an alias — the one-call provider switch.
+
+Omit ``target`` and ``routing_key`` to cycle to the next target.
+
+**Usage**:
+
+```console
+$ usvc aliases switch [OPTIONS] {identifier} [target] [routing_key]
+```
+
+**Arguments**:
+
+* `identifier`: Alias name, full UUID, or partial UUID.  [required]
+* `target`: Target-path substring selecting a specific target.
+* `routing_key`: Routing-key-value substring selecting a target.
+
+**Options**:
+
+* `--off`: Turn the current target off instead of switching it on.
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
@@ -613,7 +639,7 @@ $ usvc files url [OPTIONS] {path}
 
 ## `usvc services`
 
-Per-service operations (show, usage, interfaces, dispatch, schedule, enroll, required-secrets, optional-secrets).
+Per-service operations (show, usage, interfaces, dispatch, schedule, enroll).
 
 **Usage**:
 
@@ -633,8 +659,6 @@ $ usvc services [OPTIONS] COMMAND [ARGS]...
 * `dispatch`: One-shot HTTP through the service&#x27;s...
 * `schedule`: Schedule a recurring dispatch.
 * `enroll`: Enroll in a service.
-* `required-secrets`: List customer secrets the picked interface...
-* `optional-secrets`: List customer secrets the picked interface...
 
 ### `usvc services show`
 
@@ -784,52 +808,6 @@ $ usvc services enroll [OPTIONS] {service_id}
 * `--parameters <str>`: Enrollment parameters as inline JSON object.
 * `-p, --parameter <str>`: Single &#x27;key=value&#x27; parameter (string-valued). Repeatable; merged with --parameters.
 * `--shared`: Create a shared team enrollment instead of a personal enrollment.
-* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
-* `--help`: Show this message and exit.
-
-### `usvc services required-secrets`
-
-List customer secrets the picked interface requires.
-
-Prints one secret name per line (pipeable). Empty output means none
-are required.
-
-**Usage**:
-
-```console
-$ usvc services required-secrets [OPTIONS] {service_id}
-```
-
-**Arguments**:
-
-* `service_id`: Service UUID.  [required]
-
-**Options**:
-
-* `--interface <str>`: Inspect a specific interface by name.
-* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
-* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
-* `--help`: Show this message and exit.
-
-### `usvc services optional-secrets`
-
-List customer secrets the picked interface can use but doesn&#x27;t require.
-
-**Usage**:
-
-```console
-$ usvc services optional-secrets [OPTIONS] {service_id}
-```
-
-**Arguments**:
-
-* `service_id`: Service UUID.  [required]
-
-**Options**:
-
-* `--interface <str>`: Inspect a specific interface by name.
-* `-f, --format <str>`: Output format: table | json.  [default: table]
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.

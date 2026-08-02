@@ -1,6 +1,5 @@
 from http import HTTPStatus
-from typing import Any, cast
-from urllib.parse import quote
+from typing import Any
 
 import httpx
 
@@ -102,7 +101,7 @@ def sync_detailed(
       — active platform groups with at least one service. Excludes
       draft/archived/private groups, empty nodes, and seller-owned
       groups. ``member_count`` comes from the cached ``num_services``.
-      Ordered with ``misc`` groups last, then by ``sort_order``, then
+      Ordered by ``sort_order``, then
       alphabetically by name — matching the marketplace browse order.
     - **Own collections** (``owner_type=\"customer\"``, ``editable=True``)
       — the customer's own ``ServiceCollection`` rows. ``member_count``
@@ -171,7 +170,7 @@ def sync(
       — active platform groups with at least one service. Excludes
       draft/archived/private groups, empty nodes, and seller-owned
       groups. ``member_count`` comes from the cached ``num_services``.
-      Ordered with ``misc`` groups last, then by ``sort_order``, then
+      Ordered by ``sort_order``, then
       alphabetically by name — matching the marketplace browse order.
     - **Own collections** (``owner_type=\"customer\"``, ``editable=True``)
       — the customer's own ``ServiceCollection`` rows. ``member_count``
@@ -235,7 +234,7 @@ async def asyncio_detailed(
       — active platform groups with at least one service. Excludes
       draft/archived/private groups, empty nodes, and seller-owned
       groups. ``member_count`` comes from the cached ``num_services``.
-      Ordered with ``misc`` groups last, then by ``sort_order``, then
+      Ordered by ``sort_order``, then
       alphabetically by name — matching the marketplace browse order.
     - **Own collections** (``owner_type=\"customer\"``, ``editable=True``)
       — the customer's own ``ServiceCollection`` rows. ``member_count``
@@ -302,7 +301,7 @@ async def asyncio(
       — active platform groups with at least one service. Excludes
       draft/archived/private groups, empty nodes, and seller-owned
       groups. ``member_count`` comes from the cached ``num_services``.
-      Ordered with ``misc`` groups last, then by ``sort_order``, then
+      Ordered by ``sort_order``, then
       alphabetically by name — matching the marketplace browse order.
     - **Own collections** (``owner_type=\"customer\"``, ``editable=True``)
       — the customer's own ``ServiceCollection`` rows. ``member_count``
