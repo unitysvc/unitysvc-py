@@ -449,23 +449,22 @@
         }
       }
     },
-    "/aliases/{alias_id}/switch": {
+    "/aliases/{identifier}/switch": {
       "post": {
         "tags": [
           "customer-aliases"
         ],
         "summary": "Switch Alias Routing",
-        "description": "Switch routing on or off for this alias.\n\nWhen ``on=True``, any sibling alias currently routing the same\n(name, routing_key) combo is atomically demoted. The response\nincludes ``demoted_alias_id`` so the caller knows what changed.\n\nWhen ``on=False``, the alias stops routing. No sibling is\nauto-promoted \u2014 the combo will have no routing alias until one\nis explicitly switched on.\n\nBilling is unaffected \u2014 all non-deactivated aliases accrue duration\nregardless of routing state.",
+        "description": "Switch routing for an alias, selected flexibly \u2014 the one-call provider\nswitch, no UUID lookup and no JSON typing.\n\n``identifier`` is a full UUID, a partial UUID (>= 8 hex chars), or an alias\n**name** (strict \u2014 a name identifies the alias object). For a name,\n``target`` (target-path substring) and ``routing_key`` (routing-key-value\nsubstring) are ``%LIKE%`` filters over the name's targets; both may be\nomitted to match them all. Over the match set: one \u2192 switch it; several with\nnone active \u2192 the first; several with one active \u2192 the next after it,\nwrapping \u2014 so a bare ``switch <name>`` cycles the provider. ``on=False``\nturns the current one off instead.\n\nWhen ``on=True`` the sibling currently routing the same (name, routing_key)\nis atomically demoted; its id comes back as ``demoted_alias_id``. When\n``on=False`` the alias stops routing and no sibling is auto-promoted.\n\nBilling is unaffected \u2014 all non-deactivated aliases accrue duration\nregardless of routing state.",
         "operationId": "customer-aliases-switch_alias_routing",
         "parameters": [
           {
-            "name": "alias_id",
+            "name": "identifier",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Alias Id"
+              "title": "Identifier"
             }
           },
           {
@@ -477,6 +476,42 @@
               "default": true,
               "title": "On"
             }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substring %LIKE% filter on the target path (e.g. 'anth' for '.../anthropic-llm/...'). Omit target and routing_key to match every target of the name and cycle to the next.",
+              "title": "Target"
+            },
+            "description": "Substring %LIKE% filter on the target path (e.g. 'anth' for '.../anthropic-llm/...'). Omit target and routing_key to match every target of the name and cycle to the next."
+          },
+          {
+            "name": "routing_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substring %LIKE% filter on any routing-key value (e.g. 'opus').",
+              "title": "Routing Key"
+            },
+            "description": "Substring %LIKE% filter on any routing-key value (e.g. 'opus')."
           },
           {
             "name": "authorization",
@@ -2655,7 +2690,7 @@
           "customer-groups"
         ],
         "summary": "List Groups",
-        "description": "List service groups visible to the customer as a ``{data, count}``\nenvelope.\n\nMerges two kinds of rows into one ``CustomerGroupView`` shape under\n``data`` (``count`` is ``len(data)``):\n\n- **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)\n  \u2014 active platform groups with at least one service. Excludes\n  draft/archived/private groups, empty nodes, and seller-owned\n  groups. ``member_count`` comes from the cached ``num_services``.\n  Ordered with ``misc`` groups last, then by ``sort_order``, then\n  alphabetically by name \u2014 matching the marketplace browse order.\n- **Own collections** (``owner_type=\"customer\"``, ``editable=True``)\n  \u2014 the customer's own ``ServiceCollection`` rows. ``member_count``\n  is counted live.\n\nThe ``owner`` filter narrows this: ``system`` returns platform\ngroups only, ``own`` returns collections only, ``all`` (default)\nreturns both (platform first, then collections).\n\nPlatform groups are readable without an API key (unitysvc#1610).\nCollections are per-customer, so an anonymous caller is narrowed to\nthe platform set and ``owner='own'`` is rejected outright rather\nthan silently returning an empty list \u2014 an empty list would read as\n\"you have no collections\" instead of \"you are not authenticated\".",
+        "description": "List service groups visible to the customer as a ``{data, count}``\nenvelope.\n\nMerges two kinds of rows into one ``CustomerGroupView`` shape under\n``data`` (``count`` is ``len(data)``):\n\n- **Platform groups** (``owner_type=\"platform\"``, ``editable=False``)\n  \u2014 active platform groups with at least one service. Excludes\n  draft/archived/private groups, empty nodes, and seller-owned\n  groups. ``member_count`` comes from the cached ``num_services``.\n  Ordered by ``sort_order``, then\n  alphabetically by name \u2014 matching the marketplace browse order.\n- **Own collections** (``owner_type=\"customer\"``, ``editable=True``)\n  \u2014 the customer's own ``ServiceCollection`` rows. ``member_count``\n  is counted live.\n\nThe ``owner`` filter narrows this: ``system`` returns platform\ngroups only, ``own`` returns collections only, ``all`` (default)\nreturns both (platform first, then collections).\n\nPlatform groups are readable without an API key (unitysvc#1610).\nCollections are per-customer, so an anonymous caller is narrowed to\nthe platform set and ``owner='own'`` is rejected outright rather\nthan silently returning an empty list \u2014 an empty list would read as\n\"you have no collections\" instead of \"you are not authenticated\".",
         "operationId": "customer-groups-list_groups",
         "parameters": [
           {
@@ -3003,7 +3038,7 @@
           "customer-groups"
         ],
         "summary": "Get Group",
-        "description": "Get a single group from the unified surface, by name or UUID.\n\nBoth kinds resolve to one unified ``CustomerGroupDetail`` shape:\n\n1. If ``name`` parses as a UUID that maps to one of the customer's\n   own collections, return the collection\n   (``owner_type=\"customer\"``, ``editable=True``, ``enabled`` set,\n   ``group_type=\"collection\"``; interface / routing_policy null).\n2. Otherwise resolve a visible platform group by ``id`` or ``name``\n   and return it (``owner_type=\"platform\"``, ``editable=False``,\n   with embedded interface / routing policy; ``enabled`` null).\n   Both ``id`` and ``name`` are returned in the shape, so platform\n   groups are addressable by either; ``name`` is the stable handle\n   that survives admin recreations.\n\nCollections are UUID-keyed (their slug is reserved for the future\n``/g/<name>`` dispatch path). Returns 404 for anything outside the\ncustomer-visible set \u2014 existence is not leaked.",
+        "description": "Get a single group from the unified surface, by name or UUID.\n\nBoth kinds resolve to one unified ``CustomerGroupDetail`` shape:\n\n1. If ``name`` parses as a UUID that maps to one of the customer's\n   own collections, return the collection\n   (``owner_type=\"customer\"``, ``editable=True``, ``enabled`` set,\n   ``group_type`` = its derived routability; interface / routing_policy\n   null).\n2. Otherwise resolve a visible platform group by ``id`` or ``name``\n   and return it (``owner_type=\"platform\"``, ``editable=False``,\n   with embedded interface / routing policy; ``enabled`` null).\n   Both ``id`` and ``name`` are returned in the shape, so platform\n   groups are addressable by either; ``name`` is the stable handle\n   that survives admin recreations.\n\nCollections are UUID-keyed (their slug is reserved for the future\n``/g/<name>`` dispatch path). Returns 404 for anything outside the\ncustomer-visible set \u2014 existence is not leaked.",
         "operationId": "customer-groups-get_group",
         "parameters": [
           {
@@ -5620,48 +5655,6 @@
               }
             ],
             "title": "Enrollment Id"
-          },
-          "customer_secrets_needed": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Customer Secrets Needed"
-          },
-          "customer_secrets_optional": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Customer Secrets Optional"
-          },
-          "customer_secrets_info": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Customer Secrets Info"
           }
         },
         "type": "object",
@@ -5751,6 +5744,13 @@
             },
             "type": "array",
             "title": "Channels"
+          },
+          "routing_endpoints": {
+            "items": {
+              "$ref": "#/components/schemas/RoutingEndpointPlan"
+            },
+            "type": "array",
+            "title": "Routing Endpoints"
           }
         },
         "type": "object",
@@ -6072,6 +6072,18 @@
             "type": "boolean",
             "title": "Enabled"
           },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -6360,6 +6372,18 @@
             "type": "boolean",
             "title": "Enabled"
           },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -6417,7 +6441,7 @@
           "on_failure": {
             "type": "string",
             "title": "On Failure",
-            "default": "continue"
+            "default": "relay"
           },
           "timeout_ms": {
             "anyOf": [
@@ -6992,6 +7016,18 @@
             "title": "Member Count",
             "default": 0
           },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
           "group_type": {
             "anyOf": [
               {
@@ -7199,6 +7235,21 @@
             "type": "integer",
             "title": "Member Count",
             "default": 0
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "group_type": {
+            "$ref": "#/components/schemas/GroupTypeEnum"
           }
         },
         "type": "object",
@@ -7206,7 +7257,8 @@
           "id",
           "name",
           "owner_type",
-          "editable"
+          "editable",
+          "group_type"
         ],
         "title": "CustomerGroupView",
         "description": "Unified shape for the merged /customer/groups list \u2014 either a read-only\nplatform ServiceGroup or the customer's own editable ServiceCollection."
@@ -7290,12 +7342,12 @@
         "enum": [
           "category",
           "collection",
-          "routable",
-          "misc",
+          "open",
+          "keyed",
           "capability_pool"
         ],
         "title": "GroupTypeEnum",
-        "description": "Type of service group \u2014 derived from configuration, not set directly.\n\nDerivation rules:\n- No rules, no access interfaces \u2192 category (organizes descendants)\n- Rules, no access interfaces \u2192 collection (curated set for browsing)\n- Rules + access interfaces \u2192 group (has own API endpoint + routing)\n- System-generated catch-all \u2192 misc\n- Set explicitly (never derived, like misc) \u2192 capability_pool\n\n``capability_pool`` (#1244) backs the ``/p/<name>`` namespace: membership\nis claim-driven \u2014 services instantiated from a ServiceTemplate whose\n``pool_name`` matches the group name \u2014 computed by a dedicated refresh,\nnot by ``membership_rules``. Distinct from ``routable`` (``/g/``), whose\nmembership is curated."
+        "description": "Type of service group. Derived from members, not authored (unitysvc#1686).\n\nTwo of the five types are routable (a ``/g/<name>`` endpoint); the rest are\nnot:\n\n- ``open``  \u2014 routable, and members share a common request format, so a\n  request with **no** routing key fans safely across them. A key may still\n  be passed to select one. (Also the single-member case.)\n- ``keyed`` \u2014 routable, but members accept different formats, so a keyless\n  request is ambiguous: a routing key is **required**, and every key\n  resolves to a format-homogeneous set.\n- ``collection`` \u2014 not a routing endpoint. A browse-only set, or a would-be\n  routable group demoted because some routing key spans incompatible\n  formats (a request to that key couldn't be served reliably).\n- ``category`` \u2014 a parent with no members of its own; its membership is the\n  union of its descendants, for browsing only.\n- ``capability_pool`` (#1244) \u2014 the ``/p/<name>`` namespace; membership is\n  claim-driven (services instantiated from a ServiceTemplate whose\n  ``pool_name`` matches), set by a dedicated refresh.\n\n``open`` / ``keyed`` / ``collection`` are derived from the members at\nmembership refresh; ``category`` and ``capability_pool`` are set explicitly\nand never re-derived. (The former ``routable`` value was split into\n``open`` / ``keyed``, and the ``misc`` catch-all removed \u2014 unitysvc#1686.)"
       },
       "HTTPValidationError": {
         "properties": {
@@ -8214,6 +8266,41 @@
         "title": "ResolveResponse",
         "description": "Dry-run result: candidate services, strategy, optional pre-pick."
       },
+      "RoutingEndpointPlan": {
+        "properties": {
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "routing_key": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routing Key"
+          },
+          "routing_key_required": {
+            "type": "boolean",
+            "title": "Routing Key Required",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "RoutingEndpointPlan",
+        "description": "A platform routing endpoint this service is *also* reachable through (#1692).\n\nA service in a routable platform group is callable at ``/g/<name>``, and one\nin a capability pool at ``/p/<name>`` \u2014 facts the service page could not\notherwise learn. The contract is deliberately narrow: **the groups this\nservice is in**, expressed as the URL that addresses them. It is not a\n\"callable endpoints\" list, and it makes no claim about the *kind* of group \u2014\n``base_url`` is the only signal, which is all a caller acts on.\n\nEvery field here is frozen into the public OpenAPI schema, so the plan\ncarries the three a consumer cannot derive locally and nothing else. The\ngroup's internal taxonomy (``group_type``, namespace) and its presentation\n(``display_name``) stay server-side. Entries are platform-owned and\nidentical for every caller, which is what keeps the plan ``public``-cacheable;\ncustomer-owned routing objects get a separate, caller-scoped endpoint (#1692\nPart 2)."
+      },
       "SanitizedErrorInfo": {
         "properties": {
           "category": {
@@ -8592,6 +8679,18 @@
             "type": "boolean",
             "title": "Is Routing",
             "default": true
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
           },
           "created_at": {
             "type": "string",
@@ -9330,7 +9429,7 @@
           "alias"
         ],
         "title": "SwitchRoutingResponse",
-        "description": "Response from ``POST /aliases/{id}/switch``."
+        "description": "Response from ``POST /aliases/{identifier}/switch``."
       },
       "UpstreamResponseInfo": {
         "properties": {

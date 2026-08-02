@@ -17,13 +17,14 @@ import pytest
 from unitysvc import AsyncClient, Client
 
 
-def _group_view(name: str, *, owner_type: str = "platform", editable: bool = False) -> dict:
+def _group_view(name: str, *, owner_type: str = "platform", editable: bool = False, group_type: str = "open") -> dict:
     return {
         "id": str(uuid.uuid4()),
         "name": name,
         "display_name": name.title(),
         "owner_type": owner_type,
         "editable": editable,
+        "group_type": group_type,
         "member_count": 0,
     }
 

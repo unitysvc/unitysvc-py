@@ -90,8 +90,6 @@ def test_services_help_lists_subcommands() -> None:
         "dispatch",
         "schedule",
         "enroll",
-        "required-secrets",
-        "optional-secrets",
     ):
         assert sub in plain
 

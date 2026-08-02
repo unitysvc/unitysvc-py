@@ -21,7 +21,7 @@ from ._helpers import (
 console = Console()
 
 app = typer.Typer(
-    help="Remote service-alias operations (list, show, delete).",
+    help="Remote service-alias operations (list, show, switch, delete).",
 )
 
 
@@ -85,6 +85,35 @@ def show_alias(
 
     alias = run_async(_impl(), error_prefix="Failed to show alias")
     console.print(json.dumps(alias, indent=2, default=str))
+
+
+@app.command("switch")
+def switch_alias(
+    identifier: str = typer.Argument(..., help="Alias name, full UUID, or partial UUID."),
+    target: str | None = typer.Argument(None, help="Target-path substring selecting a specific target."),
+    routing_key: str | None = typer.Argument(None, help="Routing-key-value substring selecting a target."),
+    off: bool = typer.Option(False, "--off", help="Turn the current target off instead of switching it on."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Switch which target routes for an alias — the one-call provider switch.
+
+    Omit ``target`` and ``routing_key`` to cycle to the next target.
+    """
+
+    async def _impl() -> dict[str, Any]:
+        async with async_client(api_key, base_url) as client:
+            return model_to_dict(
+                await client.aliases.switch(
+                    identifier,
+                    target=target,
+                    routing_key=routing_key,
+                    on=not off,
+                )
+            )
+
+    result = run_async(_impl(), error_prefix="Failed to switch alias routing")
+    console.print(json.dumps(result, indent=2, default=str))
 
 
 @app.command("delete")

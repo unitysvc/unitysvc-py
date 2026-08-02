@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -12,6 +12,7 @@ from dateutil.parser import isoparse
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.chain_public_details_type_0 import ChainPublicDetailsType0
     from ..models.chain_step_public import ChainStepPublic
 
 
@@ -28,12 +29,13 @@ class ChainPublic:
     created_at: datetime.datetime
     owner_id: None | Unset | UUID = UNSET
     description: None | str | Unset = UNSET
+    details: ChainPublicDetailsType0 | None | Unset = UNSET
     updated_at: datetime.datetime | None | Unset = UNSET
     steps: list[ChainStepPublic] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.chain_step_public import ChainStepPublic
+        from ..models.chain_public_details_type_0 import ChainPublicDetailsType0
 
         id = str(self.id)
 
@@ -60,6 +62,14 @@ class ChainPublic:
             description = UNSET
         else:
             description = self.description
+
+        details: dict[str, Any] | None | Unset
+        if isinstance(self.details, Unset):
+            details = UNSET
+        elif isinstance(self.details, ChainPublicDetailsType0):
+            details = self.details.to_dict()
+        else:
+            details = self.details
 
         updated_at: None | str | Unset
         if isinstance(self.updated_at, Unset):
@@ -92,6 +102,8 @@ class ChainPublic:
             field_dict["owner_id"] = owner_id
         if description is not UNSET:
             field_dict["description"] = description
+        if details is not UNSET:
+            field_dict["details"] = details
         if updated_at is not UNSET:
             field_dict["updated_at"] = updated_at
         if steps is not UNSET:
@@ -101,6 +113,7 @@ class ChainPublic:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.chain_public_details_type_0 import ChainPublicDetailsType0
         from ..models.chain_step_public import ChainStepPublic
 
         d = dict(src_dict)
@@ -142,6 +155,23 @@ class ChainPublic:
 
         description = _parse_description(d.pop("description", UNSET))
 
+        def _parse_details(data: object) -> ChainPublicDetailsType0 | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                details_type_0 = ChainPublicDetailsType0.from_dict(data)
+
+                return details_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(ChainPublicDetailsType0 | None | Unset, data)
+
+        details = _parse_details(d.pop("details", UNSET))
+
         def _parse_updated_at(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
@@ -177,6 +207,7 @@ class ChainPublic:
             created_at=created_at,
             owner_id=owner_id,
             description=description,
+            details=details,
             updated_at=updated_at,
             steps=steps,
         )

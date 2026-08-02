@@ -143,11 +143,13 @@ and so on).
 Enrolling creates a customer-bound access interface that the
 gateway uses to substitute your key at dispatch time.
 
-Before enrolling, check what the service needs:
+Before enrolling, check what the service needs via its access plan —
+each channel lists the secrets it requires:
 
 ```python
-print("required:", svc.required_secrets())   # e.g. ["MY_PROVIDER_API_KEY"]
-print("optional:", svc.optional_secrets())   # list of {"name", "default"}
+plan = svc.access_plan()
+for ch in plan.channels:
+    print(ch.name, "required:", ch.required_secrets)   # e.g. ["MY_PROVIDER_API_KEY"]
 ```
 
 Set the required secrets on your account, then enroll:

@@ -315,24 +315,6 @@ Secret-shaped parameter keys (`api_key`, `password`, `token`, ...)
 are returned masked (`***masked***`) on reads; only the server has
 the raw values.
 
-### Inspecting required secrets
-
-A BYOK/BYOE service won't dispatch until the customer's account has
-the secrets the picked interface references (e.g. `OPENAI_API_KEY`).
-`Service` exposes those names directly:
-
-```python
-svc.required_secrets()                          # list[str]
-svc.optional_secrets()                          # list[{"name", "default"}]
-svc.required_secrets(interface="raw")           # specific interface
-```
-
-Both default to the same interface `dispatch()` would auto-pick, so
-in the common case ``svc.required_secrets()`` answers "what do I
-need to set up to use this service?". Set the secrets via
-``client.secrets.set(name=..., value=...)`` before dispatch /
-enrollment.
-
 ## `client.resolve(...)` — dry-run routing
 
 Answers "what would the gateway do for this path + routing key?"

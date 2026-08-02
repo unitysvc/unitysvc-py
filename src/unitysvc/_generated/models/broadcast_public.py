@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -13,6 +13,7 @@ from ..models.broadcast_public_mode import BroadcastPublicMode, check_broadcast_
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.broadcast_public_details_type_0 import BroadcastPublicDetailsType0
     from ..models.broadcast_target_public import BroadcastTargetPublic
 
 
@@ -30,12 +31,13 @@ class BroadcastPublic:
     created_at: datetime.datetime
     owner_id: None | Unset | UUID = UNSET
     description: None | str | Unset = UNSET
+    details: BroadcastPublicDetailsType0 | None | Unset = UNSET
     updated_at: datetime.datetime | None | Unset = UNSET
     targets: list[BroadcastTargetPublic] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.broadcast_target_public import BroadcastTargetPublic
+        from ..models.broadcast_public_details_type_0 import BroadcastPublicDetailsType0
 
         id = str(self.id)
 
@@ -64,6 +66,14 @@ class BroadcastPublic:
             description = UNSET
         else:
             description = self.description
+
+        details: dict[str, Any] | None | Unset
+        if isinstance(self.details, Unset):
+            details = UNSET
+        elif isinstance(self.details, BroadcastPublicDetailsType0):
+            details = self.details.to_dict()
+        else:
+            details = self.details
 
         updated_at: None | str | Unset
         if isinstance(self.updated_at, Unset):
@@ -97,6 +107,8 @@ class BroadcastPublic:
             field_dict["owner_id"] = owner_id
         if description is not UNSET:
             field_dict["description"] = description
+        if details is not UNSET:
+            field_dict["details"] = details
         if updated_at is not UNSET:
             field_dict["updated_at"] = updated_at
         if targets is not UNSET:
@@ -106,6 +118,7 @@ class BroadcastPublic:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.broadcast_public_details_type_0 import BroadcastPublicDetailsType0
         from ..models.broadcast_target_public import BroadcastTargetPublic
 
         d = dict(src_dict)
@@ -149,6 +162,23 @@ class BroadcastPublic:
 
         description = _parse_description(d.pop("description", UNSET))
 
+        def _parse_details(data: object) -> BroadcastPublicDetailsType0 | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                details_type_0 = BroadcastPublicDetailsType0.from_dict(data)
+
+                return details_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(BroadcastPublicDetailsType0 | None | Unset, data)
+
+        details = _parse_details(d.pop("details", UNSET))
+
         def _parse_updated_at(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
@@ -185,6 +215,7 @@ class BroadcastPublic:
             created_at=created_at,
             owner_id=owner_id,
             description=description,
+            details=details,
             updated_at=updated_at,
             targets=targets,
         )
