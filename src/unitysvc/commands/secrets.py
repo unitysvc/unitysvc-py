@@ -48,6 +48,36 @@ _VALID_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 # taken verbatim (opaque secret material: tokens, URLs, ids).
 _EXPANSION_RE = re.compile(r"^\$\{([A-Za-z_][A-Za-z0-9_]*)(?::?-(.*))?\}$")
 
+# Trailing-comment directive that marks an entry as a viewable variable. Matches
+# the ``--variable`` flag on ``secrets set``: ``NAME=value  # variable``. The
+# comment body must be exactly ``variable`` (case-insensitive) — any other
+# trailing comment is stripped as an ordinary shell comment but leaves the entry
+# a secret. Descriptions come from the ``#`` lines ABOVE an entry, so this
+# trailing channel never collides with them.
+_VARIABLE_MARKER = "variable"
+
+
+def _split_trailing_comment(rhs: str) -> tuple[str, str | None]:
+    """Split a manifest RHS into ``(code, trailing_comment)`` the way a shell would.
+
+    A ``#`` begins a comment only at the start of a word — i.e. preceded by
+    whitespace and OUTSIDE quotes. So ``a#b`` keeps the ``#`` (part of the
+    value), while ``"a b" # note`` splits at the space-hash after the closing
+    quote. ``code`` is the value text (still possibly quoted / an ``${…}``
+    expansion — resolved later by :func:`_resolve_rhs`); the comment is returned
+    without its leading ``#`` (or ``None`` when there is none).
+    """
+    quote: str | None = None
+    for i, c in enumerate(rhs):
+        if quote is not None:
+            if c == quote:
+                quote = None
+        elif c in ("'", '"'):
+            quote = c
+        elif c == "#" and i > 0 and rhs[i - 1].isspace():
+            return rhs[:i].rstrip(), rhs[i + 1 :].strip()
+    return rhs, None
+
 
 def _resolve_rhs(rhs: str, environ: Mapping[str, str]) -> str:
     """Resolve one assignment's right-hand side.
@@ -71,16 +101,23 @@ def _resolve_rhs(rhs: str, environ: Mapping[str, str]) -> str:
     return default if default is not None else ""
 
 
-def _parse_secrets_text(text: str, environ: Mapping[str, str] | None = None) -> list[tuple[str, str, str | None]]:
-    """Parse a ``.env``-style manifest into ``(name, value, description)`` triples.
+def _parse_secrets_text(
+    text: str, environ: Mapping[str, str] | None = None
+) -> list[tuple[str, str, str | None, bool | None]]:
+    """Parse a ``.env``-style manifest into ``(name, value, description, sensitive)`` tuples.
 
     ``NAME=value`` / ``export NAME=value`` lines; the contiguous ``#`` comment
     lines directly above a definition become its **description** (a blank line
     separates blocks, so a file header attaches to no secret); the value is
     resolved by :func:`_resolve_rhs`. Last assignment wins.
+
+    A **trailing** ``# variable`` comment on the assignment line marks that entry
+    as a viewable variable (``sensitive`` → ``False``); every other entry stays a
+    secret (``sensitive`` → ``None``, i.e. the server default). Any other trailing
+    comment is stripped as an ordinary shell comment. See :func:`_split_trailing_comment`.
     """
     environ = os.environ if environ is None else environ
-    values: dict[str, tuple[str, str | None]] = {}
+    values: dict[str, tuple[str, str | None, bool | None]] = {}
     order: list[str] = []
     comments: list[str] = []
     for raw in text.splitlines():
@@ -98,12 +135,14 @@ def _parse_secrets_text(text: str, environ: Mapping[str, str] | None = None) -> 
         if not sep or not _VALID_NAME_RE.match(name):
             comments = []
             continue
+        code, comment = _split_trailing_comment(rhs)
+        sensitive = False if (comment or "").lower() == _VARIABLE_MARKER else None
         description = "\n".join(comments).strip() or None
         if name not in values:
             order.append(name)
-        values[name] = (_resolve_rhs(rhs, environ), description)
+        values[name] = (_resolve_rhs(code, environ), description, sensitive)
         comments = []
-    return [(n, values[n][0], values[n][1]) for n in order]
+    return [(n, values[n][0], values[n][1], values[n][2]) for n in order]
 
 
 def _read_secrets_source(file: str | None) -> str:
@@ -138,8 +177,11 @@ def _print_upload_summary(rows: list[tuple[str, str]], output_format: str, *, dr
         table.add_row(name, status)
     console.print(table)
     n_desc = sum(1 for _, s in rows if "(+desc)" in s)
+    n_var = sum(1 for _, s in rows if "(variable)" in s)
     verb = "would upload" if dry_run else "uploaded"
     summary = f"[green]✓[/green] {verb} {len(rows)} secret(s)"
+    if n_var:
+        summary += f", {n_var} as variable(s)"
     if n_desc:
         summary += f", {n_desc} with a description"
     console.print(summary)
@@ -295,6 +337,14 @@ def upload_secrets(
     - **Description-aware**: the contiguous ``#`` comment lines directly above a
       definition become that secret's ``description``. A blank line ends a block,
       so a file header attaches to no secret.
+    - **Variable-aware**: a *trailing* ``# variable`` comment on an assignment
+      marks that one entry as a viewable variable (its value is returned by
+      ``list``/``get``); every other entry is a secret. This mirrors the
+      ``--variable`` flag on ``secrets set`` and is honored only on create::
+
+          # Notification email shown back to you
+          NOTIFY_EMAIL=me@example.com   # variable
+          OPENAI_API_KEY=${OPENAI_API_KEY}   # (no marker) → secret
 
     Every declared entry is set (source semantics; empties included, so the row
     that carries a description is created). Last assignment wins. Input is a file
@@ -305,24 +355,28 @@ def upload_secrets(
         console.print("[yellow]No secrets found in input.[/yellow]")
         raise typer.Exit(code=0)
 
-    def _status(description: str | None, *, done: bool) -> str:
-        return ("set" if done else "would set") + (" (+desc)" if description else "")
+    def _status(description: str | None, sensitive: bool | None, *, done: bool) -> str:
+        return (
+            ("set" if done else "would set")
+            + (" (variable)" if sensitive is False else "")
+            + (" (+desc)" if description else "")
+        )
 
     if dry_run:
-        rows = [(n, _status(d, done=False)) for n, _v, d in entries]
+        rows = [(n, _status(d, s, done=False)) for n, _v, d, s in entries]
         _print_upload_summary(rows, output_format, dry_run=True)
         return
 
-    async def _impl() -> list[tuple[str, str | None]]:
-        done: list[tuple[str, str | None]] = []
+    async def _impl() -> list[tuple[str, str | None, bool | None]]:
+        done: list[tuple[str, str | None, bool | None]] = []
         async with async_client(api_key, base_url) as client:
-            for name, value, description in entries:
-                await client.secrets.set(name, value, description=description)
-                done.append((name, description))
+            for name, value, description, sensitive in entries:
+                await client.secrets.set(name, value, sensitive=sensitive, description=description)
+                done.append((name, description, sensitive))
         return done
 
     done = run_async(_impl(), error_prefix="Failed to upload secrets")
-    rows = [(n, _status(d, done=True)) for n, d in done]
+    rows = [(n, _status(d, s, done=True)) for n, d, s in done]
     _print_upload_summary(rows, output_format, dry_run=False)
 
 
