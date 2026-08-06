@@ -160,6 +160,14 @@ Reads a shell-sourceable ``.env.example`` and sets each via
 - **Description-aware**: the contiguous ``#`` comment lines directly above a
   definition become that secret&#x27;s ``description``. A blank line ends a block,
   so a file header attaches to no secret.
+- **Variable-aware**: a *trailing* ``# variable`` comment on an assignment
+  marks that one entry as a viewable variable (its value is returned by
+  ``list``/``get``); every other entry is a secret. This mirrors the
+  ``--variable`` flag on ``secrets set`` and is honored only on create::
+
+      # Notification email shown back to you
+      NOTIFY_EMAIL=me@example.com   # variable
+      OPENAI_API_KEY=${OPENAI_API_KEY}   # (no marker) → secret
 
 Every declared entry is set (source semantics; empties included, so the row
 that carries a description is created). Last assignment wins. Input is a file
