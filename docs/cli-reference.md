@@ -153,9 +153,12 @@ Bulk-set secrets from an ``.env``-style manifest (idempotent).
 Reads a shell-sourceable ``.env.example`` and sets each via
 ``PUT /v1/customer/secrets/{name}``, with two conventions:
 
-- **Environment-aware**: ``NAME=${NAME:-default}`` resolves ``NAME`` from the
-  process environment when set, else the default — so the file reuses values
-  already exported in your shell, falling back to test defaults. Opaque
+- **Environment-aware**: ``NAME=${NAME:-default}`` (or the quoted
+  ``NAME=&quot;${NAME:-default}&quot;``) resolves ``NAME`` from the process environment
+  when set, else the default — so the file reuses values already exported in
+  your shell, falling back to test defaults. A defaultless ``NAME=${NAME}`` is
+  **required** — an unset/empty ``NAME`` aborts the upload rather than
+  uploading an empty value; write ``${NAME:-}`` to opt into empty. Opaque
   literals (``NAME=sk-abc``) are verbatim.
 - **Description-aware**: the contiguous ``#`` comment lines directly above a
   definition become that secret&#x27;s ``description``. A blank line ends a block,
