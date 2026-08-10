@@ -14,7 +14,12 @@ from types import SimpleNamespace
 import pytest
 from typer.testing import CliRunner
 
-from unitysvc.commands.secrets import _parse_secrets_text, app
+from unitysvc.commands.secrets import (
+    ManifestResolutionError,
+    _parse_secrets_text,
+    _resolve_rhs,
+    app,
+)
 
 runner = CliRunner()
 
@@ -72,6 +77,44 @@ def test_parse_hash_in_value_preserved() -> None:
     assert _parse_secrets_text("TOK=a#b\n", environ={}) == [("TOK", "a#b", None, None)]
 
 
+def test_double_quoted_expansion_is_resolved_not_literal() -> None:
+    # Regression: a fully double-quoted ``${...}`` used to short-circuit and
+    # upload the literal string. The shell expands inside double quotes, so we do
+    # too — this is the exact form the committed manifests use.
+    assert _resolve_rhs('"${ENDPOINT:-https://d.example}"', {}) == "https://d.example"
+    assert _resolve_rhs('"${ENDPOINT:-https://d.example}"', {"ENDPOINT": "https://real"}) == "https://real"
+    assert _resolve_rhs('"${KEY:-}"', {}) == ""
+
+
+def test_single_quoted_expansion_stays_literal() -> None:
+    # Single quotes are literal in the shell — no expansion.
+    assert _resolve_rhs("'${KEY:-x}'", {"KEY": "real"}) == "${KEY:-x}"
+
+
+def test_required_bare_expansion_errors_when_unset_or_empty() -> None:
+    # ``${NAME}`` (no default) is required: unset or empty aborts, quoted or not.
+    with pytest.raises(ManifestResolutionError) as exc:
+        _resolve_rhs("${SECRET_KEY}", {})
+    assert exc.value.name == "SECRET_KEY"
+    with pytest.raises(ManifestResolutionError):
+        _resolve_rhs('"${SECRET_KEY}"', {})  # quoted, still required
+    with pytest.raises(ManifestResolutionError):
+        _resolve_rhs("${SECRET_KEY}", {"SECRET_KEY": ""})  # set but empty
+
+
+def test_required_bare_expansion_uses_env_when_set() -> None:
+    assert _resolve_rhs("${SECRET_KEY}", {"SECRET_KEY": "s3cr3t"}) == "s3cr3t"
+    assert _resolve_rhs('"${SECRET_KEY}"', {"SECRET_KEY": "s3cr3t"}) == "s3cr3t"
+
+
+def test_parse_two_line_optional_then_required_unset() -> None:
+    # Optional line followed by a required one for the same name: last assignment
+    # wins, and the required (defaultless) form aborts.
+    with pytest.raises(ManifestResolutionError) as exc:
+        _parse_secrets_text('export K="${K:-}"\nexport K="${K}"\n', environ={})
+    assert exc.value.name == "K"
+
+
 # --- dry-run --------------------------------------------------------------
 def test_dry_run_flags_descriptions(tmp_path: Path) -> None:
     f = tmp_path / "secrets.env.example"
@@ -88,6 +131,18 @@ def test_empty_input_is_a_clean_noop() -> None:
     result = runner.invoke(app, ["upload", "-", "--dry-run"], input="# nothing\n")
     assert result.exit_code == 0
     assert "No secrets found" in result.output
+
+
+def test_required_unset_aborts_with_clean_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # A required ``${NAME}`` whose var is unset fails the upload (exit 1) with a
+    # targeted message, rather than a traceback or a silent empty upload.
+    monkeypatch.delenv("S3_RELAY_SECRET_KEY", raising=False)
+    f = tmp_path / "secrets.env.example"
+    f.write_text('export S3_RELAY_SECRET_KEY="${S3_RELAY_SECRET_KEY}"\n')
+    result = runner.invoke(app, ["upload", str(f), "--dry-run"])
+    assert result.exit_code == 1
+    assert "S3_RELAY_SECRET_KEY" in result.output
+    assert "required" in result.output.lower()
 
 
 # --- upload path (mock) ---------------------------------------------------
