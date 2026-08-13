@@ -25,6 +25,7 @@ import shutil
 import subprocess
 import sys
 from importlib.metadata import EntryPoint, entry_points
+from typing import Any
 
 import click
 
@@ -96,7 +97,7 @@ def path_executable(name: str) -> str | None:
     return None
 
 
-def _as_command(loaded: object, name: str) -> click.Command:
+def _as_command(loaded: object, name: str) -> Any:
     """Adapt a loaded entry-point object to a Click command.
 
     Accepts a Typer app (the common case) or anything already Click-shaped.
@@ -124,11 +125,11 @@ class LazyPluginCommand(click.Command):
     def __init__(self, name: str, entry_point: EntryPoint) -> None:
         super().__init__(name=name)
         self._entry_point = entry_point
-        self._target: click.Command | None = None
+        self._target: Any = None
         origin = getattr(getattr(entry_point, "dist", None), "name", None) or entry_point.value.split(":")[0]
         self.short_help = f"Provided by {origin}."
 
-    def target(self) -> click.Command:
+    def target(self) -> Any:
         if self._target is None:
             try:
                 self._target = _as_command(self._entry_point.load(), self.name or "")
@@ -155,7 +156,7 @@ class LazyPluginCommand(click.Command):
         return self.target().make_context(info_name, args, parent=parent, **extra)
 
 
-def build_path_command(name: str, executable: str) -> click.Command:
+def build_path_command(name: str, executable: str) -> Any:
     """Pass-through command handing the remaining argv to ``executable``."""
 
     @click.command(
@@ -185,7 +186,7 @@ def build_path_command(name: str, executable: str) -> click.Command:
 class PluginGroup(TyperGroup):
     """Typer group that mounts discovered subcommands alongside the built-ins."""
 
-    def get_command(self, ctx: click.Context, name: str) -> click.Command | None:
+    def get_command(self, ctx: Any, name: str) -> Any:
         # Built-ins win: a stray usvc-services binary must never shadow the real
         # subcommand.
         command = super().get_command(ctx, name)
@@ -201,10 +202,14 @@ class PluginGroup(TyperGroup):
             return build_path_command(name, executable)
         return None
 
-    def list_commands(self, ctx: click.Context) -> list[str]:
-        return sorted(set(super().list_commands(ctx)) | set(entry_point_plugins()) | path_plugins())
+    def list_commands(self, ctx: Any) -> list[str]:
+        # Built-ins keep their declared order (the help output is curated);
+        # discovered subcommands are appended, sorted among themselves.
+        builtins = list(super().list_commands(ctx))
+        discovered = (set(entry_point_plugins()) | path_plugins()) - set(builtins)
+        return [*builtins, *sorted(discovered)]
 
-    def resolve_command(self, ctx: click.Context, args: list[str]):
+    def resolve_command(self, ctx: Any, args: list[str]) -> Any:
         try:
             return super().resolve_command(ctx, args)
         except _USAGE_ERRORS:
