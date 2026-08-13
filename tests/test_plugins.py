@@ -201,3 +201,29 @@ class TestFailureModes:
         result = runner.invoke(app, ["seller"])
         assert result.exit_code == 0
         assert "plain click" in result.stdout
+
+
+class TestDiscoveryOptOut:
+    """``USVC_NO_PLUGINS`` makes generated output reproducible.
+
+    Without it, whichever ``usvc-*`` executables happen to be installed on the
+    author's machine leak into ``docs/cli-reference.md`` — a locally generated
+    reference picked up ``usvc data`` from a dev dependency and failed CI, which
+    has no such executable.
+    """
+
+    def test_env_var_suppresses_entry_points_and_path(self, monkeypatch):
+        ep = EntryPoint(name="seller", value="fake:app", group=_plugins.GROUP)
+        monkeypatch.setattr(_plugins, "entry_points", lambda group: [ep])
+        monkeypatch.setattr(_plugins.shutil, "which", lambda c: "/usr/bin/" + c)
+        monkeypatch.setenv(_plugins.DISABLE_ENV, "1")
+
+        assert _plugins.entry_point_plugins() == {}
+        assert _plugins.path_plugins() == set()
+        assert _plugins.path_executable("seller") is None
+
+    def test_help_lists_only_builtins_when_disabled(self, monkeypatch):
+        ep = EntryPoint(name="seller", value="fake:app", group=_plugins.GROUP)
+        monkeypatch.setattr(_plugins, "entry_points", lambda group: [ep])
+        monkeypatch.setenv(_plugins.DISABLE_ENV, "1")
+        assert "seller" not in runner.invoke(app, ["--help"]).stdout

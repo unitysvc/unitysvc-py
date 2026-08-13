@@ -33,7 +33,6 @@ $ usvc [OPTIONS] COMMAND [ARGS]...
 * `files`: Account files (ls, get, put, url).
 * `services`: Per-service operations (show, usage,...
 * `enrollments`: Enrollment management (list, show, cancel).
-* `data`: Run usvc_data (external command).
 
 ## `usvc env`
 
@@ -908,13 +907,3 @@ $ usvc enrollments cancel [OPTIONS] {enrollment_id}
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
-
-## `usvc data`
-
-Run usvc_data (external command).
-
-**Usage**:
-
-```console
-$ usvc data [OPTIONS] [ARGS]...
-```

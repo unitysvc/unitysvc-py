@@ -48,6 +48,11 @@ except ImportError:  # pragma: no cover - Typer without a vendored click
 from typer.core import TyperGroup
 
 GROUP = "usvc.commands"
+# Set to disable discovery entirely. Generated documentation must describe this
+# package's own commands and nothing else — otherwise whichever `usvc-*` tools
+# happen to sit on the author's PATH leak into the committed CLI reference, and
+# the output stops being reproducible between machines and CI.
+DISABLE_ENV = "USVC_NO_PLUGINS"
 PREFIX = "usvc"
 _SEPARATORS = ("-", "_")  # hyphen is canonical; underscore is the legacy spelling
 
@@ -66,11 +71,15 @@ def entry_point_plugins() -> dict[str, EntryPoint]:
     Reads distribution metadata only. The target module is *not* imported, so
     listing plugins in ``--help`` stays cheap no matter what they pull in.
     """
+    if os.environ.get(DISABLE_ENV):
+        return {}
     return {ep.name: ep for ep in entry_points(group=GROUP)}
 
 
 def path_plugins() -> set[str]:
     """Subcommand names backed by a ``usvc-*`` executable on ``PATH``."""
+    if os.environ.get(DISABLE_ENV):
+        return set()
     names: set[str] = set()
     for directory in os.get_exec_path():
         try:
@@ -90,6 +99,8 @@ def path_plugins() -> set[str]:
 
 def path_executable(name: str) -> str | None:
     """Absolute path to the executable implementing ``name``, if any."""
+    if os.environ.get(DISABLE_ENV):
+        return None
     for separator in _SEPARATORS:
         found = shutil.which(f"{PREFIX}{separator}{name}")
         if found:
