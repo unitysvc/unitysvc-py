@@ -7,6 +7,8 @@
 
 UnitySVC customer CLI — remote operations against the UnitySVC customer backend via the unitysvc-py HTTP SDK.
 
+Subcommands contributed by other UnitySVC packages appear here once those packages are installed.
+
 **Usage**:
 
 ```console

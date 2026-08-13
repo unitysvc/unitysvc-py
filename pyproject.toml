@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unitysvc-py"
-version = "0.1.21"
+version = "0.1.22"
 description = "Customer-facing Python SDK and `usvc` CLI for UnitySVC"
 readme = "README.md"
 authors = [{ name = "Bo Peng", email = "bo.peng@unitysvc.com" }]
@@ -18,6 +18,9 @@ classifiers = [
 ]
 dependencies = [
   "typer",
+  # Typer >=0.20 vendors its own click, so it no longer pulls the real one in;
+  # _plugins.py builds Click commands directly, hence the explicit dependency.
+  "click",
   "rich",
   "httpx>=0.24",
   "attrs>=23.0",

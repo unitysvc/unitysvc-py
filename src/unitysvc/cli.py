@@ -9,6 +9,7 @@ import typer
 from rich.console import Console
 
 from ._experimental import experimental_enabled
+from ._plugins import PluginGroup
 from .client import (
     DEFAULT_API_URL,
     ENV_API_BASE_URL,
@@ -40,8 +41,13 @@ def version_callback(value: bool) -> None:
 
 
 app = typer.Typer(
+    # PluginGroup resolves an unknown subcommand to a `usvc-<name>` executable on
+    # PATH, so `usvc seller ...` reaches unitysvc-sellers' CLI without this
+    # package depending on it.
+    cls=PluginGroup,
     help=(
         "UnitySVC customer CLI — remote operations against the UnitySVC customer backend via the unitysvc-py HTTP SDK."
+        "\n\nSubcommands contributed by other UnitySVC packages appear here once those packages are installed."
     ),
 )
 
