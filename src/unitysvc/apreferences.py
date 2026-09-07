@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from ._http import LowLevelClient, unwrap
+from .preferences import RequestLogMode
 
 if TYPE_CHECKING:
     from ._generated.models.user_public import UserPublic
@@ -35,3 +36,7 @@ class AsyncPreferences:
     async def set_notification_destination(self, service: str | None) -> UserPublic:
         """See :meth:`unitysvc.preferences.Preferences.set_notification_destination`."""
         return await self.set("notification-destination", service)
+
+    async def set_request_log_mode(self, mode: RequestLogMode | None) -> UserPublic:
+        """See :meth:`unitysvc.preferences.Preferences.set_request_log_mode`."""
+        return await self.set("request-log", mode)

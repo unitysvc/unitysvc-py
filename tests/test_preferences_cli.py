@@ -22,6 +22,7 @@ class _Sink:
     def __init__(self) -> None:
         self.set_calls: list[tuple[str, Any]] = []
         self.notification_destination_calls: list[str | None] = []
+        self.request_log_mode_calls: list[str | None] = []
 
     async def set(self, name: str, value: Any = None) -> SimpleNamespace:
         self.set_calls.append((name, value))
@@ -30,6 +31,10 @@ class _Sink:
     async def set_notification_destination(self, service: str | None) -> SimpleNamespace:
         self.notification_destination_calls.append(service)
         return SimpleNamespace(preference={"notification": {"destination": service}})
+
+    async def set_request_log_mode(self, mode: str | None) -> SimpleNamespace:
+        self.request_log_mode_calls.append(mode)
+        return SimpleNamespace(preference={"logging": {"enabled": mode or "auto"}})
 
 
 def _patch_sink(monkeypatch: pytest.MonkeyPatch) -> _Sink:
@@ -96,3 +101,30 @@ def test_notification_destination_with_no_arg_clears(monkeypatch: pytest.MonkeyP
 
     assert result.exit_code == 0, result.output
     assert sink.notification_destination_calls == [None]
+
+
+def test_request_log_sets_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    sink = _patch_sink(monkeypatch)
+
+    result = runner.invoke(app, ["request-log", "truncated"])
+
+    assert result.exit_code == 0, result.output
+    assert sink.request_log_mode_calls == ["truncated"]
+
+
+def test_request_log_with_no_arg_disables(monkeypatch: pytest.MonkeyPatch) -> None:
+    sink = _patch_sink(monkeypatch)
+
+    result = runner.invoke(app, ["request-log"])
+
+    assert result.exit_code == 0, result.output
+    assert sink.request_log_mode_calls == [None]
+
+
+def test_request_log_rejects_unknown_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    sink = _patch_sink(monkeypatch)
+
+    result = runner.invoke(app, ["request-log", "on"])
+
+    assert result.exit_code != 0
+    assert sink.request_log_mode_calls == []

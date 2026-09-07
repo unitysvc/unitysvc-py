@@ -927,6 +927,7 @@ $ usvc preferences [OPTIONS] COMMAND [ARGS]...
 
 * `set`: Set (or clear) one named preference.
 * `notification-destination`: Set (or clear) where your personal...
+* `request-log`: Set (or disable) the request-logging mode...
 
 ### `usvc preferences set`
 
@@ -968,6 +969,26 @@ $ usvc preferences notification-destination [OPTIONS] [service]
 **Arguments**:
 
 * `service`: Where personal notifications are delivered — a service path (e.g. &#x27;labs/discord-relay&#x27;), or a &#x27;b/&lt;name&gt;&#x27; broadcast / &#x27;e/&lt;CODE&gt;&#x27; enrollment you own. Omit to clear (falls back to in-app delivery only).
+
+**Options**:
+
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc preferences request-log`
+
+Set (or disable) the request-logging mode for the authenticated user.
+
+**Usage**:
+
+```console
+$ usvc preferences request-log [OPTIONS] [mode]
+```
+
+**Arguments**:
+
+* `mode`: &#x27;truncated&#x27; (8 KB inline preview, no S3) or &#x27;complete&#x27; (full body uploaded to S3). Omit to disable logging.
 
 **Options**:
 

@@ -13,32 +13,17 @@ if TYPE_CHECKING:
     from ._generated.models.ops_customer_request_log_detail import OpsCustomerRequestLogDetail
     from ._generated.models.request_log_detail import RequestLogDetail
     from ._generated.models.request_log_list_response import RequestLogListResponse
-    from ._generated.models.user_public import UserPublic
 
 
 class AsyncRequestLogs:
     """Async operations on the customer's request log.
 
     Mirrors :class:`unitysvc.request_logs.RequestLogs` — see that class
-    for the ``start`` / ``stop`` / ``list`` / ``get`` surface and
-    rationale.
+    for the ``list`` / ``get`` surface and rationale.
     """
 
     def __init__(self, client: LowLevelClient) -> None:
         self._client = client
-
-    async def start(self, *, truncate_long_message: bool = True) -> UserPublic:
-        """See :meth:`unitysvc.request_logs.RequestLogs.start`."""
-        from .apreferences import AsyncPreferences
-
-        mode = "truncated" if truncate_long_message else "complete"
-        return await AsyncPreferences(self._client).set("request-log", mode)
-
-    async def stop(self) -> UserPublic:
-        """See :meth:`unitysvc.request_logs.RequestLogs.stop`."""
-        from .apreferences import AsyncPreferences
-
-        return await AsyncPreferences(self._client).set("request-log", None)
 
     async def list(
         self,

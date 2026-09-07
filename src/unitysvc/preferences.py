@@ -5,21 +5,24 @@ per-user preferences (``User.preference``) — the same field the frontend
 writes to via a JWT-authenticated ``PATCH /users/me``. One preference per
 call: pass its name and new value, or ``value=None`` to clear it.
 
-Higher-level, typed wrappers build on this rather than duplicating it —
-:class:`unitysvc.request_logs.RequestLogs` implements ``start``/``stop`` as
-calls to :meth:`Preferences.set` with the ``"request-log"`` preference. Call
-:meth:`set` directly for any preference this SDK doesn't have a typed
-wrapper for yet.
+This is the one place a preference is ever written from — including
+request-log toggling, which used to have its own duplicate ``start``/``stop``
+wrapper on :class:`unitysvc.request_logs.RequestLogs`. Call :meth:`set`
+directly for any preference this SDK doesn't have a typed convenience for
+yet; :meth:`set_notification_destination` and :meth:`set_request_log_mode`
+are the typed ones for today's two.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from ._http import LowLevelClient, unwrap
 
 if TYPE_CHECKING:
     from ._generated.models.user_public import UserPublic
+
+RequestLogMode = Literal["truncated", "complete"]
 
 
 class Preferences:
@@ -54,3 +57,22 @@ class Preferences:
         it (falls back to in-app delivery only).
         """
         return self.set("notification-destination", service)
+
+    def set_request_log_mode(self, mode: RequestLogMode | None) -> UserPublic:
+        """Typed convenience for the ``"request-log"`` preference.
+
+        Enable request logging for the authenticated user, or disable it
+        with ``mode=None``. Already-persisted rows remain visible via
+        :meth:`unitysvc.request_logs.RequestLogs.list` /
+        :meth:`~unitysvc.request_logs.RequestLogs.get` either way; only
+        future gateway dispatches are affected. Idempotent.
+
+        Args:
+            mode: ``"truncated"`` — every request is logged with bodies
+                clipped at 8 KB, no S3 upload. ``"complete"`` — full
+                request/response bodies are uploaded to S3 so ``get()``
+                can return the full payload (the listing endpoint still
+                returns only the clipped preview, to keep paging cheap).
+                ``None`` disables logging.
+        """
+        return self.set("request-log", mode)

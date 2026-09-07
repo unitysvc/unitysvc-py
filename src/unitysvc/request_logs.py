@@ -1,20 +1,15 @@
-"""``client.request_logs`` — customer request log access and toggle.
+"""``client.request_logs`` — customer request log access.
 
-Wraps the customer-tagged ``/v1/customer/request-logs/*`` operations
-from the generated low-level client. Each method calls
+Wraps the customer-tagged ``/v1/customer/request-logs/*`` read
+operations from the generated low-level client. Each method calls
 ``sync_detailed`` and passes the result through
 :func:`unitysvc._http.unwrap`, so callers always get a populated typed
 model or a :class:`~unitysvc.exceptions.UnitysvcSDKError`.
 
-Two halves of the surface:
-
-* :meth:`start` / :meth:`stop` — flip the per-user logging preference
-  via the generic ``POST /v1/customer/preferences/set`` endpoint (the
-  ``"request-log"`` preference; see :mod:`unitysvc.preferences`,
-  unitysvc#2063). Until logging is started, gateway dispatches do
-  **not** appear in the listing endpoint.
-* :meth:`list` / :meth:`get` — paginated list of logged requests, plus
-  full detail (request/response bodies) for one row.
+To turn logging on/off, use :meth:`unitysvc.preferences.Preferences.set_request_log_mode`
+(or the raw ``preferences.set("request-log", ...)``) — that toggle lives
+entirely on the preference layer now (unitysvc#2063); it was previously
+duplicated here as ``start``/``stop``.
 """
 
 from __future__ import annotations
@@ -32,7 +27,6 @@ if TYPE_CHECKING:
     from ._generated.models.ops_customer_request_log_detail import OpsCustomerRequestLogDetail
     from ._generated.models.request_log_detail import RequestLogDetail
     from ._generated.models.request_log_list_response import RequestLogListResponse
-    from ._generated.models.user_public import UserPublic
 
 
 class RequestLogs:
@@ -42,46 +36,6 @@ class RequestLogs:
     def __init__(self, client: LowLevelClient) -> None:
         self._client = client
 
-    # ------------------------------------------------------------------
-    # Toggle
-    # ------------------------------------------------------------------
-    def start(self, *, truncate_long_message: bool = True) -> UserPublic:
-        """Enable request logging for the authenticated user.
-
-        Subsequent gateway dispatches will be persisted and visible via
-        :meth:`list` / :meth:`get`. Idempotent — safe to call when
-        logging is already on.
-
-        Args:
-            truncate_long_message: Picks the storage mode.
-
-                * ``True`` (default) → ``truncated``: 8 KB inline
-                  preview is stored, no S3 upload. The listing
-                  endpoint serves the preview; :meth:`get` returns the
-                  same preview (full body is not preserved).
-                * ``False`` → ``complete``: full request / response
-                  bodies are uploaded to S3 so :meth:`get` can return
-                  the full payload. The listing endpoint still
-                  returns only the preview to keep paging cheap.
-        """
-        from .preferences import Preferences
-
-        mode = "truncated" if truncate_long_message else "complete"
-        return Preferences(self._client).set("request-log", mode)
-
-    def stop(self) -> UserPublic:
-        """Disable request logging for the authenticated user.
-
-        Already-persisted rows remain visible via :meth:`list` /
-        :meth:`get`; only future dispatches are skipped. Idempotent.
-        """
-        from .preferences import Preferences
-
-        return Preferences(self._client).set("request-log", None)
-
-    # ------------------------------------------------------------------
-    # Read
-    # ------------------------------------------------------------------
     def list(
         self,
         *,

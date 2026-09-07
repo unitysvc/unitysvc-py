@@ -7,6 +7,9 @@
 - ``usvc preferences notification-destination [SERVICE]``
   — typed convenience: where personal notifications are delivered. Omit
   ``SERVICE`` to clear it.
+- ``usvc preferences request-log [MODE]``
+  — typed convenience: request-logging mode (``truncated`` | ``complete``).
+  Omit ``MODE`` to disable logging.
 
 Preferences here are account-level: they apply across every role the
 caller has, not just the one that happened to authenticate this
@@ -28,6 +31,8 @@ console = Console()
 app = typer.Typer(
     help="Per-user preference management (set/clear).",
 )
+
+_LOG_MODES = ("truncated", "complete")
 
 
 def _print_result(result: dict[str, Any], name: str) -> None:
@@ -97,3 +102,30 @@ def set_notification_destination(
 
     result = run_async(_impl(), error_prefix="Failed to set notification-destination")
     _print_result(result, "notification-destination")
+
+
+# ---------------------------------------------------------------------------
+# request-log (typed convenience)
+# ---------------------------------------------------------------------------
+@app.command("request-log")
+def set_request_log_mode(
+    mode: str | None = typer.Argument(
+        None,
+        help=(
+            "'truncated' (8 KB inline preview, no S3) or 'complete' (full "
+            "body uploaded to S3). Omit to disable logging."
+        ),
+    ),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Set (or disable) the request-logging mode for the authenticated user."""
+    if mode is not None and mode not in _LOG_MODES:
+        raise typer.BadParameter(f"mode must be one of {_LOG_MODES}, or omitted to disable")
+
+    async def _impl() -> dict[str, Any]:
+        async with async_client(api_key, base_url) as client:
+            return model_to_dict(await client.preferences.set_request_log_mode(mode))
+
+    result = run_async(_impl(), error_prefix="Failed to set request-log mode")
+    _print_result(result, "request-log")
