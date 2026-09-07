@@ -43,3 +43,14 @@ class Preferences:
                 body=PreferenceSetRequest(name=name, value=value),
             )
         )
+
+    def set_notification_destination(self, service: str | None) -> UserPublic:
+        """Typed convenience for the ``"notification-destination"`` preference.
+
+        ``service`` is where personal notifications (in-app events routed
+        through ``notify://user``) get forwarded — a service path (e.g.
+        ``"labs/discord-relay"``), or a ``"b/<name>"`` broadcast /
+        ``"e/<CODE>"`` enrollment shorthand you own. Pass ``None`` to clear
+        it (falls back to in-app delivery only).
+        """
+        return self.set("notification-destination", service)

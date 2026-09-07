@@ -31,3 +31,7 @@ class AsyncPreferences:
                 body=PreferenceSetRequest(name=name, value=value),
             )
         )
+
+    async def set_notification_destination(self, service: str | None) -> UserPublic:
+        """See :meth:`unitysvc.preferences.Preferences.set_notification_destination`."""
+        return await self.set("notification-destination", service)
