@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
+from urllib.parse import quote
 
 import httpx
 
@@ -8,6 +9,7 @@ from ...client import AuthenticatedClient, Client
 from ...models.account_file_download_response import AccountFileDownloadResponse
 from ...models.customer_download_account_file_scope import (
     CustomerDownloadAccountFileScope,
+    check_customer_download_account_file_scope,
 )
 from ...models.http_validation_error import HTTPValidationError
 from ...types import UNSET, Response, Unset

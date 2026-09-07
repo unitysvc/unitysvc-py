@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,10 +19,10 @@ T = TypeVar("T", bound="RoutingEndpointPlan")
 class RoutingEndpointPlan:
     """A platform routing endpoint this service is *also* reachable through (#1692).
 
-    A service in a routable platform group is callable at ``/g/<name>``, and one
-    in a capability pool at ``/p/<name>`` — facts the service page could not
-    otherwise learn. The contract is deliberately narrow: **the groups this
-    service is in**, expressed as the URL that addresses them. It is not a
+    A service in a routable platform group is callable at ``/g/<name>`` — a fact
+    the service page could not otherwise learn. The contract is deliberately
+    narrow: **the groups this service is in**, expressed as the URL that
+    addresses them. It is not a
     "callable endpoints" list, and it makes no claim about the *kind* of group —
     ``base_url`` is the only signal, which is all a caller acts on.
 

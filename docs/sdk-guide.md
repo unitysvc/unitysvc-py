@@ -459,32 +459,60 @@ client.recurrent_requests.trigger(request_id)
 client.recurrent_requests.delete(request_id)
 ```
 
-## `request_logs`
+## `preferences`
 
-Request logging is **opt-in per user**. Until you call
-`client.request_logs.start()`, gateway dispatches are not persisted
-to the customer-facing log — neither `list()` nor `get()` will see
-them. Once started, all subsequent dispatches are recorded until you
-call `stop()`. Both toggle calls are idempotent.
+A generic set/clear for the account-level preferences on your
+`User.preference` — the same field the frontend writes to via a
+JWT-authenticated session. One preference per call: pass its name and
+new value, or `value=None` to clear it. Preferences here apply across
+every role you have (customer, seller, admin) — any of your API keys
+may set them.
 
 ```python
-# Toggle
-client.request_logs.start()                        # preserve existing preference
-client.request_logs.start(truncate_long_message=True)   # force truncated mode
-client.request_logs.start(truncate_long_message=False)  # force complete (S3) mode
-client.request_logs.stop()                         # disable; stored rows remain visible
+# Generic — works for any preference, including ones with no typed
+# convenience below yet.
+client.preferences.set("request-log", "truncated")
+client.preferences.set("request-log", None)  # clears it
+
+# Typed convenience: where personal notifications (routed through
+# notify://user) are delivered. A service path, or a "b/<name>"
+# broadcast / "e/<CODE>" enrollment you own. None clears it (falls
+# back to in-app delivery only).
+client.preferences.set_notification_destination("labs/discord-relay")
+client.preferences.set_notification_destination(None)
+
+# Typed convenience: request-logging mode. See `request_logs` below
+# for what "truncated" / "complete" mean and what they unlock.
+client.preferences.set_request_log_mode("truncated")
+client.preferences.set_request_log_mode(None)  # disables logging
 ```
 
-`truncate_long_message=True` selects the **truncated** storage mode:
-the backend keeps an 8 KB inline preview per request / response and
-skips the S3 upload. `False` switches to **complete** mode, where
-the full body is uploaded to S3 so `get(log_id)` can return the
-original payload. The default `None` tells the backend to preserve
-the user's existing `preference.logging` mode (falling back to
-truncated if there isn't one) — useful when the frontend already
-set the preference and the SDK is just flipping logging on.
-In all modes the listing endpoint serves only the preview to keep
-paging cheap; the mode you pick decides what `get()` returns.
+Every `set*` call returns the updated `UserPublic`, including the
+full `preference` dict — useful for confirming what was actually
+persisted.
+
+## `request_logs`
+
+Request logging is **opt-in per user**, toggled via
+`client.preferences.set_request_log_mode(...)` (see `preferences`
+above) — until you enable it, gateway dispatches are not persisted to
+the customer-facing log and neither `list()` nor `get()` will see
+them. Once enabled, all subsequent dispatches are recorded until you
+disable it with `mode=None`. Idempotent either way.
+
+```python
+# Toggle (lives on preferences, not request_logs)
+client.preferences.set_request_log_mode("truncated")  # 8 KB inline preview, no S3
+client.preferences.set_request_log_mode("complete")   # full body uploaded to S3
+client.preferences.set_request_log_mode(None)          # disable; stored rows remain visible
+```
+
+`"truncated"` selects the **truncated** storage mode: the backend
+keeps an 8 KB inline preview per request / response and skips the S3
+upload. `"complete"` switches to **complete** mode, where the full
+body is uploaded to S3 so `get(log_id)` can return the original
+payload. In both modes the listing endpoint serves only the preview
+to keep paging cheap; the mode you pick decides what `get()` returns.
 
 ```python
 # Paginated listing (lightweight columns — no bodies)
@@ -522,7 +550,7 @@ fastest way to verify that a specific dispatch was recorded.
 import datetime as dt
 
 t0 = dt.datetime.now(dt.timezone.utc)
-client.request_logs.start()
+client.preferences.set_request_log_mode("truncated")
 client.services.dispatch(svc_id, json={"messages": [...]})
 
 # Brief settle window (Kafka → ClickHouse pipeline is async)
@@ -549,7 +577,7 @@ for row in errs.items:
 
 ```python
 async with AsyncClient.from_env() as client:
-    await client.request_logs.start()
+    await client.preferences.set_request_log_mode("truncated")
     await client.services.dispatch(svc_id, json={"messages": [...]})
     page = await client.request_logs.list(service_id=svc_id, limit=10)
 ```

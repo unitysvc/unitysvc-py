@@ -1,17 +1,20 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
+from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.logging_status_response import LoggingStatusResponse
+from ...models.preference_set_request import PreferenceSetRequest
+from ...models.user_public import UserPublic
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
+    body: PreferenceSetRequest,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -24,8 +27,12 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/request-logs/stop",
+        "url": "/preferences/set",
     }
+
+    _kwargs["json"] = body.to_dict()
+
+    headers["Content-Type"] = "application/json"
 
     _kwargs["headers"] = headers
     return _kwargs
@@ -33,9 +40,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | LoggingStatusResponse | None:
+) -> HTTPValidationError | UserPublic | None:
     if response.status_code == 200:
-        response_200 = LoggingStatusResponse.from_dict(response.json())
+        response_200 = UserPublic.from_dict(response.json())
 
         return response_200
 
@@ -52,7 +59,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | LoggingStatusResponse]:
+) -> Response[HTTPValidationError | UserPublic]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -64,26 +71,33 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
+    body: PreferenceSetRequest,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | LoggingStatusResponse]:
-    """Stop request logging
+) -> Response[HTTPValidationError | UserPublic]:
+    """Set Preference
 
-     Disable request logging for the authenticated user.
+     Set (or clear, with ``value: null``) one named preference.
+
+    Same write path the JWT-authenticated frontend endpoints use for each
+    preference — this is a second door onto them, reachable with a
+    ``svcpass_...`` API key, not a parallel implementation.
 
     Args:
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
+        body (PreferenceSetRequest): One preference write. ``value: None`` clears it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | LoggingStatusResponse]
+        Response[HTTPValidationError | UserPublic]
     """
 
     kwargs = _get_kwargs(
+        body=body,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -98,27 +112,34 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
+    body: PreferenceSetRequest,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | LoggingStatusResponse | None:
-    """Stop request logging
+) -> HTTPValidationError | UserPublic | None:
+    """Set Preference
 
-     Disable request logging for the authenticated user.
+     Set (or clear, with ``value: null``) one named preference.
+
+    Same write path the JWT-authenticated frontend endpoints use for each
+    preference — this is a second door onto them, reachable with a
+    ``svcpass_...`` API key, not a parallel implementation.
 
     Args:
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
+        body (PreferenceSetRequest): One preference write. ``value: None`` clears it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | LoggingStatusResponse
+        HTTPValidationError | UserPublic
     """
 
     return sync_detailed(
         client=client,
+        body=body,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -127,26 +148,33 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
+    body: PreferenceSetRequest,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | LoggingStatusResponse]:
-    """Stop request logging
+) -> Response[HTTPValidationError | UserPublic]:
+    """Set Preference
 
-     Disable request logging for the authenticated user.
+     Set (or clear, with ``value: null``) one named preference.
+
+    Same write path the JWT-authenticated frontend endpoints use for each
+    preference — this is a second door onto them, reachable with a
+    ``svcpass_...`` API key, not a parallel implementation.
 
     Args:
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
+        body (PreferenceSetRequest): One preference write. ``value: None`` clears it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | LoggingStatusResponse]
+        Response[HTTPValidationError | UserPublic]
     """
 
     kwargs = _get_kwargs(
+        body=body,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -159,28 +187,35 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
+    body: PreferenceSetRequest,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | LoggingStatusResponse | None:
-    """Stop request logging
+) -> HTTPValidationError | UserPublic | None:
+    """Set Preference
 
-     Disable request logging for the authenticated user.
+     Set (or clear, with ``value: null``) one named preference.
+
+    Same write path the JWT-authenticated frontend endpoints use for each
+    preference — this is a second door onto them, reachable with a
+    ``svcpass_...`` API key, not a parallel implementation.
 
     Args:
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
+        body (PreferenceSetRequest): One preference write. ``value: None`` clears it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | LoggingStatusResponse
+        HTTPValidationError | UserPublic
     """
 
     return (
         await asyncio_detailed(
             client=client,
+            body=body,
             authorization=authorization,
             x_role_id=x_role_id,
         )

@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
 from urllib.parse import quote
 
 import httpx
@@ -94,8 +94,9 @@ def sync_detailed(
 
     Returns ``201 Created`` on insert and ``200 OK`` on update.
     The value is encrypted at rest. Set ``sensitive=false`` on creation to make
-    the value viewable as a variable. Existing rows cannot change between
-    secret and variable in place.
+    the value viewable as a variable. On update, sending ``sensitive`` replaces
+    the value and stores it with that type; omitting ``sensitive`` preserves the
+    existing type.
 
     The customer's context cache is invalidated so the gateway picks
     up the new value immediately.
@@ -109,8 +110,9 @@ def sync_detailed(
         x_role_id (None | str | Unset):
         body (SecretUpdate): Request body for variable-capable ``PUT /secrets/{name}`` endpoints.
 
-            ``sensitive`` is only honored when creating rows; an existing row cannot be
-            changed between secret and variable in place.
+            ``sensitive`` controls the freshly submitted value. On update, omitting the
+            field preserves the existing row type; sending it replaces the value and
+            stores the row with that sensitivity.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -150,8 +152,9 @@ def sync(
 
     Returns ``201 Created`` on insert and ``200 OK`` on update.
     The value is encrypted at rest. Set ``sensitive=false`` on creation to make
-    the value viewable as a variable. Existing rows cannot change between
-    secret and variable in place.
+    the value viewable as a variable. On update, sending ``sensitive`` replaces
+    the value and stores it with that type; omitting ``sensitive`` preserves the
+    existing type.
 
     The customer's context cache is invalidated so the gateway picks
     up the new value immediately.
@@ -165,8 +168,9 @@ def sync(
         x_role_id (None | str | Unset):
         body (SecretUpdate): Request body for variable-capable ``PUT /secrets/{name}`` endpoints.
 
-            ``sensitive`` is only honored when creating rows; an existing row cannot be
-            changed between secret and variable in place.
+            ``sensitive`` controls the freshly submitted value. On update, omitting the
+            field preserves the existing row type; sending it replaces the value and
+            stores the row with that sensitivity.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -201,8 +205,9 @@ async def asyncio_detailed(
 
     Returns ``201 Created`` on insert and ``200 OK`` on update.
     The value is encrypted at rest. Set ``sensitive=false`` on creation to make
-    the value viewable as a variable. Existing rows cannot change between
-    secret and variable in place.
+    the value viewable as a variable. On update, sending ``sensitive`` replaces
+    the value and stores it with that type; omitting ``sensitive`` preserves the
+    existing type.
 
     The customer's context cache is invalidated so the gateway picks
     up the new value immediately.
@@ -216,8 +221,9 @@ async def asyncio_detailed(
         x_role_id (None | str | Unset):
         body (SecretUpdate): Request body for variable-capable ``PUT /secrets/{name}`` endpoints.
 
-            ``sensitive`` is only honored when creating rows; an existing row cannot be
-            changed between secret and variable in place.
+            ``sensitive`` controls the freshly submitted value. On update, omitting the
+            field preserves the existing row type; sending it replaces the value and
+            stores the row with that sensitivity.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -255,8 +261,9 @@ async def asyncio(
 
     Returns ``201 Created`` on insert and ``200 OK`` on update.
     The value is encrypted at rest. Set ``sensitive=false`` on creation to make
-    the value viewable as a variable. Existing rows cannot change between
-    secret and variable in place.
+    the value viewable as a variable. On update, sending ``sensitive`` replaces
+    the value and stores it with that type; omitting ``sensitive`` preserves the
+    existing type.
 
     The customer's context cache is invalidated so the gateway picks
     up the new value immediately.
@@ -270,8 +277,9 @@ async def asyncio(
         x_role_id (None | str | Unset):
         body (SecretUpdate): Request body for variable-capable ``PUT /secrets/{name}`` endpoints.
 
-            ``sensitive`` is only honored when creating rows; an existing row cannot be
-            changed between secret and variable in place.
+            ``sensitive`` controls the freshly submitted value. On update, omitting the
+            field preserves the existing row type; sending it replaces the value and
+            stores the row with that sensitivity.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

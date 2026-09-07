@@ -22,6 +22,7 @@ from .commands import aliases as aliases_cmd
 from .commands import enrollments as enrollments_cmd
 from .commands import files as files_cmd
 from .commands import groups as groups_cmd
+from .commands import preferences as preferences_cmd
 from .commands import recurrent_requests as recurrent_cmd
 from .commands import resolve as resolve_cmd
 from .commands import secrets as secrets_cmd
@@ -96,6 +97,7 @@ app.add_typer(groups_cmd.app, name="groups")
 app.add_typer(files_cmd.app, name="files")
 app.add_typer(services_cmd.app, name="services")
 app.add_typer(enrollments_cmd.app, name="enrollments")
+app.add_typer(preferences_cmd.app, name="preferences")
 app.command("resolve", help="Dry-run resolve a gateway path to its candidates.")(
     resolve_cmd.resolve_cmd
 )

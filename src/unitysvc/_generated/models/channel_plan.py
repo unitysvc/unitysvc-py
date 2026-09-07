@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -28,9 +28,15 @@ class ChannelPlan:
     requires_enrollment: bool | Unset = False
     required_secrets: list[SecretRequirement] | Unset = UNSET
     optional_secrets: list[SecretRequirement] | Unset = UNSET
+    default: bool | Unset = False
+    selector: None | str | Unset = UNSET
+    applicable_interfaces: list[str] | None | Unset = UNSET
+    request_formats: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.secret_requirement import SecretRequirement
+
         name = self.name
 
         channel_type = self.channel_type
@@ -71,6 +77,32 @@ class ChannelPlan:
                 optional_secrets_item = optional_secrets_item_data.to_dict()
                 optional_secrets.append(optional_secrets_item)
 
+        default = self.default
+
+        selector: None | str | Unset
+        if isinstance(self.selector, Unset):
+            selector = UNSET
+        else:
+            selector = self.selector
+
+        applicable_interfaces: list[str] | None | Unset
+        if isinstance(self.applicable_interfaces, Unset):
+            applicable_interfaces = UNSET
+        elif isinstance(self.applicable_interfaces, list):
+            applicable_interfaces = self.applicable_interfaces
+
+        else:
+            applicable_interfaces = self.applicable_interfaces
+
+        request_formats: list[str] | None | Unset
+        if isinstance(self.request_formats, Unset):
+            request_formats = UNSET
+        elif isinstance(self.request_formats, list):
+            request_formats = self.request_formats
+
+        else:
+            request_formats = self.request_formats
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -93,6 +125,14 @@ class ChannelPlan:
             field_dict["required_secrets"] = required_secrets
         if optional_secrets is not UNSET:
             field_dict["optional_secrets"] = optional_secrets
+        if default is not UNSET:
+            field_dict["default"] = default
+        if selector is not UNSET:
+            field_dict["selector"] = selector
+        if applicable_interfaces is not UNSET:
+            field_dict["applicable_interfaces"] = applicable_interfaces
+        if request_formats is not UNSET:
+            field_dict["request_formats"] = request_formats
 
         return field_dict
 
@@ -154,6 +194,51 @@ class ChannelPlan:
 
                 optional_secrets.append(optional_secrets_item)
 
+        default = d.pop("default", UNSET)
+
+        def _parse_selector(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        selector = _parse_selector(d.pop("selector", UNSET))
+
+        def _parse_applicable_interfaces(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                applicable_interfaces_type_0 = cast(list[str], data)
+
+                return applicable_interfaces_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        applicable_interfaces = _parse_applicable_interfaces(d.pop("applicable_interfaces", UNSET))
+
+        def _parse_request_formats(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                request_formats_type_0 = cast(list[str], data)
+
+                return request_formats_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        request_formats = _parse_request_formats(d.pop("request_formats", UNSET))
+
         channel_plan = cls(
             name=name,
             channel_type=channel_type,
@@ -164,6 +249,10 @@ class ChannelPlan:
             requires_enrollment=requires_enrollment,
             required_secrets=required_secrets,
             optional_secrets=optional_secrets,
+            default=default,
+            selector=selector,
+            applicable_interfaces=applicable_interfaces,
+            request_formats=request_formats,
         )
 
         channel_plan.additional_properties = d

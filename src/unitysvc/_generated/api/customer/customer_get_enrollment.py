@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
 from urllib.parse import quote
 from uuid import UUID
 
@@ -87,7 +87,7 @@ def sync_detailed(
      Get a specific enrollment by ID with enriched service data.
     Users can only access their own customer's enrollments.
 
-    Uses ServiceMView and AccessInterface resolution for comprehensive data.
+    Uses live service/content rows and AccessInterface resolution for comprehensive data.
 
     Args:
         enrollment_id (UUID):
@@ -130,7 +130,7 @@ def sync(
      Get a specific enrollment by ID with enriched service data.
     Users can only access their own customer's enrollments.
 
-    Uses ServiceMView and AccessInterface resolution for comprehensive data.
+    Uses live service/content rows and AccessInterface resolution for comprehensive data.
 
     Args:
         enrollment_id (UUID):
@@ -168,7 +168,7 @@ async def asyncio_detailed(
      Get a specific enrollment by ID with enriched service data.
     Users can only access their own customer's enrollments.
 
-    Uses ServiceMView and AccessInterface resolution for comprehensive data.
+    Uses live service/content rows and AccessInterface resolution for comprehensive data.
 
     Args:
         enrollment_id (UUID):
@@ -209,7 +209,7 @@ async def asyncio(
      Get a specific enrollment by ID with enriched service data.
     Users can only access their own customer's enrollments.
 
-    Uses ServiceMView and AccessInterface resolution for comprehensive data.
+    Uses live service/content rows and AccessInterface resolution for comprehensive data.
 
     Args:
         enrollment_id (UUID):

@@ -33,6 +33,7 @@ $ usvc [OPTIONS] COMMAND [ARGS]...
 * `files`: Account files (ls, get, put, url).
 * `services`: Per-service operations (show, usage,...
 * `enrollments`: Enrollment management (list, show, cancel).
+* `preferences`: Per-user preference management (set/clear).
 
 ## `usvc env`
 
@@ -904,6 +905,93 @@ $ usvc enrollments cancel [OPTIONS] {enrollment_id}
 **Options**:
 
 * `-y, --yes`: Skip confirmation prompt.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+## `usvc preferences`
+
+Per-user preference management (set/clear).
+
+**Usage**:
+
+```console
+$ usvc preferences [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `set`: Set (or clear) one named preference.
+* `notification-destination`: Set (or clear) where your personal...
+* `request-log`: Set (or disable) the request-logging mode...
+
+### `usvc preferences set`
+
+Set (or clear) one named preference. Maps to POST /v1/customer/preferences/set.
+
+``--value`` is taken as a literal string by default; pass ``--json`` to
+parse it as JSON instead (so ``--value true --json`` sends the boolean
+``true``, not the string ``&quot;true&quot;``). Omitting ``--value`` entirely
+clears the preference.
+
+**Usage**:
+
+```console
+$ usvc preferences set [OPTIONS] {name}
+```
+
+**Arguments**:
+
+* `name`: Preference name, e.g. &#x27;notification-destination&#x27; or &#x27;request-log&#x27;.  [required]
+
+**Options**:
+
+* `--value <str>`: New value. Omit to clear the preference (sends value: null).
+* `--json`: Parse --value as JSON instead of a literal string (for non-string values future preferences may need).
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc preferences notification-destination`
+
+Set (or clear) where your personal notifications are delivered.
+
+**Usage**:
+
+```console
+$ usvc preferences notification-destination [OPTIONS] [service]
+```
+
+**Arguments**:
+
+* `service`: Where personal notifications are delivered — a service path (e.g. &#x27;labs/discord-relay&#x27;), or a &#x27;b/&lt;name&gt;&#x27; broadcast / &#x27;e/&lt;CODE&gt;&#x27; enrollment you own. Omit to clear (falls back to in-app delivery only).
+
+**Options**:
+
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc preferences request-log`
+
+Set (or disable) the request-logging mode for the authenticated user.
+
+**Usage**:
+
+```console
+$ usvc preferences request-log [OPTIONS] [mode]
+```
+
+**Arguments**:
+
+* `mode`: &#x27;truncated&#x27; (8 KB inline preview, no S3) or &#x27;complete&#x27; (full body uploaded to S3). Omit to disable logging.
+
+**Options**:
+
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.

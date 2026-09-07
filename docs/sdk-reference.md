@@ -84,6 +84,12 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
     options:
       show_root_heading: true
 
+### Preferences
+
+::: unitysvc.preferences.Preferences
+    options:
+      show_root_heading: true
+
 ### Streaming responses
 
 `Services.stream()` / `Groups.stream()` (and async siblings) return

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -16,6 +16,7 @@ class ParameterRequirement:
     name: str
     description: None | str | Unset = UNSET
     required: bool | Unset = False
+    names_secret: bool | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -29,6 +30,8 @@ class ParameterRequirement:
 
         required = self.required
 
+        names_secret = self.names_secret
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -40,6 +43,8 @@ class ParameterRequirement:
             field_dict["description"] = description
         if required is not UNSET:
             field_dict["required"] = required
+        if names_secret is not UNSET:
+            field_dict["names_secret"] = names_secret
 
         return field_dict
 
@@ -59,10 +64,13 @@ class ParameterRequirement:
 
         required = d.pop("required", UNSET)
 
+        names_secret = d.pop("names_secret", UNSET)
+
         parameter_requirement = cls(
             name=name,
             description=description,
             required=required,
+            names_secret=names_secret,
         )
 
         parameter_requirement.additional_properties = d
