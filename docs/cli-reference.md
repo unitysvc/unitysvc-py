@@ -950,7 +950,7 @@ $ usvc preferences set [OPTIONS] {name}
 **Options**:
 
 * `--value <str>`: New value. Omit to clear the preference (sends value: null).
-* `--json`: Parse --value as JSON instead of a literal string (for non-string values, as future preferences may need).
+* `--json`: Parse --value as JSON instead of a literal string (for non-string values future preferences may need).
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
