@@ -8,12 +8,12 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="UserRequestInfoHeadersType0")
+T = TypeVar("T", bound="ServiceDocumentDetailMetaType0")
 
 
 @_attrs_define
-class UserRequestInfoHeadersType0:
-    additional_properties: dict[str, str] = _attrs_field(init=False, factory=dict)
+class ServiceDocumentDetailMetaType0:
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         field_dict: dict[str, Any] = {}
@@ -24,19 +24,19 @@ class UserRequestInfoHeadersType0:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        user_request_info_headers_type_0 = cls()
+        service_document_detail_meta_type_0 = cls()
 
-        user_request_info_headers_type_0.additional_properties = d
-        return user_request_info_headers_type_0
+        service_document_detail_meta_type_0.additional_properties = d
+        return service_document_detail_meta_type_0
 
     @property
     def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
-    def __getitem__(self, key: str) -> str:
+    def __getitem__(self, key: str) -> Any:
         return self.additional_properties[key]
 
-    def __setitem__(self, key: str, value: str) -> None:
+    def __setitem__(self, key: str, value: Any) -> None:
         self.additional_properties[key] = value
 
     def __delitem__(self, key: str) -> None:

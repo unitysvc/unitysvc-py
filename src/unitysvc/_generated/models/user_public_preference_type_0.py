@@ -1,43 +1,33 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="LoggingStatusResponse")
+from ..types import UNSET, Unset
+
+T = TypeVar("T", bound="UserPublicPreferenceType0")
 
 
 @_attrs_define
-class LoggingStatusResponse:
-    enabled: bool
+class UserPublicPreferenceType0:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        enabled = self.enabled
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "enabled": enabled,
-            }
-        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        enabled = d.pop("enabled")
+        user_public_preference_type_0 = cls()
 
-        logging_status_response = cls(
-            enabled=enabled,
-        )
-
-        logging_status_response.additional_properties = d
-        return logging_status_response
+        user_public_preference_type_0.additional_properties = d
+        return user_public_preference_type_0
 
     @property
     def additional_keys(self) -> list[str]:

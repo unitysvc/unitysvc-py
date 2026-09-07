@@ -2114,7 +2114,7 @@
           "enrollments"
         ],
         "summary": "List Enrollments",
-        "description": "List user's service enrollments with optional enriched service data.\n\nUses ServiceMView for efficient data retrieval when include_service_details=True.",
+        "description": "List user's service enrollments with optional enriched service data.\n\nUses live service/content rows when include_service_details=True.",
         "operationId": "customer-list_enrollments",
         "parameters": [
           {
@@ -2223,7 +2223,7 @@
           "enrollments"
         ],
         "summary": "Get Enrollment",
-        "description": "Get a specific enrollment by ID with enriched service data.\nUsers can only access their own customer's enrollments.\n\nUses ServiceMView and AccessInterface resolution for comprehensive data.",
+        "description": "Get a specific enrollment by ID with enriched service data.\nUsers can only access their own customer's enrollments.\n\nUses live service/content rows and AccessInterface resolution for comprehensive data.",
         "operationId": "customer-get_enrollment",
         "parameters": [
           {
@@ -3475,6 +3475,83 @@
         }
       }
     },
+    "/preferences/set": {
+      "post": {
+        "tags": [
+          "customer",
+          "preferences"
+        ],
+        "summary": "Set Preference",
+        "description": "Set (or clear, with ``value: null``) one named preference.\n\nSame write path the JWT-authenticated frontend endpoints use for each\npreference \u2014 this is a second door onto them, reachable with a\n``svcpass_...`` API key, not a parallel implementation.",
+        "operationId": "customer-set_preference",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferenceSetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/recurrent-requests/": {
       "post": {
         "tags": [
@@ -4292,158 +4369,6 @@
         }
       }
     },
-    "/request-logs/start": {
-      "post": {
-        "tags": [
-          "customer",
-          "request-logs"
-        ],
-        "summary": "Start request logging",
-        "description": "Enable request logging for the authenticated user.",
-        "operationId": "customer-start_request_logging",
-        "parameters": [
-          {
-            "name": "truncate_long_message",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Picks the mode. ``True`` \u2192 ``truncated`` (8 KB inline preview, no S3). ``False`` \u2192 ``complete`` (full body uploaded to S3 for retrieval via the detail endpoint). ``None`` (default) \u2192 preserve the user's existing ``preference.logging.enabled`` if it's already ``truncated`` or ``complete``; fall back to ``truncated`` otherwise.\n\nTwo intended caller shapes:\n\n- **Frontend**: sets ``preference.logging`` via   ``PATCH /users/me`` (composing with ``expire_at`` etc.),   then calls /start with no param to flip the gateway on   using the just-stored mode.\n- **SDK / scripts**: pass ``True`` or ``False``   explicitly \u2014 the SDK has no concept of the customer's   stored preference, so it picks the mode per call.",
-              "title": "Truncate Long Message"
-            },
-            "description": "Picks the mode. ``True`` \u2192 ``truncated`` (8 KB inline preview, no S3). ``False`` \u2192 ``complete`` (full body uploaded to S3 for retrieval via the detail endpoint). ``None`` (default) \u2192 preserve the user's existing ``preference.logging.enabled`` if it's already ``truncated`` or ``complete``; fall back to ``truncated`` otherwise.\n\nTwo intended caller shapes:\n\n- **Frontend**: sets ``preference.logging`` via   ``PATCH /users/me`` (composing with ``expire_at`` etc.),   then calls /start with no param to flip the gateway on   using the just-stored mode.\n- **SDK / scripts**: pass ``True`` or ``False``   explicitly \u2014 the SDK has no concept of the customer's   stored preference, so it picks the mode per call."
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-role-id",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Role-Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoggingStatusResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/request-logs/stop": {
-      "post": {
-        "tags": [
-          "customer",
-          "request-logs"
-        ],
-        "summary": "Stop request logging",
-        "description": "Disable request logging for the authenticated user.",
-        "operationId": "customer-stop_request_logging",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-role-id",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Role-Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoggingStatusResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/request-logs/{log_id}": {
       "get": {
         "tags": [
@@ -4776,7 +4701,7 @@
           "customer-secrets"
         ],
         "summary": "Set Secret",
-        "description": "Set a customer secret or variable to ``value``.\n\nReturns ``201 Created`` on insert and ``200 OK`` on update.\nThe value is encrypted at rest. Set ``sensitive=false`` on creation to make\nthe value viewable as a variable. Existing rows cannot change between\nsecret and variable in place.\n\nThe customer's context cache is invalidated so the gateway picks\nup the new value immediately.",
+        "description": "Set a customer secret or variable to ``value``.\n\nReturns ``201 Created`` on insert and ``200 OK`` on update.\nThe value is encrypted at rest. Set ``sensitive=false`` on creation to make\nthe value viewable as a variable. On update, sending ``sensitive`` replaces\nthe value and stores it with that type; omitting ``sensitive`` preserves the\nexisting type.\n\nThe customer's context cache is invalidated so the gateway picks\nup the new value immediately.",
         "operationId": "customer-secrets-set_secret",
         "parameters": [
           {
@@ -5751,6 +5676,25 @@
             },
             "type": "array",
             "title": "Routing Endpoints"
+          },
+          "input_formats": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Formats"
+          },
+          "gateway_type": {
+            "type": "string",
+            "title": "Gateway Type",
+            "default": "api"
           }
         },
         "type": "object",
@@ -6724,6 +6668,50 @@
             },
             "type": "array",
             "title": "Optional Secrets"
+          },
+          "default": {
+            "type": "boolean",
+            "title": "Default",
+            "default": false
+          },
+          "selector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selector"
+          },
+          "applicable_interfaces": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applicable Interfaces"
+          },
+          "request_formats": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Formats"
           }
         },
         "type": "object",
@@ -7236,6 +7224,38 @@
             "title": "Member Count",
             "default": 0
           },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "default": false
+          },
+          "service_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Ids"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
           "details": {
             "anyOf": [
               {
@@ -7343,11 +7363,10 @@
           "category",
           "collection",
           "open",
-          "keyed",
-          "capability_pool"
+          "keyed"
         ],
         "title": "GroupTypeEnum",
-        "description": "Type of service group. Derived from members, not authored (unitysvc#1686).\n\nTwo of the five types are routable (a ``/g/<name>`` endpoint); the rest are\nnot:\n\n- ``open``  \u2014 routable, and members share a common request format, so a\n  request with **no** routing key fans safely across them. A key may still\n  be passed to select one. (Also the single-member case.)\n- ``keyed`` \u2014 routable, but members accept different formats, so a keyless\n  request is ambiguous: a routing key is **required**, and every key\n  resolves to a format-homogeneous set.\n- ``collection`` \u2014 not a routing endpoint. A browse-only set, or a would-be\n  routable group demoted because some routing key spans incompatible\n  formats (a request to that key couldn't be served reliably).\n- ``category`` \u2014 a parent with no members of its own; its membership is the\n  union of its descendants, for browsing only.\n- ``capability_pool`` (#1244) \u2014 the ``/p/<name>`` namespace; membership is\n  claim-driven (services instantiated from a ServiceTemplate whose\n  ``pool_name`` matches), set by a dedicated refresh.\n\n``open`` / ``keyed`` / ``collection`` are derived from the members at\nmembership refresh; ``category`` and ``capability_pool`` are set explicitly\nand never re-derived. (The former ``routable`` value was split into\n``open`` / ``keyed``, and the ``misc`` catch-all removed \u2014 unitysvc#1686.)"
+        "description": "Type of service group. Derived from members, not authored (unitysvc#1686).\n\nTwo of the five types are routable (a ``/g/<name>`` endpoint); the rest are\nnot:\n\nA quick-characterization spectrum derived from ``routable_keys``\n(unitysvc#1730); the gateway routes off ``routable_keys`` itself, not this:\n\n- ``keyed`` \u2014 one extreme: a clean menu, every service addressable by its own\n  distinct routing key (each key maps to a single service); keyless access an\n  optional feature. Serves ``/v1/models`` and is tool-explorable.\n- ``open`` \u2014 the middle: routable, but not a clean per-service menu \u2014 a\n  keyless-only pool, partial keying, or a key that fans to several services.\n- ``collection`` \u2014 the other extreme: **not** a routing endpoint at all\n  (empty ``routable_keys`` \u2014 no members, or every bucket format-collides).\n\nRoutability is exactly ``group_type in {open, keyed}`` (``collection`` =\nempty ``routable_keys``), so the routing gate is unchanged; #1730 only re-cut\nthe open\u2194keyed boundary. Whether a keyless request is served is a\n``routable_keys`` fact, not a type fact.\n- ``category`` \u2014 a parent with no members of its own; its membership is the\n  union of its descendants, for browsing only.\n\n``open`` / ``keyed`` / ``collection`` are derived from the members at\nmembership refresh; ``category`` is set explicitly and never re-derived.\n(The former ``routable`` value was split into ``open`` / ``keyed``, and the\n``misc`` catch-all removed \u2014 unitysvc#1686.)"
       },
       "HTTPValidationError": {
         "properties": {
@@ -7361,19 +7380,6 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
-      },
-      "LoggingStatusResponse": {
-        "properties": {
-          "enabled": {
-            "type": "boolean",
-            "title": "Enabled"
-          }
-        },
-        "type": "object",
-        "required": [
-          "enabled"
-        ],
-        "title": "LoggingStatusResponse"
       },
       "Message": {
         "properties": {
@@ -7525,6 +7531,11 @@
             "type": "boolean",
             "title": "Required",
             "default": false
+          },
+          "names_secret": {
+            "type": "boolean",
+            "title": "Names Secret",
+            "default": false
           }
         },
         "type": "object",
@@ -7532,6 +7543,23 @@
           "name"
         ],
         "title": "ParameterRequirement"
+      },
+      "PreferenceSetRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "value": {
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "PreferenceSetRequest",
+        "description": "One preference write. ``value: None`` clears it."
       },
       "RecurrentRequestCreate": {
         "properties": {
@@ -8299,7 +8327,7 @@
         },
         "type": "object",
         "title": "RoutingEndpointPlan",
-        "description": "A platform routing endpoint this service is *also* reachable through (#1692).\n\nA service in a routable platform group is callable at ``/g/<name>``, and one\nin a capability pool at ``/p/<name>`` \u2014 facts the service page could not\notherwise learn. The contract is deliberately narrow: **the groups this\nservice is in**, expressed as the URL that addresses them. It is not a\n\"callable endpoints\" list, and it makes no claim about the *kind* of group \u2014\n``base_url`` is the only signal, which is all a caller acts on.\n\nEvery field here is frozen into the public OpenAPI schema, so the plan\ncarries the three a consumer cannot derive locally and nothing else. The\ngroup's internal taxonomy (``group_type``, namespace) and its presentation\n(``display_name``) stay server-side. Entries are platform-owned and\nidentical for every caller, which is what keeps the plan ``public``-cacheable;\ncustomer-owned routing objects get a separate, caller-scoped endpoint (#1692\nPart 2)."
+        "description": "A platform routing endpoint this service is *also* reachable through (#1692).\n\nA service in a routable platform group is callable at ``/g/<name>`` \u2014 a fact\nthe service page could not otherwise learn. The contract is deliberately\nnarrow: **the groups this service is in**, expressed as the URL that\naddresses them. It is not a\n\"callable endpoints\" list, and it makes no claim about the *kind* of group \u2014\n``base_url`` is the only signal, which is all a caller acts on.\n\nEvery field here is frozen into the public OpenAPI schema, so the plan\ncarries the three a consumer cannot derive locally and nothing else. The\ngroup's internal taxonomy (``group_type``, namespace) and its presentation\n(``display_name``) stay server-side. Entries are platform-owned and\nidentical for every caller, which is what keeps the plan ``public``-cacheable;\ncustomer-owned routing objects get a separate, caller-scoped endpoint (#1692\nPart 2)."
       },
       "SanitizedErrorInfo": {
         "properties": {
@@ -8498,7 +8526,7 @@
               }
             ],
             "title": "Sensitive",
-            "description": "Whether the value is write-only. Defaults to true on create and cannot be changed after creation."
+            "description": "Whether the value is write-only. Defaults to true on create and preserves the existing type when omitted on update."
           },
           "description": {
             "anyOf": [
@@ -8519,7 +8547,7 @@
           "value"
         ],
         "title": "SecretUpdate",
-        "description": "Request body for variable-capable ``PUT /secrets/{name}`` endpoints.\n\n``sensitive`` is only honored when creating rows; an existing row cannot be\nchanged between secret and variable in place."
+        "description": "Request body for variable-capable ``PUT /secrets/{name}`` endpoints.\n\n``sensitive`` controls the freshly submitted value. On update, omitting the\nfield preserves the existing row type; sending it replaces the value and\nstores the row with that sensitivity."
       },
       "SecretsPublic": {
         "properties": {
@@ -9139,16 +9167,19 @@
             ],
             "title": "Enrollment Channel"
           },
-          "listing_type": {
+          "channel_types": {
             "anyOf": [
               {
-                "type": "string"
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Listing Type"
+            "title": "Channel Types"
           }
         },
         "type": "object",
@@ -9157,7 +9188,7 @@
           "name"
         ],
         "title": "ServiceDetail",
-        "description": "Full customer-facing service details.\n\nSourced from ``service_mview``. Intentionally narrow:\n\n- Omits seller-internal fields (``seller_id``, ``routing_vars``,\n  ``payout_price``, ``ops_subscription_id``, ``ops_customer_id``)\n  and draft-only fields (``pending_revision_id``).\n- Omits review stats (``review_count``, ``average_rating``) and\n  logo URLs (``provider_logo``, ``offering_logo``,\n  ``seller_logo``); those belong to the marketing/dashboard\n  surface, not the SDK.\n- Omits ``tagline`` as marketing copy not used for dispatch."
+        "description": "Full customer-facing service details.\n\nSourced from ``service_mview``. Intentionally narrow:\n\n- Omits seller-internal fields (``seller_id``, ``routing_vars``,\n  ``payout_price``, ``ops_subscription_id``, ``ops_customer_id``)\n  and draft-only fields (``pending_revision_id``).\n- Omits review stats (``review_count``, ``average_rating``) and\n  logo URLs (``provider_logo``, ``offering_logo``,\n  ``seller_logo``); those belong to the marketing/dashboard\n  surface, not the SDK.\n- Omits ``summary`` as marketing copy not used for dispatch."
       },
       "ServiceDocumentDetail": {
         "properties": {
@@ -9225,6 +9256,18 @@
               }
             ],
             "title": "Filename"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
           },
           "content": {
             "anyOf": [
@@ -9491,6 +9534,63 @@
         ],
         "title": "UsageEventInfo",
         "description": "Linked usage/billing event data."
+      },
+      "UserPublic": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email",
+            "title": "Email"
+          },
+          "is_superuser": {
+            "type": "boolean",
+            "title": "Is Superuser",
+            "default": false
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "preference": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preference"
+          },
+          "primary_email_configured": {
+            "type": "boolean",
+            "title": "Primary Email Configured",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "email"
+        ],
+        "title": "UserPublic",
+        "description": "For API response"
       },
       "UserRequestInfo": {
         "properties": {

@@ -60,10 +60,10 @@ from .gateway_request_info import GatewayRequestInfo
 from .gateway_request_info_headers_type_0 import GatewayRequestInfoHeadersType0
 from .group_type_enum import GroupTypeEnum
 from .http_validation_error import HTTPValidationError
-from .logging_status_response import LoggingStatusResponse
 from .message import Message
 from .ops_customer_request_log_detail import OpsCustomerRequestLogDetail
 from .parameter_requirement import ParameterRequirement
+from .preference_set_request import PreferenceSetRequest
 from .recurrent_request_create import RecurrentRequestCreate
 from .recurrent_request_create_body_template_type_0 import RecurrentRequestCreateBodyTemplateType0
 from .recurrent_request_create_request_headers_type_0 import RecurrentRequestCreateRequestHeadersType0
@@ -115,6 +115,7 @@ from .service_collection_update import ServiceCollectionUpdate
 from .service_detail import ServiceDetail
 from .service_detail_list_price_type_0 import ServiceDetailListPriceType0
 from .service_document_detail import ServiceDocumentDetail
+from .service_document_detail_meta_type_0 import ServiceDocumentDetailMetaType0
 from .service_documents_response import ServiceDocumentsResponse
 from .service_enrollment_create import ServiceEnrollmentCreate
 from .service_enrollment_create_parameters_type_0 import ServiceEnrollmentCreateParametersType0
@@ -125,6 +126,8 @@ from .switch_routing_response import SwitchRoutingResponse
 from .upstream_response_info import UpstreamResponseInfo
 from .upstream_response_info_headers_type_0 import UpstreamResponseInfoHeadersType0
 from .usage_event_info import UsageEventInfo
+from .user_public import UserPublic
+from .user_public_preference_type_0 import UserPublicPreferenceType0
 from .user_request_info import UserRequestInfo
 from .user_request_info_headers_type_0 import UserRequestInfoHeadersType0
 from .validation_error import ValidationError
@@ -190,10 +193,10 @@ __all__ = (
     "GatewayRequestInfoHeadersType0",
     "GroupTypeEnum",
     "HTTPValidationError",
-    "LoggingStatusResponse",
     "Message",
     "OpsCustomerRequestLogDetail",
     "ParameterRequirement",
+    "PreferenceSetRequest",
     "RecurrentRequestCreate",
     "RecurrentRequestCreateBodyTemplateType0",
     "RecurrentRequestCreateRequestHeadersType0",
@@ -245,6 +248,7 @@ __all__ = (
     "ServiceDetail",
     "ServiceDetailListPriceType0",
     "ServiceDocumentDetail",
+    "ServiceDocumentDetailMetaType0",
     "ServiceDocumentsResponse",
     "ServiceEnrollmentCreate",
     "ServiceEnrollmentCreateParametersType0",
@@ -255,6 +259,8 @@ __all__ = (
     "UpstreamResponseInfo",
     "UpstreamResponseInfoHeadersType0",
     "UsageEventInfo",
+    "UserPublic",
+    "UserPublicPreferenceType0",
     "UserRequestInfo",
     "UserRequestInfoHeadersType0",
     "ValidationError",

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -28,9 +28,16 @@ class AccessPlan:
     interfaces: list[AccessInterfacePlan] | Unset = UNSET
     channels: list[ChannelPlan] | Unset = UNSET
     routing_endpoints: list[RoutingEndpointPlan] | Unset = UNSET
+    input_formats: list[str] | None | Unset = UNSET
+    gateway_type: str | Unset = "api"
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.access_interface_plan import AccessInterfacePlan
+        from ..models.channel_plan import ChannelPlan
+        from ..models.parameter_requirement import ParameterRequirement
+        from ..models.routing_endpoint_plan import RoutingEndpointPlan
+
         enrollment_mode: str | Unset = UNSET
         if not isinstance(self.enrollment_mode, Unset):
             enrollment_mode = self.enrollment_mode
@@ -63,6 +70,17 @@ class AccessPlan:
                 routing_endpoints_item = routing_endpoints_item_data.to_dict()
                 routing_endpoints.append(routing_endpoints_item)
 
+        input_formats: list[str] | None | Unset
+        if isinstance(self.input_formats, Unset):
+            input_formats = UNSET
+        elif isinstance(self.input_formats, list):
+            input_formats = self.input_formats
+
+        else:
+            input_formats = self.input_formats
+
+        gateway_type = self.gateway_type
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
@@ -76,6 +94,10 @@ class AccessPlan:
             field_dict["channels"] = channels
         if routing_endpoints is not UNSET:
             field_dict["routing_endpoints"] = routing_endpoints
+        if input_formats is not UNSET:
+            field_dict["input_formats"] = input_formats
+        if gateway_type is not UNSET:
+            field_dict["gateway_type"] = gateway_type
 
         return field_dict
 
@@ -130,12 +152,33 @@ class AccessPlan:
 
                 routing_endpoints.append(routing_endpoints_item)
 
+        def _parse_input_formats(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                input_formats_type_0 = cast(list[str], data)
+
+                return input_formats_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        input_formats = _parse_input_formats(d.pop("input_formats", UNSET))
+
+        gateway_type = d.pop("gateway_type", UNSET)
+
         access_plan = cls(
             enrollment_mode=enrollment_mode,
             parameters=parameters,
             interfaces=interfaces,
             channels=channels,
             routing_endpoints=routing_endpoints,
+            input_formats=input_formats,
+            gateway_type=gateway_type,
         )
 
         access_plan.additional_properties = d

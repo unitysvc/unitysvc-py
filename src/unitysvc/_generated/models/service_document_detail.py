@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -9,6 +9,10 @@ from attrs import field as _attrs_field
 
 from ..models.document_category_enum import DocumentCategoryEnum, check_document_category_enum
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.service_document_detail_meta_type_0 import ServiceDocumentDetailMetaType0
+
 
 T = TypeVar("T", bound="ServiceDocumentDetail")
 
@@ -42,11 +46,14 @@ class ServiceDocumentDetail:
     sort_order: int | Unset = 0
     external_url: None | str | Unset = UNSET
     filename: None | str | Unset = UNSET
+    meta: None | ServiceDocumentDetailMetaType0 | Unset = UNSET
     content: None | str | Unset = UNSET
     render_error: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.service_document_detail_meta_type_0 import ServiceDocumentDetailMetaType0
+
         id = str(self.id)
 
         title = self.title
@@ -81,6 +88,14 @@ class ServiceDocumentDetail:
         else:
             filename = self.filename
 
+        meta: dict[str, Any] | None | Unset
+        if isinstance(self.meta, Unset):
+            meta = UNSET
+        elif isinstance(self.meta, ServiceDocumentDetailMetaType0):
+            meta = self.meta.to_dict()
+        else:
+            meta = self.meta
+
         content: None | str | Unset
         if isinstance(self.content, Unset):
             content = UNSET
@@ -113,6 +128,8 @@ class ServiceDocumentDetail:
             field_dict["external_url"] = external_url
         if filename is not UNSET:
             field_dict["filename"] = filename
+        if meta is not UNSET:
+            field_dict["meta"] = meta
         if content is not UNSET:
             field_dict["content"] = content
         if render_error is not UNSET:
@@ -122,6 +139,8 @@ class ServiceDocumentDetail:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.service_document_detail_meta_type_0 import ServiceDocumentDetailMetaType0
+
         d = dict(src_dict)
         id = UUID(d.pop("id"))
 
@@ -169,6 +188,23 @@ class ServiceDocumentDetail:
 
         filename = _parse_filename(d.pop("filename", UNSET))
 
+        def _parse_meta(data: object) -> None | ServiceDocumentDetailMetaType0 | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                meta_type_0 = ServiceDocumentDetailMetaType0.from_dict(data)
+
+                return meta_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | ServiceDocumentDetailMetaType0 | Unset, data)
+
+        meta = _parse_meta(d.pop("meta", UNSET))
+
         def _parse_content(data: object) -> None | str | Unset:
             if data is None:
                 return data
@@ -197,6 +233,7 @@ class ServiceDocumentDetail:
             sort_order=sort_order,
             external_url=external_url,
             filename=filename,
+            meta=meta,
             content=content,
             render_error=render_error,
         )

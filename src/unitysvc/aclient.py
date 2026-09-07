@@ -47,6 +47,7 @@ if TYPE_CHECKING:
     from .aenrollments import AsyncEnrollments
     from .afiles import AsyncFiles
     from .agroups import AsyncGroups
+    from .apreferences import AsyncPreferences
     from .arecurrent_requests import AsyncRecurrentRequests
     from .arequest_logs import AsyncRequestLogs
     from .asecrets import AsyncSecrets
@@ -83,8 +84,7 @@ class AsyncClient:
         # anonymous and returning a confusingly narrow catalog.
         if api_key is not None and not api_key:
             raise ValueError(
-                "api_key is required. Pass api_key=None (or omit it) to "
-                "browse the public catalog anonymously."
+                "api_key is required. Pass api_key=None (or omit it) to browse the public catalog anonymously."
             )
 
         resolved_base_url = base_url or os.environ.get(ENV_API_URL) or DEFAULT_API_URL
@@ -128,6 +128,7 @@ class AsyncClient:
         self._enrollments: AsyncEnrollments | None = None
         self._files: AsyncFiles | None = None
         self._groups: AsyncGroups | None = None
+        self._preferences: AsyncPreferences | None = None
         self._recurrent_requests: AsyncRecurrentRequests | None = None
         self._request_logs: AsyncRequestLogs | None = None
         self._secrets: AsyncSecrets | None = None
@@ -215,6 +216,14 @@ class AsyncClient:
 
             self._groups = AsyncGroups(self._client, parent=self)
         return self._groups
+
+    @property
+    def preferences(self) -> AsyncPreferences:
+        if self._preferences is None:
+            from .apreferences import AsyncPreferences
+
+            self._preferences = AsyncPreferences(self._client)
+        return self._preferences
 
     @property
     def services(self) -> AsyncServices:

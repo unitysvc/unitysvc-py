@@ -10,10 +10,10 @@ from ._http import LowLevelClient, unwrap
 from .request_logs import _or_unset
 
 if TYPE_CHECKING:
-    from ._generated.models.logging_status_response import LoggingStatusResponse
     from ._generated.models.ops_customer_request_log_detail import OpsCustomerRequestLogDetail
     from ._generated.models.request_log_detail import RequestLogDetail
     from ._generated.models.request_log_list_response import RequestLogListResponse
+    from ._generated.models.user_public import UserPublic
 
 
 class AsyncRequestLogs:
@@ -27,24 +27,18 @@ class AsyncRequestLogs:
     def __init__(self, client: LowLevelClient) -> None:
         self._client = client
 
-    async def start(
-        self, *, truncate_long_message: bool | None = None
-    ) -> LoggingStatusResponse:
+    async def start(self, *, truncate_long_message: bool = True) -> UserPublic:
         """See :meth:`unitysvc.request_logs.RequestLogs.start`."""
-        from ._generated.api.customer import customer_start_request_logging
-        from ._generated.types import UNSET
+        from .apreferences import AsyncPreferences
 
-        return unwrap(
-            await customer_start_request_logging.asyncio_detailed(
-                client=self._client,
-                truncate_long_message=truncate_long_message if truncate_long_message is not None else UNSET,
-            )
-        )
+        mode = "truncated" if truncate_long_message else "complete"
+        return await AsyncPreferences(self._client).set("request-log", mode)
 
-    async def stop(self) -> LoggingStatusResponse:
-        from ._generated.api.customer import customer_stop_request_logging
+    async def stop(self) -> UserPublic:
+        """See :meth:`unitysvc.request_logs.RequestLogs.stop`."""
+        from .apreferences import AsyncPreferences
 
-        return unwrap(await customer_stop_request_logging.asyncio_detailed(client=self._client))
+        return await AsyncPreferences(self._client).set("request-log", None)
 
     async def list(
         self,

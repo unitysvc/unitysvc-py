@@ -60,6 +60,7 @@ if TYPE_CHECKING:
     from .enrollments import Enrollments
     from .files import Files
     from .groups import Groups
+    from .preferences import Preferences
     from .recurrent_requests import RecurrentRequests
     from .request_logs import RequestLogs
     from .secrets import Secrets
@@ -110,8 +111,7 @@ class Client:
         # anonymous and returning a confusingly narrow catalog.
         if api_key is not None and not api_key:
             raise ValueError(
-                "api_key is required. Pass api_key=None (or omit it) to "
-                "browse the public catalog anonymously."
+                "api_key is required. Pass api_key=None (or omit it) to browse the public catalog anonymously."
             )
 
         resolved_base_url = base_url or os.environ.get(ENV_API_URL) or DEFAULT_API_URL
@@ -157,6 +157,7 @@ class Client:
         self._enrollments: Enrollments | None = None
         self._files: Files | None = None
         self._groups: Groups | None = None
+        self._preferences: Preferences | None = None
         self._recurrent_requests: RecurrentRequests | None = None
         self._request_logs: RequestLogs | None = None
         self._secrets: Secrets | None = None
@@ -249,6 +250,14 @@ class Client:
 
             self._groups = Groups(self._client, parent=self)
         return self._groups
+
+    @property
+    def preferences(self) -> Preferences:
+        if self._preferences is None:
+            from .preferences import Preferences
+
+            self._preferences = Preferences(self._client)
+        return self._preferences
 
     @property
     def services(self) -> Services:

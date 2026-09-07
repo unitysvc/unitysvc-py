@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
+from urllib.parse import quote
 
 import httpx
 
@@ -92,7 +93,7 @@ def sync_detailed(
 
      List user's service enrollments with optional enriched service data.
 
-    Uses ServiceMView for efficient data retrieval when include_service_details=True.
+    Uses live service/content rows when include_service_details=True.
 
     Args:
         skip (int | Unset):  Default: 0.
@@ -142,7 +143,7 @@ def sync(
 
      List user's service enrollments with optional enriched service data.
 
-    Uses ServiceMView for efficient data retrieval when include_service_details=True.
+    Uses live service/content rows when include_service_details=True.
 
     Args:
         skip (int | Unset):  Default: 0.
@@ -187,7 +188,7 @@ async def asyncio_detailed(
 
      List user's service enrollments with optional enriched service data.
 
-    Uses ServiceMView for efficient data retrieval when include_service_details=True.
+    Uses live service/content rows when include_service_details=True.
 
     Args:
         skip (int | Unset):  Default: 0.
@@ -235,7 +236,7 @@ async def asyncio(
 
      List user's service enrollments with optional enriched service data.
 
-    Uses ServiceMView for efficient data retrieval when include_service_details=True.
+    Uses live service/content rows when include_service_details=True.
 
     Args:
         skip (int | Unset):  Default: 0.

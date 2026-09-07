@@ -8,9 +8,11 @@ model or a :class:`~unitysvc.exceptions.UnitysvcSDKError`.
 
 Two halves of the surface:
 
-* :meth:`start` / :meth:`stop` — flip the per-user logging preference.
-  Until logging is started, gateway dispatches do **not** appear in
-  the listing endpoint.
+* :meth:`start` / :meth:`stop` — flip the per-user logging preference
+  via the generic ``POST /v1/customer/preferences/set`` endpoint (the
+  ``"request-log"`` preference; see :mod:`unitysvc.preferences`,
+  unitysvc#2063). Until logging is started, gateway dispatches do
+  **not** appear in the listing endpoint.
 * :meth:`list` / :meth:`get` — paginated list of logged requests, plus
   full detail (request/response bodies) for one row.
 """
@@ -27,10 +29,10 @@ from ._http import LowLevelClient, unwrap
 T = TypeVar("T")
 
 if TYPE_CHECKING:
-    from ._generated.models.logging_status_response import LoggingStatusResponse
     from ._generated.models.ops_customer_request_log_detail import OpsCustomerRequestLogDetail
     from ._generated.models.request_log_detail import RequestLogDetail
     from ._generated.models.request_log_list_response import RequestLogListResponse
+    from ._generated.models.user_public import UserPublic
 
 
 class RequestLogs:
@@ -43,9 +45,7 @@ class RequestLogs:
     # ------------------------------------------------------------------
     # Toggle
     # ------------------------------------------------------------------
-    def start(
-        self, *, truncate_long_message: bool | None = None
-    ) -> LoggingStatusResponse:
+    def start(self, *, truncate_long_message: bool = True) -> UserPublic:
         """Enable request logging for the authenticated user.
 
         Subsequent gateway dispatches will be persisted and visible via
@@ -55,42 +55,29 @@ class RequestLogs:
         Args:
             truncate_long_message: Picks the storage mode.
 
-                * ``True`` → ``truncated``: 8 KB inline preview is
-                  stored, no S3 upload. The listing endpoint serves
-                  the preview; :meth:`get` returns the same preview
-                  (full body is not preserved).
+                * ``True`` (default) → ``truncated``: 8 KB inline
+                  preview is stored, no S3 upload. The listing
+                  endpoint serves the preview; :meth:`get` returns the
+                  same preview (full body is not preserved).
                 * ``False`` → ``complete``: full request / response
                   bodies are uploaded to S3 so :meth:`get` can return
                   the full payload. The listing endpoint still
                   returns only the preview to keep paging cheap.
-                * ``None`` (default) → preserve the user's existing
-                  ``preference.logging`` mode if it's already
-                  ``truncated`` or ``complete``; otherwise fall back
-                  to ``truncated``. Use this when the frontend has
-                  already set the preference via ``PATCH /users/me``
-                  and you just want to flip the gateway on. SDK
-                  scripts that don't manage preferences should pass
-                  ``True`` or ``False`` explicitly.
         """
-        from ._generated.api.customer import customer_start_request_logging
-        from ._generated.types import UNSET
+        from .preferences import Preferences
 
-        return unwrap(
-            customer_start_request_logging.sync_detailed(
-                client=self._client,
-                truncate_long_message=truncate_long_message if truncate_long_message is not None else UNSET,
-            )
-        )
+        mode = "truncated" if truncate_long_message else "complete"
+        return Preferences(self._client).set("request-log", mode)
 
-    def stop(self) -> LoggingStatusResponse:
+    def stop(self) -> UserPublic:
         """Disable request logging for the authenticated user.
 
         Already-persisted rows remain visible via :meth:`list` /
         :meth:`get`; only future dispatches are skipped. Idempotent.
         """
-        from ._generated.api.customer import customer_stop_request_logging
+        from .preferences import Preferences
 
-        return unwrap(customer_stop_request_logging.sync_detailed(client=self._client))
+        return Preferences(self._client).set("request-log", None)
 
     # ------------------------------------------------------------------
     # Read
@@ -172,5 +159,3 @@ def _or_unset(value: T | None) -> T | Unset:
     """Map ``None`` to ``UNSET`` so the generated client omits the query
     parameter entirely instead of sending ``?param=None``."""
     return UNSET if value is None else value
-
-

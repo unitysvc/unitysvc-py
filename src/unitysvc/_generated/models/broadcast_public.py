@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -38,6 +38,7 @@ class BroadcastPublic:
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.broadcast_public_details_type_0 import BroadcastPublicDetailsType0
+        from ..models.broadcast_target_public import BroadcastTargetPublic
 
         id = str(self.id)
 

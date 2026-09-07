@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -34,27 +34,33 @@ class CustomerGroupView:
     Two of the five types are routable (a ``/g/<name>`` endpoint); the rest are
     not:
 
-    - ``open``  — routable, and members share a common request format, so a
-      request with **no** routing key fans safely across them. A key may still
-      be passed to select one. (Also the single-member case.)
-    - ``keyed`` — routable, but members accept different formats, so a keyless
-      request is ambiguous: a routing key is **required**, and every key
-      resolves to a format-homogeneous set.
-    - ``collection`` — not a routing endpoint. A browse-only set, or a would-be
-      routable group demoted because some routing key spans incompatible
-      formats (a request to that key couldn't be served reliably).
+    A quick-characterization spectrum derived from ``routable_keys``
+    (unitysvc#1730); the gateway routes off ``routable_keys`` itself, not this:
+
+    - ``keyed`` — one extreme: a clean menu, every service addressable by its own
+      distinct routing key (each key maps to a single service); keyless access an
+      optional feature. Serves ``/v1/models`` and is tool-explorable.
+    - ``open`` — the middle: routable, but not a clean per-service menu — a
+      keyless-only pool, partial keying, or a key that fans to several services.
+    - ``collection`` — the other extreme: **not** a routing endpoint at all
+      (empty ``routable_keys`` — no members, or every bucket format-collides).
+
+    Routability is exactly ``group_type in {open, keyed}`` (``collection`` =
+    empty ``routable_keys``), so the routing gate is unchanged; #1730 only re-cut
+    the open↔keyed boundary. Whether a keyless request is served is a
+    ``routable_keys`` fact, not a type fact.
     - ``category`` — a parent with no members of its own; its membership is the
       union of its descendants, for browsing only.
-    - ``capability_pool`` (#1244) — the ``/p/<name>`` namespace; membership is
-      claim-driven (services instantiated from a ServiceTemplate whose
-      ``pool_name`` matches), set by a dedicated refresh.
 
     ``open`` / ``keyed`` / ``collection`` are derived from the members at
-    membership refresh; ``category`` and ``capability_pool`` are set explicitly
-    and never re-derived. (The former ``routable`` value was split into
-    ``open`` / ``keyed``, and the ``misc`` catch-all removed — unitysvc#1686.) """
+    membership refresh; ``category`` is set explicitly and never re-derived.
+    (The former ``routable`` value was split into ``open`` / ``keyed``, and the
+    ``misc`` catch-all removed — unitysvc#1686.) """
     display_name: None | str | Unset = UNSET
     member_count: int | Unset = 0
+    is_default: bool | Unset = False
+    service_ids: list[UUID] | None | Unset = UNSET
+    owner_id: None | Unset | UUID = UNSET
     details: CustomerGroupViewDetailsType0 | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -79,6 +85,28 @@ class CustomerGroupView:
 
         member_count = self.member_count
 
+        is_default = self.is_default
+
+        service_ids: list[str] | None | Unset
+        if isinstance(self.service_ids, Unset):
+            service_ids = UNSET
+        elif isinstance(self.service_ids, list):
+            service_ids = []
+            for service_ids_type_0_item_data in self.service_ids:
+                service_ids_type_0_item = str(service_ids_type_0_item_data)
+                service_ids.append(service_ids_type_0_item)
+
+        else:
+            service_ids = self.service_ids
+
+        owner_id: None | str | Unset
+        if isinstance(self.owner_id, Unset):
+            owner_id = UNSET
+        elif isinstance(self.owner_id, UUID):
+            owner_id = str(self.owner_id)
+        else:
+            owner_id = self.owner_id
+
         details: dict[str, Any] | None | Unset
         if isinstance(self.details, Unset):
             details = UNSET
@@ -102,6 +130,12 @@ class CustomerGroupView:
             field_dict["display_name"] = display_name
         if member_count is not UNSET:
             field_dict["member_count"] = member_count
+        if is_default is not UNSET:
+            field_dict["is_default"] = is_default
+        if service_ids is not UNSET:
+            field_dict["service_ids"] = service_ids
+        if owner_id is not UNSET:
+            field_dict["owner_id"] = owner_id
         if details is not UNSET:
             field_dict["details"] = details
 
@@ -133,6 +167,47 @@ class CustomerGroupView:
 
         member_count = d.pop("member_count", UNSET)
 
+        is_default = d.pop("is_default", UNSET)
+
+        def _parse_service_ids(data: object) -> list[UUID] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                service_ids_type_0 = []
+                _service_ids_type_0 = data
+                for service_ids_type_0_item_data in _service_ids_type_0:
+                    service_ids_type_0_item = UUID(service_ids_type_0_item_data)
+
+                    service_ids_type_0.append(service_ids_type_0_item)
+
+                return service_ids_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[UUID] | None | Unset, data)
+
+        service_ids = _parse_service_ids(d.pop("service_ids", UNSET))
+
+        def _parse_owner_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                owner_id_type_0 = UUID(data)
+
+                return owner_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
+
+        owner_id = _parse_owner_id(d.pop("owner_id", UNSET))
+
         def _parse_details(data: object) -> CustomerGroupViewDetailsType0 | None | Unset:
             if data is None:
                 return data
@@ -158,6 +233,9 @@ class CustomerGroupView:
             group_type=group_type,
             display_name=display_name,
             member_count=member_count,
+            is_default=is_default,
+            service_ids=service_ids,
+            owner_id=owner_id,
             details=details,
         )
 

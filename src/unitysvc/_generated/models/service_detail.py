@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -29,7 +29,7 @@ class ServiceDetail:
       logo URLs (``provider_logo``, ``offering_logo``,
       ``seller_logo``); those belong to the marketing/dashboard
       surface, not the SDK.
-    - Omits ``tagline`` as marketing copy not used for dispatch.
+    - Omits ``summary`` as marketing copy not used for dispatch.
 
     """
 
@@ -45,7 +45,7 @@ class ServiceDetail:
     tags: list[str] | None | Unset = UNSET
     list_price: None | ServiceDetailListPriceType0 | Unset = UNSET
     enrollment_channel: None | str | Unset = UNSET
-    listing_type: None | str | Unset = UNSET
+    channel_types: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -123,11 +123,14 @@ class ServiceDetail:
         else:
             enrollment_channel = self.enrollment_channel
 
-        listing_type: None | str | Unset
-        if isinstance(self.listing_type, Unset):
-            listing_type = UNSET
+        channel_types: list[str] | None | Unset
+        if isinstance(self.channel_types, Unset):
+            channel_types = UNSET
+        elif isinstance(self.channel_types, list):
+            channel_types = self.channel_types
+
         else:
-            listing_type = self.listing_type
+            channel_types = self.channel_types
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -157,8 +160,8 @@ class ServiceDetail:
             field_dict["list_price"] = list_price
         if enrollment_channel is not UNSET:
             field_dict["enrollment_channel"] = enrollment_channel
-        if listing_type is not UNSET:
-            field_dict["listing_type"] = listing_type
+        if channel_types is not UNSET:
+            field_dict["channel_types"] = channel_types
 
         return field_dict
 
@@ -285,14 +288,22 @@ class ServiceDetail:
 
         enrollment_channel = _parse_enrollment_channel(d.pop("enrollment_channel", UNSET))
 
-        def _parse_listing_type(data: object) -> None | str | Unset:
+        def _parse_channel_types(data: object) -> list[str] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | str | Unset, data)
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                channel_types_type_0 = cast(list[str], data)
 
-        listing_type = _parse_listing_type(d.pop("listing_type", UNSET))
+                return channel_types_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        channel_types = _parse_channel_types(d.pop("channel_types", UNSET))
 
         service_detail = cls(
             id=id,
@@ -307,7 +318,7 @@ class ServiceDetail:
             tags=tags,
             list_price=list_price,
             enrollment_channel=enrollment_channel,
-            listing_type=listing_type,
+            channel_types=channel_types,
         )
 
         service_detail.additional_properties = d
