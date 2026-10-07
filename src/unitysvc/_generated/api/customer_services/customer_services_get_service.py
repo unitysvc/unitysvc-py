@@ -77,14 +77,11 @@ def sync_detailed(
 
      Get details of a single service in the public catalog.
 
-    Hot path: read from ``service_mview`` for active + public services.
-
-    Cold path: if the mview misses, fall back to a base-tables query
-    that matches ``status = 'deprecated' AND visibility = 'public'``.
-    This enables statement / invoice back-reference URLs to keep
-    rendering after a service has been deprecated (the service still
-    exists in the base tables; only the mview filters it out). See
-    unitysvc#1027.
+    Hot path: the active + public row. Cold path: the same query at
+    ``status = 'deprecated'``, so statement / invoice back-reference URLs
+    keep rendering after a service has been deprecated — see unitysvc#1027,
+    which added the fallback back when ``service_mview`` was the hot path
+    and excluded deprecated rows. Both paths read the base tables now.
 
     Returns 404 for non-public services, or for statuses other than
     ``active`` / ``deprecated`` — the visible set is intentionally
@@ -133,14 +130,11 @@ def sync(
 
      Get details of a single service in the public catalog.
 
-    Hot path: read from ``service_mview`` for active + public services.
-
-    Cold path: if the mview misses, fall back to a base-tables query
-    that matches ``status = 'deprecated' AND visibility = 'public'``.
-    This enables statement / invoice back-reference URLs to keep
-    rendering after a service has been deprecated (the service still
-    exists in the base tables; only the mview filters it out). See
-    unitysvc#1027.
+    Hot path: the active + public row. Cold path: the same query at
+    ``status = 'deprecated'``, so statement / invoice back-reference URLs
+    keep rendering after a service has been deprecated — see unitysvc#1027,
+    which added the fallback back when ``service_mview`` was the hot path
+    and excluded deprecated rows. Both paths read the base tables now.
 
     Returns 404 for non-public services, or for statuses other than
     ``active`` / ``deprecated`` — the visible set is intentionally
@@ -184,14 +178,11 @@ async def asyncio_detailed(
 
      Get details of a single service in the public catalog.
 
-    Hot path: read from ``service_mview`` for active + public services.
-
-    Cold path: if the mview misses, fall back to a base-tables query
-    that matches ``status = 'deprecated' AND visibility = 'public'``.
-    This enables statement / invoice back-reference URLs to keep
-    rendering after a service has been deprecated (the service still
-    exists in the base tables; only the mview filters it out). See
-    unitysvc#1027.
+    Hot path: the active + public row. Cold path: the same query at
+    ``status = 'deprecated'``, so statement / invoice back-reference URLs
+    keep rendering after a service has been deprecated — see unitysvc#1027,
+    which added the fallback back when ``service_mview`` was the hot path
+    and excluded deprecated rows. Both paths read the base tables now.
 
     Returns 404 for non-public services, or for statuses other than
     ``active`` / ``deprecated`` — the visible set is intentionally
@@ -238,14 +229,11 @@ async def asyncio(
 
      Get details of a single service in the public catalog.
 
-    Hot path: read from ``service_mview`` for active + public services.
-
-    Cold path: if the mview misses, fall back to a base-tables query
-    that matches ``status = 'deprecated' AND visibility = 'public'``.
-    This enables statement / invoice back-reference URLs to keep
-    rendering after a service has been deprecated (the service still
-    exists in the base tables; only the mview filters it out). See
-    unitysvc#1027.
+    Hot path: the active + public row. Cold path: the same query at
+    ``status = 'deprecated'``, so statement / invoice back-reference URLs
+    keep rendering after a service has been deprecated — see unitysvc#1027,
+    which added the fallback back when ``service_mview`` was the hot path
+    and excluded deprecated rows. Both paths read the base tables now.
 
     Returns 404 for non-public services, or for statuses other than
     ``active`` / ``deprecated`` — the visible set is intentionally

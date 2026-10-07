@@ -20,7 +20,7 @@ T = TypeVar("T", bound="ServiceDetail")
 class ServiceDetail:
     """Full customer-facing service details.
 
-    Sourced from ``service_mview``. Intentionally narrow:
+    Intentionally narrow:
 
     - Omits seller-internal fields (``seller_id``, ``routing_vars``,
       ``payout_price``, ``ops_subscription_id``, ``ops_customer_id``)
