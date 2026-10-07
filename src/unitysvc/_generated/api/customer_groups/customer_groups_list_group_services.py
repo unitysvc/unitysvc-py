@@ -106,9 +106,8 @@ def sync_detailed(
     The group is addressable by id or name; both are returned in the
     group detail shape. Names stay valid across admin recreations of a
     group, so SDK scripts that use the name keep working.
-    Mirrors the visibility rule used by the GraphQL
-    ``resolve_group_services`` resolver for non-admin / non-seller
-    callers: service must be ``status='active'`` and
+    Matches the public catalog visibility rule: service must be
+    ``status='active'`` and
     ``visibility='public'``. The group itself must be in the
     customer-visible set (active + platform + non-empty).
 
@@ -172,9 +171,8 @@ def sync(
     The group is addressable by id or name; both are returned in the
     group detail shape. Names stay valid across admin recreations of a
     group, so SDK scripts that use the name keep working.
-    Mirrors the visibility rule used by the GraphQL
-    ``resolve_group_services`` resolver for non-admin / non-seller
-    callers: service must be ``status='active'`` and
+    Matches the public catalog visibility rule: service must be
+    ``status='active'`` and
     ``visibility='public'``. The group itself must be in the
     customer-visible set (active + platform + non-empty).
 
@@ -233,9 +231,8 @@ async def asyncio_detailed(
     The group is addressable by id or name; both are returned in the
     group detail shape. Names stay valid across admin recreations of a
     group, so SDK scripts that use the name keep working.
-    Mirrors the visibility rule used by the GraphQL
-    ``resolve_group_services`` resolver for non-admin / non-seller
-    callers: service must be ``status='active'`` and
+    Matches the public catalog visibility rule: service must be
+    ``status='active'`` and
     ``visibility='public'``. The group itself must be in the
     customer-visible set (active + platform + non-empty).
 
@@ -297,9 +294,8 @@ async def asyncio(
     The group is addressable by id or name; both are returned in the
     group detail shape. Names stay valid across admin recreations of a
     group, so SDK scripts that use the name keep working.
-    Mirrors the visibility rule used by the GraphQL
-    ``resolve_group_services`` resolver for non-admin / non-seller
-    callers: service must be ``status='active'`` and
+    Matches the public catalog visibility rule: service must be
+    ``status='active'`` and
     ``visibility='public'``. The group itself must be in the
     customer-visible set (active + platform + non-empty).
 

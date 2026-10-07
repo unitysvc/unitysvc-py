@@ -834,7 +834,7 @@
           "customer-broadcasts"
         ],
         "summary": "Update Broadcast",
-        "description": "Update a broadcast's config (timeout, enabled, description).\n\n``mode`` may be set to ``\"sync\"`` but not ``\"async\"`` (rejected with 422\nuntil async is built \u2014 see #1553).",
+        "description": "Update a broadcast's config (mode, timeout, enabled, description).\n\nSwitching ``mode`` takes effect on the next ``/b/<name>`` call: ``sync``\nblocks for the aggregated envelope, ``async`` returns ``202`` + per-target\ntask ids (#1553).",
         "operationId": "customer-broadcasts-update_broadcast",
         "parameters": [
           {
@@ -3113,7 +3113,7 @@
           "customer-groups"
         ],
         "summary": "List Group Services",
-        "description": "List customer-visible services that belong to a group.\n\nThe group is addressable by id or name; both are returned in the\ngroup detail shape. Names stay valid across admin recreations of a\ngroup, so SDK scripts that use the name keep working.\nMirrors the visibility rule used by the GraphQL\n``resolve_group_services`` resolver for non-admin / non-seller\ncallers: service must be ``status='active'`` and\n``visibility='public'``. The group itself must be in the\ncustomer-visible set (active + platform + non-empty).\n\nUses keyset pagination on ``(created_at DESC, service_id DESC)``\nto match the seller ``services_list`` endpoint \u2014 clients echo\n``next_cursor`` back unchanged to fetch subsequent pages.\n\nReadable without an API key (unitysvc#1610). The visibility rule\nabove is defined entirely by service and group state, so an\nanonymous caller sees exactly what an authenticated customer sees \u2014\ncaller identity was never used for scoping here.",
+        "description": "List customer-visible services that belong to a group.\n\nThe group is addressable by id or name; both are returned in the\ngroup detail shape. Names stay valid across admin recreations of a\ngroup, so SDK scripts that use the name keep working.\nMatches the public catalog visibility rule: service must be\n``status='active'`` and\n``visibility='public'``. The group itself must be in the\ncustomer-visible set (active + platform + non-empty).\n\nUses keyset pagination on ``(created_at DESC, service_id DESC)``\nto match the seller ``services_list`` endpoint \u2014 clients echo\n``next_cursor`` back unchanged to fetch subsequent pages.\n\nReadable without an API key (unitysvc#1610). The visibility rule\nabove is defined entirely by service and group state, so an\nanonymous caller sees exactly what an authenticated customer sees \u2014\ncaller identity was never used for scoping here.",
         "operationId": "customer-groups-list_group_services",
         "parameters": [
           {
@@ -3482,7 +3482,7 @@
           "preferences"
         ],
         "summary": "Set Preference",
-        "description": "Set (or clear, with ``value: null``) one named preference.\n\nSame write path the JWT-authenticated frontend endpoints use for each\npreference \u2014 this is a second door onto them, reachable with a\n``svcpass_...`` API key, not a parallel implementation.",
+        "description": "Set (or clear, with ``value: null``) one named preference.\n\nSame write path the JWT-authenticated frontend endpoints use for each\npreference \u2014 this is a second door onto them, reachable with a\n``svcpass_...`` API key, not a parallel implementation. The dispatch\nitself (and the set of supported preference names) lives in\n``app.crud.preferences.set_customer_preference``.\n\nNo router-wide scope gate here \u2014 see the module docstring's\n\"Scoping\" section. Each preference branch there is responsible for its\nown.",
         "operationId": "customer-set_preference",
         "parameters": [
           {
@@ -4884,7 +4884,7 @@
           "customer-services"
         ],
         "summary": "Get Service",
-        "description": "Get details of a single service in the public catalog.\n\nHot path: read from ``service_mview`` for active + public services.\n\nCold path: if the mview misses, fall back to a base-tables query\nthat matches ``status = 'deprecated' AND visibility = 'public'``.\nThis enables statement / invoice back-reference URLs to keep\nrendering after a service has been deprecated (the service still\nexists in the base tables; only the mview filters it out). See\nunitysvc#1027.\n\nReturns 404 for non-public services, or for statuses other than\n``active`` / ``deprecated`` \u2014 the visible set is intentionally\nnarrow so the endpoint doesn't leak the existence of unlisted\nor draft services.\n\nReadable without an API key (unitysvc#1610). The visible set is\ndefined purely by service status and visibility, so an anonymous\ncaller sees exactly what an authenticated customer sees \u2014 caller\nidentity was never used for scoping here.",
+        "description": "Get details of a single service in the public catalog.\n\nHot path: the active + public row. Cold path: the same query at\n``status = 'deprecated'``, so statement / invoice back-reference URLs\nkeep rendering after a service has been deprecated \u2014 see unitysvc#1027,\nwhich added the fallback back when ``service_mview`` was the hot path\nand excluded deprecated rows. Both paths read the base tables now.\n\nReturns 404 for non-public services, or for statuses other than\n``active`` / ``deprecated`` \u2014 the visible set is intentionally\nnarrow so the endpoint doesn't leak the existence of unlisted\nor draft services.\n\nReadable without an API key (unitysvc#1610). The visible set is\ndefined purely by service status and visibility, so an anonymous\ncaller sees exactly what an authenticated customer sees \u2014 caller\nidentity was never used for scoping here.",
         "operationId": "customer-services-get_service",
         "parameters": [
           {
@@ -5499,6 +5499,92 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AccessPlan"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usage/cycle": {
+      "get": {
+        "tags": [
+          "customer",
+          "usage"
+        ],
+        "summary": "Cycle-to-date usage and cost",
+        "description": "Per-service usage and cost for the current billing cycle, plus every plan-level meter (request logging, log storage, data transfer) with its included quota. Defaults to the current cycle; pass cycle_start to read an earlier one.",
+        "operationId": "customer-get_cycle_usage",
+        "parameters": [
+          {
+            "name": "cycle_start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "First day of the cycle to report. Defaults to the customer's current wallet cycle.",
+              "title": "Cycle Start"
+            },
+            "description": "First day of the cycle to report. Defaults to the customer's current wallet cycle."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CycleUsageResponse"
                 }
               }
             }
@@ -6612,6 +6698,17 @@
             "type": "string",
             "title": "Channel Type"
           },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
           "free": {
             "type": "boolean",
             "title": "Free",
@@ -7283,6 +7380,118 @@
         "title": "CustomerGroupView",
         "description": "Unified shape for the merged /customer/groups list \u2014 either a read-only\nplatform ServiceGroup or the customer's own editable ServiceCollection."
       },
+      "CycleUsageResponse": {
+        "properties": {
+          "cycle_start": {
+            "type": "string",
+            "format": "date",
+            "title": "Cycle Start"
+          },
+          "cycle_end": {
+            "type": "string",
+            "format": "date",
+            "title": "Cycle End"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "As Of"
+          },
+          "days_elapsed": {
+            "type": "integer",
+            "title": "Days Elapsed"
+          },
+          "days_total": {
+            "type": "integer",
+            "title": "Days Total"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "has_active_plan": {
+            "type": "boolean",
+            "title": "Has Active Plan",
+            "description": "Whether the customer has an active/trialing plan subscription",
+            "default": false
+          },
+          "services": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceUsagePublic"
+            },
+            "type": "array",
+            "title": "Services"
+          },
+          "meters": {
+            "items": {
+              "$ref": "#/components/schemas/PlanMeterPublic"
+            },
+            "type": "array",
+            "title": "Meters"
+          },
+          "services_charge": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Services Charge"
+          },
+          "meters_charge": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Meters Charge"
+          },
+          "total_charge": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Charge"
+          },
+          "projected_total_charge": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Projected Total Charge",
+            "description": "Flat extrapolation to cycle end; a projection, not a quote"
+          },
+          "wallet_balance": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wallet Balance"
+          },
+          "balance_after_usage": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Balance After Usage",
+            "description": "wallet_balance - total_charge, computed live"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cycle_start",
+          "cycle_end",
+          "as_of",
+          "days_elapsed",
+          "days_total",
+          "currency",
+          "services_charge",
+          "meters_charge",
+          "total_charge",
+          "projected_total_charge"
+        ],
+        "title": "CycleUsageResponse",
+        "description": "Cycle-to-date usage and cost for the authenticated customer."
+      },
       "DocumentCategoryEnum": {
         "type": "string",
         "enum": [
@@ -7366,7 +7575,7 @@
           "keyed"
         ],
         "title": "GroupTypeEnum",
-        "description": "Type of service group. Derived from members, not authored (unitysvc#1686).\n\nTwo of the five types are routable (a ``/g/<name>`` endpoint); the rest are\nnot:\n\nA quick-characterization spectrum derived from ``routable_keys``\n(unitysvc#1730); the gateway routes off ``routable_keys`` itself, not this:\n\n- ``keyed`` \u2014 one extreme: a clean menu, every service addressable by its own\n  distinct routing key (each key maps to a single service); keyless access an\n  optional feature. Serves ``/v1/models`` and is tool-explorable.\n- ``open`` \u2014 the middle: routable, but not a clean per-service menu \u2014 a\n  keyless-only pool, partial keying, or a key that fans to several services.\n- ``collection`` \u2014 the other extreme: **not** a routing endpoint at all\n  (empty ``routable_keys`` \u2014 no members, or every bucket format-collides).\n\nRoutability is exactly ``group_type in {open, keyed}`` (``collection`` =\nempty ``routable_keys``), so the routing gate is unchanged; #1730 only re-cut\nthe open\u2194keyed boundary. Whether a keyless request is served is a\n``routable_keys`` fact, not a type fact.\n- ``category`` \u2014 a parent with no members of its own; its membership is the\n  union of its descendants, for browsing only.\n\n``open`` / ``keyed`` / ``collection`` are derived from the members at\nmembership refresh; ``category`` is set explicitly and never re-derived.\n(The former ``routable`` value was split into ``open`` / ``keyed``, and the\n``misc`` catch-all removed \u2014 unitysvc#1686.)"
+        "description": "Type of service group. Derived from members, not authored.\n\n- ``category``: Parent group for browsing/organization only.\n- ``collection``: Services-bearing group that is not routable.\n- ``open``: Routable group where keyless requests can fan safely.\n- ``keyed``: Routable group where callers must provide a routing key."
       },
       "HTTPValidationError": {
         "properties": {
@@ -7543,6 +7752,52 @@
           "name"
         ],
         "title": "ParameterRequirement"
+      },
+      "PlanMeterPublic": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "logging_db | logging_s3 | data_transfer_out|_in"
+          },
+          "based_on": {
+            "type": "string",
+            "title": "Based On",
+            "description": "request_count | one_gigabyte"
+          },
+          "raw_quantity": {
+            "type": "integer",
+            "title": "Raw Quantity",
+            "description": "Used, in the base unit (rows or bytes)"
+          },
+          "included": {
+            "type": "integer",
+            "title": "Included",
+            "description": "Free quota in based_on units, seat-scaled"
+          },
+          "cost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost",
+            "description": "Overage cost this cycle"
+          },
+          "overage_billable": {
+            "type": "boolean",
+            "title": "Overage Billable",
+            "description": "Whether exceeding `included` is charged. False means the plan prices this resource at $0 throughout, so `included` is not a real ceiling and the UI should not draw progress toward it.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "based_on",
+          "raw_quantity",
+          "included",
+          "cost"
+        ],
+        "title": "PlanMeterPublic",
+        "description": "A plan-level meter (request logging, log storage, data transfer).\n\nPresent only for resources the customer's plan actually defines, so the\nUI renders a quota bar per real entitlement and nothing otherwise."
       },
       "PreferenceSetRequest": {
         "properties": {
@@ -9188,7 +9443,7 @@
           "name"
         ],
         "title": "ServiceDetail",
-        "description": "Full customer-facing service details.\n\nSourced from ``service_mview``. Intentionally narrow:\n\n- Omits seller-internal fields (``seller_id``, ``routing_vars``,\n  ``payout_price``, ``ops_subscription_id``, ``ops_customer_id``)\n  and draft-only fields (``pending_revision_id``).\n- Omits review stats (``review_count``, ``average_rating``) and\n  logo URLs (``provider_logo``, ``offering_logo``,\n  ``seller_logo``); those belong to the marketing/dashboard\n  surface, not the SDK.\n- Omits ``summary`` as marketing copy not used for dispatch."
+        "description": "Full customer-facing service details.\n\nIntentionally narrow:\n\n- Omits seller-internal fields (``seller_id``, ``routing_vars``,\n  ``payout_price``, ``ops_subscription_id``, ``ops_customer_id``)\n  and draft-only fields (``pending_revision_id``).\n- Omits review stats (``review_count``, ``average_rating``) and\n  logo URLs (``provider_logo``, ``offering_logo``,\n  ``seller_logo``); those belong to the marketing/dashboard\n  surface, not the SDK.\n- Omits ``summary`` as marketing copy not used for dispatch."
       },
       "ServiceDocumentDetail": {
         "properties": {
@@ -9448,6 +9703,62 @@
         "title": "ServiceSummary",
         "description": "Minimal service info used when listing services inside a group.\n\nIntentionally narrow: enough to render a picker and drill in,\nnothing that customers don't need at browse time. Fetch\n``ServiceDetail`` for the full schema.\n\n``status`` is intentionally not exposed \u2014 customers only ever\nsee ``active`` services (the visibility filter guarantees it),\nso a field whose only valid value is ``\"active\"`` carries no\ninformation. Same reasoning for ``is_active`` on\n``AccessInterface``."
       },
+      "ServiceUsagePublic": {
+        "properties": {
+          "service_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Service Id"
+          },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name",
+            "description": "Service name, blank if since deleted"
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel",
+            "description": "Upstream access channel used",
+            "default": ""
+          },
+          "request_count": {
+            "type": "integer",
+            "title": "Request Count"
+          },
+          "success_count": {
+            "type": "integer",
+            "title": "Success Count"
+          },
+          "error_count": {
+            "type": "integer",
+            "title": "Error Count"
+          },
+          "usage_metrics": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Usage Metrics"
+          },
+          "customer_charge": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Customer Charge",
+            "description": "Cost for this service this cycle"
+          }
+        },
+        "type": "object",
+        "required": [
+          "service_id",
+          "service_name",
+          "request_count",
+          "success_count",
+          "error_count",
+          "customer_charge"
+        ],
+        "title": "ServiceUsagePublic",
+        "description": "One service's usage and cost for the billing cycle."
+      },
       "SwitchRoutingResponse": {
         "properties": {
           "alias": {
@@ -9518,22 +9829,31 @@
       },
       "UsageEventInfo": {
         "properties": {
-          "customer_charge": {
-            "type": "string",
-            "title": "Customer Charge"
-          },
           "usage_metrics": {
-            "type": "string",
-            "title": "Usage Metrics"
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Usage Event Metrics"
+          },
+          "pricing_bundle_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pricing Bundle Id"
           }
         },
         "type": "object",
         "required": [
-          "customer_charge",
           "usage_metrics"
         ],
         "title": "UsageEventInfo",
-        "description": "Linked usage/billing event data."
+        "description": "Linked usage event data.\n\nCharges are derived from the pricing bundle at statement time; the raw\nClickHouse event stores only the bundle reference and usage metrics."
       },
       "UserPublic": {
         "properties": {

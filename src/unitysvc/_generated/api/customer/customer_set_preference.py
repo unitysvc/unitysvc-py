@@ -75,13 +75,19 @@ def sync_detailed(
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | UserPublic]:
-    """Set Preference
+    r"""Set Preference
 
      Set (or clear, with ``value: null``) one named preference.
 
     Same write path the JWT-authenticated frontend endpoints use for each
     preference — this is a second door onto them, reachable with a
-    ``svcpass_...`` API key, not a parallel implementation.
+    ``svcpass_...`` API key, not a parallel implementation. The dispatch
+    itself (and the set of supported preference names) lives in
+    ``app.crud.preferences.set_customer_preference``.
+
+    No router-wide scope gate here — see the module docstring's
+    \"Scoping\" section. Each preference branch there is responsible for its
+    own.
 
     Args:
         authorization (None | str | Unset):
@@ -116,13 +122,19 @@ def sync(
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | UserPublic | None:
-    """Set Preference
+    r"""Set Preference
 
      Set (or clear, with ``value: null``) one named preference.
 
     Same write path the JWT-authenticated frontend endpoints use for each
     preference — this is a second door onto them, reachable with a
-    ``svcpass_...`` API key, not a parallel implementation.
+    ``svcpass_...`` API key, not a parallel implementation. The dispatch
+    itself (and the set of supported preference names) lives in
+    ``app.crud.preferences.set_customer_preference``.
+
+    No router-wide scope gate here — see the module docstring's
+    \"Scoping\" section. Each preference branch there is responsible for its
+    own.
 
     Args:
         authorization (None | str | Unset):
@@ -152,13 +164,19 @@ async def asyncio_detailed(
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | UserPublic]:
-    """Set Preference
+    r"""Set Preference
 
      Set (or clear, with ``value: null``) one named preference.
 
     Same write path the JWT-authenticated frontend endpoints use for each
     preference — this is a second door onto them, reachable with a
-    ``svcpass_...`` API key, not a parallel implementation.
+    ``svcpass_...`` API key, not a parallel implementation. The dispatch
+    itself (and the set of supported preference names) lives in
+    ``app.crud.preferences.set_customer_preference``.
+
+    No router-wide scope gate here — see the module docstring's
+    \"Scoping\" section. Each preference branch there is responsible for its
+    own.
 
     Args:
         authorization (None | str | Unset):
@@ -191,13 +209,19 @@ async def asyncio(
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | UserPublic | None:
-    """Set Preference
+    r"""Set Preference
 
      Set (or clear, with ``value: null``) one named preference.
 
     Same write path the JWT-authenticated frontend endpoints use for each
     preference — this is a second door onto them, reachable with a
-    ``svcpass_...`` API key, not a parallel implementation.
+    ``svcpass_...`` API key, not a parallel implementation. The dispatch
+    itself (and the set of supported preference names) lives in
+    ``app.crud.preferences.set_customer_preference``.
+
+    No router-wide scope gate here — see the module docstring's
+    \"Scoping\" section. Each preference branch there is responsible for its
+    own.
 
     Args:
         authorization (None | str | Unset):

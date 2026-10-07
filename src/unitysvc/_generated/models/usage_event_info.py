@@ -1,50 +1,75 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar
+from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
+if TYPE_CHECKING:
+    from ..models.usage_event_metrics import UsageEventMetrics
+
+
 T = TypeVar("T", bound="UsageEventInfo")
 
 
 @_attrs_define
 class UsageEventInfo:
-    """Linked usage/billing event data."""
+    """Linked usage event data.
 
-    customer_charge: str
-    usage_metrics: str
+    Charges are derived from the pricing bundle at statement time; the raw
+    ClickHouse event stores only the bundle reference and usage metrics.
+
+    """
+
+    usage_metrics: UsageEventMetrics
+    pricing_bundle_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        customer_charge = self.customer_charge
+        from ..models.usage_event_metrics import UsageEventMetrics
 
-        usage_metrics = self.usage_metrics
+        usage_metrics = self.usage_metrics.to_dict()
+
+        pricing_bundle_id: None | str | Unset
+        if isinstance(self.pricing_bundle_id, Unset):
+            pricing_bundle_id = UNSET
+        else:
+            pricing_bundle_id = self.pricing_bundle_id
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "customer_charge": customer_charge,
                 "usage_metrics": usage_metrics,
             }
         )
+        if pricing_bundle_id is not UNSET:
+            field_dict["pricing_bundle_id"] = pricing_bundle_id
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        d = dict(src_dict)
-        customer_charge = d.pop("customer_charge")
+        from ..models.usage_event_metrics import UsageEventMetrics
 
-        usage_metrics = d.pop("usage_metrics")
+        d = dict(src_dict)
+        usage_metrics = UsageEventMetrics.from_dict(d.pop("usage_metrics"))
+
+        def _parse_pricing_bundle_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        pricing_bundle_id = _parse_pricing_bundle_id(d.pop("pricing_bundle_id", UNSET))
 
         usage_event_info = cls(
-            customer_charge=customer_charge,
             usage_metrics=usage_metrics,
+            pricing_bundle_id=pricing_bundle_id,
         )
 
         usage_event_info.additional_properties = d
