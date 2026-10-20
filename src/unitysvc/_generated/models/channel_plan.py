@@ -21,6 +21,7 @@ class ChannelPlan:
 
     name: str
     channel_type: str
+    description: None | str | Unset = UNSET
     free: bool | Unset = False
     price_description: None | str | Unset = UNSET
     price: None | str | Unset = UNSET
@@ -40,6 +41,12 @@ class ChannelPlan:
         name = self.name
 
         channel_type = self.channel_type
+
+        description: None | str | Unset
+        if isinstance(self.description, Unset):
+            description = UNSET
+        else:
+            description = self.description
 
         free = self.free
 
@@ -111,6 +118,8 @@ class ChannelPlan:
                 "channel_type": channel_type,
             }
         )
+        if description is not UNSET:
+            field_dict["description"] = description
         if free is not UNSET:
             field_dict["free"] = free
         if price_description is not UNSET:
@@ -144,6 +153,15 @@ class ChannelPlan:
         name = d.pop("name")
 
         channel_type = d.pop("channel_type")
+
+        def _parse_description(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        description = _parse_description(d.pop("description", UNSET))
 
         free = d.pop("free", UNSET)
 
@@ -242,6 +260,7 @@ class ChannelPlan:
         channel_plan = cls(
             name=name,
             channel_type=channel_type,
+            description=description,
             free=free,
             price_description=price_description,
             price=price,

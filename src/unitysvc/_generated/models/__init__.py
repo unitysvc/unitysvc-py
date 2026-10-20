@@ -53,6 +53,7 @@ from .customer_group_membership_update import CustomerGroupMembershipUpdate
 from .customer_group_view import CustomerGroupView
 from .customer_group_view_details_type_0 import CustomerGroupViewDetailsType0
 from .customer_list_account_files_scope import CustomerListAccountFilesScope
+from .cycle_usage_response import CycleUsageResponse
 from .document_category_enum import DocumentCategoryEnum
 from .fields import Fields
 from .gateway_kind import GatewayKind
@@ -63,7 +64,14 @@ from .http_validation_error import HTTPValidationError
 from .message import Message
 from .ops_customer_request_log_detail import OpsCustomerRequestLogDetail
 from .parameter_requirement import ParameterRequirement
-from .preference_set_request import PreferenceSetRequest
+from .plan_meter_public import PlanMeterPublic
+from .preference_account_public import PreferenceAccountPublic
+from .preference_account_public_type import PreferenceAccountPublicType
+from .preference_public import PreferencePublic
+from .preference_public_source_type_0 import PreferencePublicSourceType0
+from .preference_update import PreferenceUpdate
+from .preference_value import PreferenceValue
+from .preferences_public import PreferencesPublic
 from .recurrent_request_create import RecurrentRequestCreate
 from .recurrent_request_create_body_template_type_0 import RecurrentRequestCreateBodyTemplateType0
 from .recurrent_request_create_request_headers_type_0 import RecurrentRequestCreateRequestHeadersType0
@@ -122,12 +130,13 @@ from .service_enrollment_create_parameters_type_0 import ServiceEnrollmentCreate
 from .service_enrollment_create_recurrence_schedule_type_0 import ServiceEnrollmentCreateRecurrenceScheduleType0
 from .service_enrollment_status_enum import ServiceEnrollmentStatusEnum
 from .service_summary import ServiceSummary
+from .service_usage_public import ServiceUsagePublic
 from .switch_routing_response import SwitchRoutingResponse
 from .upstream_response_info import UpstreamResponseInfo
 from .upstream_response_info_headers_type_0 import UpstreamResponseInfoHeadersType0
 from .usage_event_info import UsageEventInfo
-from .user_public import UserPublic
-from .user_public_preference_type_0 import UserPublicPreferenceType0
+from .usage_event_metrics import UsageEventMetrics
+from .usage_metrics import UsageMetrics
 from .user_request_info import UserRequestInfo
 from .user_request_info_headers_type_0 import UserRequestInfoHeadersType0
 from .validation_error import ValidationError
@@ -186,6 +195,7 @@ __all__ = (
     "CustomerGroupView",
     "CustomerGroupViewDetailsType0",
     "CustomerListAccountFilesScope",
+    "CycleUsageResponse",
     "DocumentCategoryEnum",
     "Fields",
     "GatewayKind",
@@ -196,7 +206,14 @@ __all__ = (
     "Message",
     "OpsCustomerRequestLogDetail",
     "ParameterRequirement",
-    "PreferenceSetRequest",
+    "PlanMeterPublic",
+    "PreferenceAccountPublic",
+    "PreferenceAccountPublicType",
+    "PreferencePublic",
+    "PreferencePublicSourceType0",
+    "PreferencesPublic",
+    "PreferenceUpdate",
+    "PreferenceValue",
     "RecurrentRequestCreate",
     "RecurrentRequestCreateBodyTemplateType0",
     "RecurrentRequestCreateRequestHeadersType0",
@@ -255,12 +272,13 @@ __all__ = (
     "ServiceEnrollmentCreateRecurrenceScheduleType0",
     "ServiceEnrollmentStatusEnum",
     "ServiceSummary",
+    "ServiceUsagePublic",
     "SwitchRoutingResponse",
     "UpstreamResponseInfo",
     "UpstreamResponseInfoHeadersType0",
     "UsageEventInfo",
-    "UserPublic",
-    "UserPublicPreferenceType0",
+    "UsageEventMetrics",
+    "UsageMetrics",
     "UserRequestInfo",
     "UserRequestInfoHeadersType0",
     "ValidationError",

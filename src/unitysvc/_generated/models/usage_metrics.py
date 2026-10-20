@@ -8,57 +8,35 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="PreferenceSetRequest")
+T = TypeVar("T", bound="UsageMetrics")
 
 
 @_attrs_define
-class PreferenceSetRequest:
-    """One preference write. ``value: None`` clears it."""
-
-    name: str
-    value: Any | Unset = UNSET
-    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+class UsageMetrics:
+    additional_properties: dict[str, float] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        name = self.name
-
-        value = self.value
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "name": name,
-            }
-        )
-        if value is not UNSET:
-            field_dict["value"] = value
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        name = d.pop("name")
+        usage_metrics = cls()
 
-        value = d.pop("value", UNSET)
-
-        preference_set_request = cls(
-            name=name,
-            value=value,
-        )
-
-        preference_set_request.additional_properties = d
-        return preference_set_request
+        usage_metrics.additional_properties = d
+        return usage_metrics
 
     @property
     def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: str) -> float:
         return self.additional_properties[key]
 
-    def __setitem__(self, key: str, value: Any) -> None:
+    def __setitem__(self, key: str, value: float) -> None:
         self.additional_properties[key] = value
 
     def __delitem__(self, key: str) -> None:

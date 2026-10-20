@@ -29,33 +29,12 @@ class CustomerGroupView:
     owner_type: str
     editable: bool
     group_type: GroupTypeEnum
-    """ Type of service group. Derived from members, not authored (unitysvc#1686).
+    """ Type of service group. Derived from members, not authored.
 
-    Two of the five types are routable (a ``/g/<name>`` endpoint); the rest are
-    not:
-
-    A quick-characterization spectrum derived from ``routable_keys``
-    (unitysvc#1730); the gateway routes off ``routable_keys`` itself, not this:
-
-    - ``keyed`` — one extreme: a clean menu, every service addressable by its own
-      distinct routing key (each key maps to a single service); keyless access an
-      optional feature. Serves ``/v1/models`` and is tool-explorable.
-    - ``open`` — the middle: routable, but not a clean per-service menu — a
-      keyless-only pool, partial keying, or a key that fans to several services.
-    - ``collection`` — the other extreme: **not** a routing endpoint at all
-      (empty ``routable_keys`` — no members, or every bucket format-collides).
-
-    Routability is exactly ``group_type in {open, keyed}`` (``collection`` =
-    empty ``routable_keys``), so the routing gate is unchanged; #1730 only re-cut
-    the open↔keyed boundary. Whether a keyless request is served is a
-    ``routable_keys`` fact, not a type fact.
-    - ``category`` — a parent with no members of its own; its membership is the
-      union of its descendants, for browsing only.
-
-    ``open`` / ``keyed`` / ``collection`` are derived from the members at
-    membership refresh; ``category`` is set explicitly and never re-derived.
-    (The former ``routable`` value was split into ``open`` / ``keyed``, and the
-    ``misc`` catch-all removed — unitysvc#1686.) """
+    - ``category``: Parent group for browsing/organization only.
+    - ``collection``: Services-bearing group that is not routable.
+    - ``open``: Routable group where keyless requests can fan safely.
+    - ``keyed``: Routable group where callers must provide a routing key. """
     display_name: None | str | Unset = UNSET
     member_count: int | Unset = 0
     is_default: bool | Unset = False

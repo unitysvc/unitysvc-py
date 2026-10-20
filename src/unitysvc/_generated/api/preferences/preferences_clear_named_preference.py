@@ -7,14 +7,13 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.preference_set_request import PreferenceSetRequest
-from ...models.user_public import UserPublic
+from ...models.preference_public import PreferencePublic
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
+    name: str,
     *,
-    body: PreferenceSetRequest,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -26,13 +25,11 @@ def _get_kwargs(
         headers["x-role-id"] = x_role_id
 
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/preferences/set",
+        "method": "delete",
+        "url": "/preferences/{name}".format(
+            name=quote(str(name), safe=""),
+        ),
     }
-
-    _kwargs["json"] = body.to_dict()
-
-    headers["Content-Type"] = "application/json"
 
     _kwargs["headers"] = headers
     return _kwargs
@@ -40,9 +37,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | UserPublic | None:
+) -> HTTPValidationError | PreferencePublic | None:
     if response.status_code == 200:
-        response_200 = UserPublic.from_dict(response.json())
+        response_200 = PreferencePublic.from_dict(response.json())
 
         return response_200
 
@@ -59,7 +56,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | UserPublic]:
+) -> Response[HTTPValidationError | PreferencePublic]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -69,35 +66,32 @@ def _build_response(
 
 
 def sync_detailed(
+    name: str,
     *,
     client: AuthenticatedClient | Client,
-    body: PreferenceSetRequest,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | UserPublic]:
-    """Set Preference
+) -> Response[HTTPValidationError | PreferencePublic]:
+    """Clear Named Preference
 
-     Set (or clear, with ``value: null``) one named preference.
-
-    Same write path the JWT-authenticated frontend endpoints use for each
-    preference — this is a second door onto them, reachable with a
-    ``svcpass_...`` API key, not a parallel implementation.
+     Clear one preference on the current account, back to its fallback.
+    Idempotent.
 
     Args:
+        name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (PreferenceSetRequest): One preference write. ``value: None`` clears it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | UserPublic]
+        Response[HTTPValidationError | PreferencePublic]
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        name=name,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -110,71 +104,65 @@ def sync_detailed(
 
 
 def sync(
+    name: str,
     *,
     client: AuthenticatedClient | Client,
-    body: PreferenceSetRequest,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | UserPublic | None:
-    """Set Preference
+) -> HTTPValidationError | PreferencePublic | None:
+    """Clear Named Preference
 
-     Set (or clear, with ``value: null``) one named preference.
-
-    Same write path the JWT-authenticated frontend endpoints use for each
-    preference — this is a second door onto them, reachable with a
-    ``svcpass_...`` API key, not a parallel implementation.
+     Clear one preference on the current account, back to its fallback.
+    Idempotent.
 
     Args:
+        name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (PreferenceSetRequest): One preference write. ``value: None`` clears it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | UserPublic
+        HTTPValidationError | PreferencePublic
     """
 
     return sync_detailed(
+        name=name,
         client=client,
-        body=body,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
 
 
 async def asyncio_detailed(
+    name: str,
     *,
     client: AuthenticatedClient | Client,
-    body: PreferenceSetRequest,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | UserPublic]:
-    """Set Preference
+) -> Response[HTTPValidationError | PreferencePublic]:
+    """Clear Named Preference
 
-     Set (or clear, with ``value: null``) one named preference.
-
-    Same write path the JWT-authenticated frontend endpoints use for each
-    preference — this is a second door onto them, reachable with a
-    ``svcpass_...`` API key, not a parallel implementation.
+     Clear one preference on the current account, back to its fallback.
+    Idempotent.
 
     Args:
+        name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (PreferenceSetRequest): One preference write. ``value: None`` clears it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | UserPublic]
+        Response[HTTPValidationError | PreferencePublic]
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        name=name,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -185,37 +173,34 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    name: str,
     *,
     client: AuthenticatedClient | Client,
-    body: PreferenceSetRequest,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
-) -> HTTPValidationError | UserPublic | None:
-    """Set Preference
+) -> HTTPValidationError | PreferencePublic | None:
+    """Clear Named Preference
 
-     Set (or clear, with ``value: null``) one named preference.
-
-    Same write path the JWT-authenticated frontend endpoints use for each
-    preference — this is a second door onto them, reachable with a
-    ``svcpass_...`` API key, not a parallel implementation.
+     Clear one preference on the current account, back to its fallback.
+    Idempotent.
 
     Args:
+        name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (PreferenceSetRequest): One preference write. ``value: None`` clears it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | UserPublic
+        HTTPValidationError | PreferencePublic
     """
 
     return (
         await asyncio_detailed(
+            name=name,
             client=client,
-            body=body,
             authorization=authorization,
             x_role_id=x_role_id,
         )

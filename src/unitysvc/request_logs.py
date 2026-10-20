@@ -8,8 +8,7 @@ model or a :class:`~unitysvc.exceptions.UnitysvcSDKError`.
 
 To turn logging on/off, use :meth:`unitysvc.preferences.Preferences.set_request_log_mode`
 (or the raw ``preferences.set("request-log", ...)``) — that toggle lives
-entirely on the preference layer now (unitysvc#2063); it was previously
-duplicated here as ``start``/``stop``.
+entirely on the preference layer (``/v1/preferences/request-log``).
 """
 
 from __future__ import annotations
