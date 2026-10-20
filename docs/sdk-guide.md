@@ -461,35 +461,33 @@ client.recurrent_requests.delete(request_id)
 
 ## `preferences`
 
-A generic set/clear for the account-level preferences on your
-`User.preference` — the same field the frontend writes to via a
-JWT-authenticated session. One preference per call: pass its name and
-new value, or `value=None` to clear it. Preferences here apply across
-every role you have (customer, seller, admin) — any of your API keys
-may set them.
+Named preferences on the **account your key acts for**: a personal key
+reads and changes your own, a team key the team's, a seller key the
+seller's. Each call returns the preference as that account sees it: its
+own `value`, the `effective` value calls and notices use, and the
+`source` of that effective value (`account`, `user` or `default`).
+
+Today's preferences are `notification` (where notices are forwarded),
+`ai` (the AI behind `/ai`) and `request-log` (request-logging mode).
 
 ```python
-# Generic — works for any preference, including ones with no typed
-# convenience below yet.
+# Read
+client.preferences.list()             # every preference
+client.preferences.get("ai")          # one
+
+# Generic set / clear, for any preference
 client.preferences.set("request-log", "truncated")
-client.preferences.set("request-log", None)  # clears it
+client.preferences.set("ai", {"service": "labs/llm-balanced"})
+client.preferences.clear("request-log")   # same as set(name, None)
 
-# Typed convenience: where personal notifications (routed through
-# notify://user) are delivered. A service path, or a "b/<name>"
-# broadcast / "e/<CODE>" enrollment you own. None clears it (falls
-# back to in-app delivery only).
-client.preferences.set_notification_destination("labs/discord-relay")
-client.preferences.set_notification_destination(None)
-
-# Typed convenience: request-logging mode. See `request_logs` below
-# for what "truncated" / "complete" mean and what they unlock.
+# Typed conveniences; None clears
+client.preferences.set_notification("labs/discord-relay")  # or "b/<name>" / "e/<CODE>"
+client.preferences.set_ai("labs/llm-balanced")             # or "a/<name>"; no enrollment-required services
 client.preferences.set_request_log_mode("truncated")
-client.preferences.set_request_log_mode(None)  # disables logging
 ```
 
-Every `set*` call returns the updated `UserPublic`, including the
-full `preference` dict — useful for confirming what was actually
-persisted.
+With no `ai` preference, `/ai` uses the platform default. A team's
+unset `notification` falls back to each member's own destination.
 
 ## `request_logs`
 

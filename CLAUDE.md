@@ -47,6 +47,7 @@ When the backend API changes, two things need updating:
 - Copies the spec to `openapi.json`
 - Runs `openapi-python-client generate` → `src/unitysvc/_generated/`
 - Default spec path: `../unitysvc/backend/generated/customer_api.json`
+- CI (`.github/workflows/spec-sync.yml`) fails while `openapi.json` differs from that file on unitysvc main, ignoring prose and the version string; check locally with `python3 scripts/check_spec_sync.py ../unitysvc/backend/generated/customer_api.json`
 
 ### 2. Regenerate the CLI reference
 

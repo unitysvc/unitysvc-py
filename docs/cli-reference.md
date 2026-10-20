@@ -33,7 +33,7 @@ $ usvc [OPTIONS] COMMAND [ARGS]...
 * `files`: Account files (ls, get, put, url).
 * `services`: Per-service operations (show, usage,...
 * `enrollments`: Enrollment management (list, show, cancel).
-* `preferences`: Per-user preference management (set/clear).
+* `preferences`: Preferences of the account your key acts...
 
 ## `usvc env`
 
@@ -911,7 +911,7 @@ $ usvc enrollments cancel [OPTIONS] {enrollment_id}
 
 ## `usvc preferences`
 
-Per-user preference management (set/clear).
+Preferences of the account your key acts for (list/get/set/clear).
 
 **Usage**:
 
@@ -925,18 +925,57 @@ $ usvc preferences [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
+* `list`: List every preference.
+* `get`: Show one preference.
 * `set`: Set (or clear) one named preference.
-* `notification-destination`: Set (or clear) where your personal...
+* `clear`: Clear one preference, back to its fallback.
+* `notification`: Set (or clear) where notices for this...
+* `ai`: Set (or clear) the AI this account&#x27;s /ai...
 * `request-log`: Set (or disable) the request-logging mode...
+
+### `usvc preferences list`
+
+List every preference. Maps to GET /v1/preferences.
+
+**Usage**:
+
+```console
+$ usvc preferences list [OPTIONS]
+```
+
+**Options**:
+
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc preferences get`
+
+Show one preference. Maps to GET /v1/preferences/{name}.
+
+**Usage**:
+
+```console
+$ usvc preferences get [OPTIONS] {name}
+```
+
+**Arguments**:
+
+* `name`: Preference name: &#x27;notification&#x27;, &#x27;ai&#x27; or &#x27;request-log&#x27;.  [required]
+
+**Options**:
+
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
 
 ### `usvc preferences set`
 
-Set (or clear) one named preference. Maps to POST /v1/customer/preferences/set.
+Set (or clear) one named preference. Maps to PUT /v1/preferences/{name}.
 
 ``--value`` is taken as a literal string by default; pass ``--json`` to
-parse it as JSON instead (so ``--value true --json`` sends the boolean
-``true``, not the string ``&quot;true&quot;``). Omitting ``--value`` entirely
-clears the preference.
+parse it as JSON instead. Omitting ``--value`` clears the preference
+(DELETE /v1/preferences/{name}).
 
 **Usage**:
 
@@ -946,29 +985,69 @@ $ usvc preferences set [OPTIONS] {name}
 
 **Arguments**:
 
-* `name`: Preference name, e.g. &#x27;notification-destination&#x27; or &#x27;request-log&#x27;.  [required]
+* `name`: Preference name: &#x27;notification&#x27;, &#x27;ai&#x27; or &#x27;request-log&#x27;.  [required]
 
 **Options**:
 
-* `--value <str>`: New value. Omit to clear the preference (sends value: null).
-* `--json`: Parse --value as JSON instead of a literal string (for non-string values future preferences may need).
+* `--value <str>`: New value. Omit to clear the preference.
+* `--json`: Parse --value as JSON instead of a literal string (e.g. &#x27;{&quot;service&quot;: &quot;labs/llm-balanced&quot;}&#x27;).
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
-### `usvc preferences notification-destination`
+### `usvc preferences clear`
 
-Set (or clear) where your personal notifications are delivered.
+Clear one preference, back to its fallback. Maps to DELETE /v1/preferences/{name}.
 
 **Usage**:
 
 ```console
-$ usvc preferences notification-destination [OPTIONS] [service]
+$ usvc preferences clear [OPTIONS] {name}
 ```
 
 **Arguments**:
 
-* `service`: Where personal notifications are delivered — a service path (e.g. &#x27;labs/discord-relay&#x27;), or a &#x27;b/&lt;name&gt;&#x27; broadcast / &#x27;e/&lt;CODE&gt;&#x27; enrollment you own. Omit to clear (falls back to in-app delivery only).
+* `name`: Preference name: &#x27;notification&#x27;, &#x27;ai&#x27; or &#x27;request-log&#x27;.  [required]
+
+**Options**:
+
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc preferences notification`
+
+Set (or clear) where notices for this account are forwarded.
+
+**Usage**:
+
+```console
+$ usvc preferences notification [OPTIONS] [service]
+```
+
+**Arguments**:
+
+* `service`: Where notices are forwarded: a service path (e.g. &#x27;labs/discord-relay&#x27;), or a &#x27;b/&lt;name&gt;&#x27; broadcast / &#x27;e/&lt;CODE&gt;&#x27; enrollment you own. Omit to clear.
+
+**Options**:
+
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc preferences ai`
+
+Set (or clear) the AI this account&#x27;s /ai calls use.
+
+**Usage**:
+
+```console
+$ usvc preferences ai [OPTIONS] [service]
+```
+
+**Arguments**:
+
+* `service`: The AI behind /ai: a service name (e.g. &#x27;labs/llm-balanced&#x27;) or an &#x27;a/&lt;name&gt;&#x27; alias. Services that require enrollment are refused. Omit to clear (the platform default applies).
 
 **Options**:
 

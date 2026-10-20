@@ -80,12 +80,13 @@ def sync_detailed(
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[BroadcastPublic | HTTPValidationError]:
-    r"""Update Broadcast
+    """Update Broadcast
 
-     Update a broadcast's config (timeout, enabled, description).
+     Update a broadcast's config (mode, timeout, enabled, description).
 
-    ``mode`` may be set to ``\"sync\"`` but not ``\"async\"`` (rejected with 422
-    until async is built — see #1553).
+    Switching ``mode`` takes effect on the next ``/b/<name>`` call: ``sync``
+    blocks for the aggregated envelope, ``async`` returns ``202`` + per-target
+    task ids (#1553).
 
     Args:
         broadcast_id (UUID):
@@ -123,12 +124,13 @@ def sync(
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> BroadcastPublic | HTTPValidationError | None:
-    r"""Update Broadcast
+    """Update Broadcast
 
-     Update a broadcast's config (timeout, enabled, description).
+     Update a broadcast's config (mode, timeout, enabled, description).
 
-    ``mode`` may be set to ``\"sync\"`` but not ``\"async\"`` (rejected with 422
-    until async is built — see #1553).
+    Switching ``mode`` takes effect on the next ``/b/<name>`` call: ``sync``
+    blocks for the aggregated envelope, ``async`` returns ``202`` + per-target
+    task ids (#1553).
 
     Args:
         broadcast_id (UUID):
@@ -161,12 +163,13 @@ async def asyncio_detailed(
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[BroadcastPublic | HTTPValidationError]:
-    r"""Update Broadcast
+    """Update Broadcast
 
-     Update a broadcast's config (timeout, enabled, description).
+     Update a broadcast's config (mode, timeout, enabled, description).
 
-    ``mode`` may be set to ``\"sync\"`` but not ``\"async\"`` (rejected with 422
-    until async is built — see #1553).
+    Switching ``mode`` takes effect on the next ``/b/<name>`` call: ``sync``
+    blocks for the aggregated envelope, ``async`` returns ``202`` + per-target
+    task ids (#1553).
 
     Args:
         broadcast_id (UUID):
@@ -202,12 +205,13 @@ async def asyncio(
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> BroadcastPublic | HTTPValidationError | None:
-    r"""Update Broadcast
+    """Update Broadcast
 
-     Update a broadcast's config (timeout, enabled, description).
+     Update a broadcast's config (mode, timeout, enabled, description).
 
-    ``mode`` may be set to ``\"sync\"`` but not ``\"async\"`` (rejected with 422
-    until async is built — see #1553).
+    Switching ``mode`` takes effect on the next ``/b/<name>`` call: ``sync``
+    blocks for the aggregated envelope, ``async`` returns ``202`` + per-target
+    task ids (#1553).
 
     Args:
         broadcast_id (UUID):
