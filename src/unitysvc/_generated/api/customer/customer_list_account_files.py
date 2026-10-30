@@ -1,23 +1,17 @@
 from http import HTTPStatus
-from typing import Any, cast
-from urllib.parse import quote
+from typing import Any
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.account_files_list_response import AccountFilesListResponse
-from ...models.customer_list_account_files_scope import (
-    CustomerListAccountFilesScope,
-    check_customer_list_account_files_scope,
-)
 from ...models.http_validation_error import HTTPValidationError
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    scope: CustomerListAccountFilesScope | Unset = "personal",
     path: str | Unset = "",
     max_keys: int | Unset = 100,
     continuation_token: None | str | Unset = UNSET,
@@ -32,12 +26,6 @@ def _get_kwargs(
         headers["x-role-id"] = x_role_id
 
     params: dict[str, Any] = {}
-
-    json_scope: str | Unset = UNSET
-    if not isinstance(scope, Unset):
-        json_scope = scope
-
-    params["scope"] = json_scope
 
     params["path"] = path
 
@@ -95,26 +83,20 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    scope: CustomerListAccountFilesScope | Unset = "personal",
     path: str | Unset = "",
     max_keys: int | Unset = 100,
     continuation_token: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[AccountFilesListResponse | HTTPValidationError]:
-    """List Account Files
+    r"""List Account Files
 
-     List the caller's account files (one folder level per call).
-
-    ``scope=personal`` lists the member's own folder; ``scope=shared``
-    lists the team folder and requires a team/enterprise plan. Returned
-    keys and prefixes are relative to the scope root. A missing bucket
-    reads as an empty listing (the bucket is provisioned out of band).
+     List one folder level of the customer's tree (``\"\"`` is the root:
+    ``home/`` and ``services/``). Keys and prefixes are relative to the root.
+    A missing bucket is a storage outage (503).
 
     Args:
-        scope (CustomerListAccountFilesScope | Unset): Which folder tree to list Default:
-            'personal'.
-        path (str | Unset): Folder path relative to the scope root Default: ''.
+        path (str | Unset): Folder path relative to the root Default: ''.
         max_keys (int | Unset):  Default: 100.
         continuation_token (None | str | Unset):
         authorization (None | str | Unset):
@@ -129,7 +111,6 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        scope=scope,
         path=path,
         max_keys=max_keys,
         continuation_token=continuation_token,
@@ -147,26 +128,20 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    scope: CustomerListAccountFilesScope | Unset = "personal",
     path: str | Unset = "",
     max_keys: int | Unset = 100,
     continuation_token: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> AccountFilesListResponse | HTTPValidationError | None:
-    """List Account Files
+    r"""List Account Files
 
-     List the caller's account files (one folder level per call).
-
-    ``scope=personal`` lists the member's own folder; ``scope=shared``
-    lists the team folder and requires a team/enterprise plan. Returned
-    keys and prefixes are relative to the scope root. A missing bucket
-    reads as an empty listing (the bucket is provisioned out of band).
+     List one folder level of the customer's tree (``\"\"`` is the root:
+    ``home/`` and ``services/``). Keys and prefixes are relative to the root.
+    A missing bucket is a storage outage (503).
 
     Args:
-        scope (CustomerListAccountFilesScope | Unset): Which folder tree to list Default:
-            'personal'.
-        path (str | Unset): Folder path relative to the scope root Default: ''.
+        path (str | Unset): Folder path relative to the root Default: ''.
         max_keys (int | Unset):  Default: 100.
         continuation_token (None | str | Unset):
         authorization (None | str | Unset):
@@ -182,7 +157,6 @@ def sync(
 
     return sync_detailed(
         client=client,
-        scope=scope,
         path=path,
         max_keys=max_keys,
         continuation_token=continuation_token,
@@ -194,26 +168,20 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    scope: CustomerListAccountFilesScope | Unset = "personal",
     path: str | Unset = "",
     max_keys: int | Unset = 100,
     continuation_token: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[AccountFilesListResponse | HTTPValidationError]:
-    """List Account Files
+    r"""List Account Files
 
-     List the caller's account files (one folder level per call).
-
-    ``scope=personal`` lists the member's own folder; ``scope=shared``
-    lists the team folder and requires a team/enterprise plan. Returned
-    keys and prefixes are relative to the scope root. A missing bucket
-    reads as an empty listing (the bucket is provisioned out of band).
+     List one folder level of the customer's tree (``\"\"`` is the root:
+    ``home/`` and ``services/``). Keys and prefixes are relative to the root.
+    A missing bucket is a storage outage (503).
 
     Args:
-        scope (CustomerListAccountFilesScope | Unset): Which folder tree to list Default:
-            'personal'.
-        path (str | Unset): Folder path relative to the scope root Default: ''.
+        path (str | Unset): Folder path relative to the root Default: ''.
         max_keys (int | Unset):  Default: 100.
         continuation_token (None | str | Unset):
         authorization (None | str | Unset):
@@ -228,7 +196,6 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        scope=scope,
         path=path,
         max_keys=max_keys,
         continuation_token=continuation_token,
@@ -244,26 +211,20 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    scope: CustomerListAccountFilesScope | Unset = "personal",
     path: str | Unset = "",
     max_keys: int | Unset = 100,
     continuation_token: None | str | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> AccountFilesListResponse | HTTPValidationError | None:
-    """List Account Files
+    r"""List Account Files
 
-     List the caller's account files (one folder level per call).
-
-    ``scope=personal`` lists the member's own folder; ``scope=shared``
-    lists the team folder and requires a team/enterprise plan. Returned
-    keys and prefixes are relative to the scope root. A missing bucket
-    reads as an empty listing (the bucket is provisioned out of band).
+     List one folder level of the customer's tree (``\"\"`` is the root:
+    ``home/`` and ``services/``). Keys and prefixes are relative to the root.
+    A missing bucket is a storage outage (503).
 
     Args:
-        scope (CustomerListAccountFilesScope | Unset): Which folder tree to list Default:
-            'personal'.
-        path (str | Unset): Folder path relative to the scope root Default: ''.
+        path (str | Unset): Folder path relative to the root Default: ''.
         max_keys (int | Unset):  Default: 100.
         continuation_token (None | str | Unset):
         authorization (None | str | Unset):
@@ -280,7 +241,6 @@ async def asyncio(
     return (
         await asyncio_detailed(
             client=client,
-            scope=scope,
             path=path,
             max_keys=max_keys,
             continuation_token=continuation_token,

@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, cast
+from typing import Any
 from urllib.parse import quote
 from uuid import UUID
 
@@ -82,7 +82,8 @@ def sync_detailed(
     row and its AccessInterfaces are preserved for potential
     reactivation via re-enrollment with matching parameters.
 
-    Callers can only cancel their own customer's enrollments.
+    Callers can only cancel their own customer's enrollments. A key needs
+    ``service:*`` with ``enroll``.
 
     Args:
         enrollment_id (UUID):
@@ -126,7 +127,8 @@ def sync(
     row and its AccessInterfaces are preserved for potential
     reactivation via re-enrollment with matching parameters.
 
-    Callers can only cancel their own customer's enrollments.
+    Callers can only cancel their own customer's enrollments. A key needs
+    ``service:*`` with ``enroll``.
 
     Args:
         enrollment_id (UUID):
@@ -165,7 +167,8 @@ async def asyncio_detailed(
     row and its AccessInterfaces are preserved for potential
     reactivation via re-enrollment with matching parameters.
 
-    Callers can only cancel their own customer's enrollments.
+    Callers can only cancel their own customer's enrollments. A key needs
+    ``service:*`` with ``enroll``.
 
     Args:
         enrollment_id (UUID):
@@ -207,7 +210,8 @@ async def asyncio(
     row and its AccessInterfaces are preserved for potential
     reactivation via re-enrollment with matching parameters.
 
-    Callers can only cancel their own customer's enrollments.
+    Callers can only cancel their own customer's enrollments. A key needs
+    ``service:*`` with ``enroll``.
 
     Args:
         enrollment_id (UUID):

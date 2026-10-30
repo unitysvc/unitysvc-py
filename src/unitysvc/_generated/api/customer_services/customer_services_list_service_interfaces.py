@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, cast
+from typing import Any
 from urllib.parse import quote
 from uuid import UUID
 
@@ -88,14 +88,17 @@ def sync_detailed(
     1. **Shared** interfaces (``enrollment_id IS NULL``) — usable by
        any customer, matches the public playground behaviour.
     2. **Enrollment-bound** interfaces whose ``enrollment_id`` belongs
-       to an enrollment owned by the authenticated customer. BYOK /
-       BYOE services create these on enrollment activation so the
-       gateway can substitute customer-supplied secrets at runtime.
+       to an enrollment the caller can use: one of the customer's
+       shared enrollments (``owner_id IS NULL``) or the caller's own
+       personal one. BYOK / BYOE services create these on enrollment
+       activation so the gateway can substitute customer-supplied
+       secrets at runtime.
 
-    Interfaces bound to *other* customers' enrollments are filtered
-    out — existence is not leaked. ``base_url`` is resolved with
-    ``settings.resolve_gateway_urls`` so SDK consumers can dispatch
-    directly without knowing gateway substitution rules.
+    Interfaces bound to *other* customers' enrollments, and to
+    teammates' personal enrollments, are filtered out — existence is
+    not leaked (#2701), matching the gateway's owner rule. ``base_url``
+    is resolved with ``settings.resolve_gateway_urls`` so SDK consumers
+    can dispatch directly without knowing gateway substitution rules.
 
     Args:
         service_id (UUID):
@@ -140,14 +143,17 @@ def sync(
     1. **Shared** interfaces (``enrollment_id IS NULL``) — usable by
        any customer, matches the public playground behaviour.
     2. **Enrollment-bound** interfaces whose ``enrollment_id`` belongs
-       to an enrollment owned by the authenticated customer. BYOK /
-       BYOE services create these on enrollment activation so the
-       gateway can substitute customer-supplied secrets at runtime.
+       to an enrollment the caller can use: one of the customer's
+       shared enrollments (``owner_id IS NULL``) or the caller's own
+       personal one. BYOK / BYOE services create these on enrollment
+       activation so the gateway can substitute customer-supplied
+       secrets at runtime.
 
-    Interfaces bound to *other* customers' enrollments are filtered
-    out — existence is not leaked. ``base_url`` is resolved with
-    ``settings.resolve_gateway_urls`` so SDK consumers can dispatch
-    directly without knowing gateway substitution rules.
+    Interfaces bound to *other* customers' enrollments, and to
+    teammates' personal enrollments, are filtered out — existence is
+    not leaked (#2701), matching the gateway's owner rule. ``base_url``
+    is resolved with ``settings.resolve_gateway_urls`` so SDK consumers
+    can dispatch directly without knowing gateway substitution rules.
 
     Args:
         service_id (UUID):
@@ -187,14 +193,17 @@ async def asyncio_detailed(
     1. **Shared** interfaces (``enrollment_id IS NULL``) — usable by
        any customer, matches the public playground behaviour.
     2. **Enrollment-bound** interfaces whose ``enrollment_id`` belongs
-       to an enrollment owned by the authenticated customer. BYOK /
-       BYOE services create these on enrollment activation so the
-       gateway can substitute customer-supplied secrets at runtime.
+       to an enrollment the caller can use: one of the customer's
+       shared enrollments (``owner_id IS NULL``) or the caller's own
+       personal one. BYOK / BYOE services create these on enrollment
+       activation so the gateway can substitute customer-supplied
+       secrets at runtime.
 
-    Interfaces bound to *other* customers' enrollments are filtered
-    out — existence is not leaked. ``base_url`` is resolved with
-    ``settings.resolve_gateway_urls`` so SDK consumers can dispatch
-    directly without knowing gateway substitution rules.
+    Interfaces bound to *other* customers' enrollments, and to
+    teammates' personal enrollments, are filtered out — existence is
+    not leaked (#2701), matching the gateway's owner rule. ``base_url``
+    is resolved with ``settings.resolve_gateway_urls`` so SDK consumers
+    can dispatch directly without knowing gateway substitution rules.
 
     Args:
         service_id (UUID):
@@ -237,14 +246,17 @@ async def asyncio(
     1. **Shared** interfaces (``enrollment_id IS NULL``) — usable by
        any customer, matches the public playground behaviour.
     2. **Enrollment-bound** interfaces whose ``enrollment_id`` belongs
-       to an enrollment owned by the authenticated customer. BYOK /
-       BYOE services create these on enrollment activation so the
-       gateway can substitute customer-supplied secrets at runtime.
+       to an enrollment the caller can use: one of the customer's
+       shared enrollments (``owner_id IS NULL``) or the caller's own
+       personal one. BYOK / BYOE services create these on enrollment
+       activation so the gateway can substitute customer-supplied
+       secrets at runtime.
 
-    Interfaces bound to *other* customers' enrollments are filtered
-    out — existence is not leaked. ``base_url`` is resolved with
-    ``settings.resolve_gateway_urls`` so SDK consumers can dispatch
-    directly without knowing gateway substitution rules.
+    Interfaces bound to *other* customers' enrollments, and to
+    teammates' personal enrollments, are filtered out — existence is
+    not leaked (#2701), matching the gateway's owner rule. ``base_url``
+    is resolved with ``settings.resolve_gateway_urls`` so SDK consumers
+    can dispatch directly without knowing gateway substitution rules.
 
     Args:
         service_id (UUID):

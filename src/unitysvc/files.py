@@ -8,11 +8,11 @@ generated low-level client:
 * :meth:`download`     — presign + stream the bytes to a local file
 * :meth:`upload`       — ``POST /files/upload`` (mint) + presigned POST
 
-Files live in a platform bucket under a server-computed prefix — the
-``personal`` scope is the member's own folder, ``shared`` is the
-team-visible folder (team/enterprise plans only). Keys and paths are
-always relative to that scope root; the server rejects traversal, so
-other members' and other tenants' folders are unreachable.
+Files belong to the API key's customer account. ``scope=None`` addresses
+its full tree (``home/`` and ``services/``); legacy ``personal`` paths are
+translated to ``home/``. Use a team key for a team's files. The former
+``shared`` selector is refused because it cannot change the key's account.
+The server computes the tenant prefix and rejects traversal.
 
 Upload and download bytes flow directly between this machine and the
 storage endpoint (never through the UnitySVC API), and the storage
@@ -44,6 +44,21 @@ if TYPE_CHECKING:
     )
 
 FileScope = Literal["personal", "shared"]
+
+
+def _account_path(value: str, scope: FileScope | None) -> str:
+    """Translate legacy personal paths into the account's current file tree.
+
+    ``scope=None`` addresses the full account tree (``home/`` or ``services/``).
+    A shared folder is selected by the team's API key, never by a scope flag.
+    """
+    if scope == "shared":
+        raise ValueError("Use the team's API key and scope=None for its account file tree")
+    if scope is None:
+        return value
+    relative = value.lstrip("/")
+    return relative if relative == "home" or relative.startswith("home/") else f"home/{relative}"
+
 
 # Sane ceiling for a single storage round-trip; uploads/downloads stream.
 _STORAGE_TIMEOUT = httpx.Timeout(30.0, read=600.0, write=600.0)
@@ -86,14 +101,13 @@ class Files:
         self,
         path: str = "",
         *,
-        scope: FileScope = "personal",
+        scope: FileScope | None = "personal",
         max_keys: int = 100,
         continuation_token: str | None = None,
     ) -> AccountFilesListResponse:
         """List one folder level; keys are relative to the scope root.
 
-        ``response.shared_enabled`` reports whether the ``shared`` scope
-        is available on the customer's plan.
+        ``response.labels`` identifies service and enrollment folders.
         """
         from ._generated.api.customer import customer_list_account_files
         from ._generated.types import UNSET
@@ -101,8 +115,7 @@ class Files:
         return unwrap(
             customer_list_account_files.sync_detailed(
                 client=self._client,
-                scope=scope,
-                path=path,
+                path=_account_path(path, scope),
                 max_keys=max_keys,
                 continuation_token=(continuation_token if continuation_token is not None else UNSET),
             )
@@ -112,7 +125,7 @@ class Files:
         self,
         key: str,
         *,
-        scope: FileScope = "personal",
+        scope: FileScope | None = "personal",
         expires_in: int = 900,
     ) -> AccountFileDownloadResponse:
         """Presign a download URL for one file (no bytes transferred)."""
@@ -121,8 +134,7 @@ class Files:
         return unwrap(
             customer_download_account_file.sync_detailed(
                 client=self._client,
-                key=key,
-                scope=scope,
+                key=_account_path(key, scope),
                 expires_in=expires_in,
             )
         )
@@ -132,7 +144,7 @@ class Files:
         key: str,
         dest: str | Path | None = None,
         *,
-        scope: FileScope = "personal",
+        scope: FileScope | None = "personal",
     ) -> Path:
         """Download one file to ``dest`` (default: its basename in cwd).
 
@@ -163,7 +175,7 @@ class Files:
         src: str | Path,
         path: str = "",
         *,
-        scope: FileScope = "personal",
+        scope: FileScope | None = "personal",
         filename: str | None = None,
         content_type: str | None = None,
     ) -> str:
@@ -191,8 +203,7 @@ class Files:
                     filename=name,
                     size=size,
                     content_type=content_type if content_type is not None else UNSET,
-                    path=path,
-                    scope=scope,
+                    path=_account_path(path, scope),
                 ),
             )
         )

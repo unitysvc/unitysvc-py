@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -23,6 +23,7 @@ class CustomerEnrollmentCreateResponse:
 
     id: UUID
     service_id: UUID
+    channel: str
     status: ServiceEnrollmentStatusEnum
     """ Status of a customer's service enrollment.
 
@@ -58,6 +59,8 @@ class CustomerEnrollmentCreateResponse:
 
         service_id = str(self.service_id)
 
+        channel = self.channel
+
         status: str = self.status
 
         task_id = self.task_id
@@ -78,6 +81,7 @@ class CustomerEnrollmentCreateResponse:
             {
                 "id": id,
                 "service_id": service_id,
+                "channel": channel,
                 "status": status,
                 "task_id": task_id,
                 "message": message,
@@ -94,6 +98,8 @@ class CustomerEnrollmentCreateResponse:
         id = UUID(d.pop("id"))
 
         service_id = UUID(d.pop("service_id"))
+
+        channel = d.pop("channel")
 
         status = check_service_enrollment_status_enum(d.pop("status"))
 
@@ -121,6 +127,7 @@ class CustomerEnrollmentCreateResponse:
         customer_enrollment_create_response = cls(
             id=id,
             service_id=service_id,
+            channel=channel,
             status=status,
             task_id=task_id,
             message=message,

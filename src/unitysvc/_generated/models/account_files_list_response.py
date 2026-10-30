@@ -1,19 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.account_files_list_response_scope import (
-    AccountFilesListResponseScope,
-    check_account_files_list_response_scope,
-)
-from ..types import UNSET, Unset
-
 if TYPE_CHECKING:
     from ..models.account_file_object import AccountFileObject
+    from ..models.labels import Labels
 
 
 T = TypeVar("T", bound="AccountFilesListResponse")
@@ -21,22 +16,17 @@ T = TypeVar("T", bound="AccountFilesListResponse")
 
 @_attrs_define
 class AccountFilesListResponse:
-    """One page of an account-files listing."""
+    """One folder level of the customer's tree."""
 
-    scope: AccountFilesListResponseScope
     path: str
     objects: list[AccountFileObject]
     common_prefixes: list[str]
+    labels: Labels
     is_truncated: bool
     next_continuation_token: None | str
-    shared_enabled: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.account_file_object import AccountFileObject
-
-        scope: str = self.scope
-
         path = self.path
 
         objects = []
@@ -46,24 +36,23 @@ class AccountFilesListResponse:
 
         common_prefixes = self.common_prefixes
 
+        labels = self.labels.to_dict()
+
         is_truncated = self.is_truncated
 
         next_continuation_token: None | str
         next_continuation_token = self.next_continuation_token
 
-        shared_enabled = self.shared_enabled
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "scope": scope,
                 "path": path,
                 "objects": objects,
                 "common_prefixes": common_prefixes,
+                "labels": labels,
                 "is_truncated": is_truncated,
                 "next_continuation_token": next_continuation_token,
-                "shared_enabled": shared_enabled,
             }
         )
 
@@ -72,10 +61,9 @@ class AccountFilesListResponse:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.account_file_object import AccountFileObject
+        from ..models.labels import Labels
 
         d = dict(src_dict)
-        scope = check_account_files_list_response_scope(d.pop("scope"))
-
         path = d.pop("path")
 
         objects = []
@@ -87,6 +75,8 @@ class AccountFilesListResponse:
 
         common_prefixes = cast(list[str], d.pop("common_prefixes"))
 
+        labels = Labels.from_dict(d.pop("labels"))
+
         is_truncated = d.pop("is_truncated")
 
         def _parse_next_continuation_token(data: object) -> None | str:
@@ -96,16 +86,13 @@ class AccountFilesListResponse:
 
         next_continuation_token = _parse_next_continuation_token(d.pop("next_continuation_token"))
 
-        shared_enabled = d.pop("shared_enabled")
-
         account_files_list_response = cls(
-            scope=scope,
             path=path,
             objects=objects,
             common_prefixes=common_prefixes,
+            labels=labels,
             is_truncated=is_truncated,
             next_continuation_token=next_continuation_token,
-            shared_enabled=shared_enabled,
         )
 
         account_files_list_response.additional_properties = d

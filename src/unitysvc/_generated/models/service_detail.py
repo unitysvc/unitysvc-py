@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -44,7 +44,7 @@ class ServiceDetail:
     capabilities: list[str] | None | Unset = UNSET
     tags: list[str] | None | Unset = UNSET
     list_price: None | ServiceDetailListPriceType0 | Unset = UNSET
-    enrollment_channel: None | str | Unset = UNSET
+    enrollment_channels: list[str] | Unset = UNSET
     channel_types: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -117,11 +117,9 @@ class ServiceDetail:
         else:
             list_price = self.list_price
 
-        enrollment_channel: None | str | Unset
-        if isinstance(self.enrollment_channel, Unset):
-            enrollment_channel = UNSET
-        else:
-            enrollment_channel = self.enrollment_channel
+        enrollment_channels: list[str] | Unset = UNSET
+        if not isinstance(self.enrollment_channels, Unset):
+            enrollment_channels = self.enrollment_channels
 
         channel_types: list[str] | None | Unset
         if isinstance(self.channel_types, Unset):
@@ -158,8 +156,8 @@ class ServiceDetail:
             field_dict["tags"] = tags
         if list_price is not UNSET:
             field_dict["list_price"] = list_price
-        if enrollment_channel is not UNSET:
-            field_dict["enrollment_channel"] = enrollment_channel
+        if enrollment_channels is not UNSET:
+            field_dict["enrollment_channels"] = enrollment_channels
         if channel_types is not UNSET:
             field_dict["channel_types"] = channel_types
 
@@ -279,14 +277,7 @@ class ServiceDetail:
 
         list_price = _parse_list_price(d.pop("list_price", UNSET))
 
-        def _parse_enrollment_channel(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
-
-        enrollment_channel = _parse_enrollment_channel(d.pop("enrollment_channel", UNSET))
+        enrollment_channels = cast(list[str], d.pop("enrollment_channels", UNSET))
 
         def _parse_channel_types(data: object) -> list[str] | None | Unset:
             if data is None:
@@ -317,7 +308,7 @@ class ServiceDetail:
             capabilities=capabilities,
             tags=tags,
             list_price=list_price,
-            enrollment_channel=enrollment_channel,
+            enrollment_channels=enrollment_channels,
             channel_types=channel_types,
         )
 

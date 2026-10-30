@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, cast
+from typing import Any
 from urllib.parse import quote
 
 import httpx
@@ -89,9 +89,10 @@ def sync_detailed(
         name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (PreferenceUpdate): ``value``: ``{"service": ...}`` (or the service as a string), or
-            a mode
-            for ``request-log``. Use ``DELETE`` to clear.
+        body (PreferenceUpdate): ``value``: ``{"service": ...}`` (or the service as a string), a
+            mode
+            for ``request-log``, or ``auto`` / ``off`` / a path for a ``room-*``
+            preference. Use ``DELETE`` to clear.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -133,9 +134,10 @@ def sync(
         name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (PreferenceUpdate): ``value``: ``{"service": ...}`` (or the service as a string), or
-            a mode
-            for ``request-log``. Use ``DELETE`` to clear.
+        body (PreferenceUpdate): ``value``: ``{"service": ...}`` (or the service as a string), a
+            mode
+            for ``request-log``, or ``auto`` / ``off`` / a path for a ``room-*``
+            preference. Use ``DELETE`` to clear.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -172,9 +174,10 @@ async def asyncio_detailed(
         name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (PreferenceUpdate): ``value``: ``{"service": ...}`` (or the service as a string), or
-            a mode
-            for ``request-log``. Use ``DELETE`` to clear.
+        body (PreferenceUpdate): ``value``: ``{"service": ...}`` (or the service as a string), a
+            mode
+            for ``request-log``, or ``auto`` / ``off`` / a path for a ``room-*``
+            preference. Use ``DELETE`` to clear.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -214,9 +217,10 @@ async def asyncio(
         name (str):
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
-        body (PreferenceUpdate): ``value``: ``{"service": ...}`` (or the service as a string), or
-            a mode
-            for ``request-log``. Use ``DELETE`` to clear.
+        body (PreferenceUpdate): ``value``: ``{"service": ...}`` (or the service as a string), a
+            mode
+            for ``request-log``, or ``auto`` / ``off`` / a path for a ``room-*``
+            preference. Use ``DELETE`` to clear.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

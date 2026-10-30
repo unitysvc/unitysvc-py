@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -14,6 +14,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.customer_enrollment_parameters_type_0 import CustomerEnrollmentParametersType0
+    from ..models.customer_enrollment_policy_type_0_item import CustomerEnrollmentPolicyType0Item
     from ..models.customer_enrollment_service_type_0 import CustomerEnrollmentServiceType0
 
 
@@ -67,6 +68,8 @@ class CustomerEnrollment:
     service: CustomerEnrollmentServiceType0 | None | Unset = UNSET
     proxy_endpoint: None | str | Unset = UNSET
     code: None | str | Unset = UNSET
+    channel: None | str | Unset = UNSET
+    policy: list[CustomerEnrollmentPolicyType0Item] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -125,6 +128,24 @@ class CustomerEnrollment:
         else:
             code = self.code
 
+        channel: None | str | Unset
+        if isinstance(self.channel, Unset):
+            channel = UNSET
+        else:
+            channel = self.channel
+
+        policy: list[dict[str, Any]] | None | Unset
+        if isinstance(self.policy, Unset):
+            policy = UNSET
+        elif isinstance(self.policy, list):
+            policy = []
+            for policy_type_0_item_data in self.policy:
+                policy_type_0_item = policy_type_0_item_data.to_dict()
+                policy.append(policy_type_0_item)
+
+        else:
+            policy = self.policy
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -147,12 +168,17 @@ class CustomerEnrollment:
             field_dict["proxy_endpoint"] = proxy_endpoint
         if code is not UNSET:
             field_dict["code"] = code
+        if channel is not UNSET:
+            field_dict["channel"] = channel
+        if policy is not UNSET:
+            field_dict["policy"] = policy
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.customer_enrollment_parameters_type_0 import CustomerEnrollmentParametersType0
+        from ..models.customer_enrollment_policy_type_0_item import CustomerEnrollmentPolicyType0Item
         from ..models.customer_enrollment_service_type_0 import CustomerEnrollmentServiceType0
 
         d = dict(src_dict)
@@ -250,6 +276,37 @@ class CustomerEnrollment:
 
         code = _parse_code(d.pop("code", UNSET))
 
+        def _parse_channel(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        channel = _parse_channel(d.pop("channel", UNSET))
+
+        def _parse_policy(data: object) -> list[CustomerEnrollmentPolicyType0Item] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                policy_type_0 = []
+                _policy_type_0 = data
+                for policy_type_0_item_data in _policy_type_0:
+                    policy_type_0_item = CustomerEnrollmentPolicyType0Item.from_dict(policy_type_0_item_data)
+
+                    policy_type_0.append(policy_type_0_item)
+
+                return policy_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[CustomerEnrollmentPolicyType0Item] | None | Unset, data)
+
+        policy = _parse_policy(d.pop("policy", UNSET))
+
         customer_enrollment = cls(
             id=id,
             service_id=service_id,
@@ -261,6 +318,8 @@ class CustomerEnrollment:
             service=service,
             proxy_endpoint=proxy_endpoint,
             code=code,
+            channel=channel,
+            policy=policy,
         )
 
         customer_enrollment.additional_properties = d

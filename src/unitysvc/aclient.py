@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from .apreferences import AsyncPreferences
     from .arecurrent_requests import AsyncRecurrentRequests
     from .arequest_logs import AsyncRequestLogs
+    from .arooms import AsyncRooms
     from .asecrets import AsyncSecrets
     from .aservices import AsyncServices
 
@@ -132,6 +133,7 @@ class AsyncClient:
         self._recurrent_requests: AsyncRecurrentRequests | None = None
         self._request_logs: AsyncRequestLogs | None = None
         self._secrets: AsyncSecrets | None = None
+        self._rooms: AsyncRooms | None = None
         self._services: AsyncServices | None = None
 
     # ------------------------------------------------------------------
@@ -318,6 +320,15 @@ class AsyncClient:
 
             self._request_logs = AsyncRequestLogs(self._client)
         return self._request_logs
+
+    @property
+    def rooms(self) -> AsyncRooms:
+        """Rooms and messages for this account."""
+        if self._rooms is None:
+            from .arooms import AsyncRooms
+
+            self._rooms = AsyncRooms(self._authenticated())
+        return self._rooms
 
     @property
     def secrets(self) -> AsyncSecrets:

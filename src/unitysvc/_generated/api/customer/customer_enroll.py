@@ -1,6 +1,5 @@
 from http import HTTPStatus
-from typing import Any, cast
-from urllib.parse import quote
+from typing import Any
 
 import httpx
 
@@ -92,7 +91,12 @@ def sync_detailed(
     Returns a task_id for polling via GET /tasks/{task_id}.
 
     Requires X-Role-Id header (JWT) or a svcpass customer API key with
-    customer context.
+    customer context; a key also needs ``service:*`` with ``enroll``.
+
+    Checked exactly as an enrollment request document (#2770): parameters
+    against the channel's schema, secrets, and ``policy`` (required when the
+    channel asks for access). Refused with 422 naming every error and missing
+    secret.
 
     Args:
         shared (bool | Unset): When true, create a shared team enrollment visible to all org
@@ -142,7 +146,12 @@ def sync(
     Returns a task_id for polling via GET /tasks/{task_id}.
 
     Requires X-Role-Id header (JWT) or a svcpass customer API key with
-    customer context.
+    customer context; a key also needs ``service:*`` with ``enroll``.
+
+    Checked exactly as an enrollment request document (#2770): parameters
+    against the channel's schema, secrets, and ``policy`` (required when the
+    channel asks for access). Refused with 422 naming every error and missing
+    secret.
 
     Args:
         shared (bool | Unset): When true, create a shared team enrollment visible to all org
@@ -187,7 +196,12 @@ async def asyncio_detailed(
     Returns a task_id for polling via GET /tasks/{task_id}.
 
     Requires X-Role-Id header (JWT) or a svcpass customer API key with
-    customer context.
+    customer context; a key also needs ``service:*`` with ``enroll``.
+
+    Checked exactly as an enrollment request document (#2770): parameters
+    against the channel's schema, secrets, and ``policy`` (required when the
+    channel asks for access). Refused with 422 naming every error and missing
+    secret.
 
     Args:
         shared (bool | Unset): When true, create a shared team enrollment visible to all org
@@ -235,7 +249,12 @@ async def asyncio(
     Returns a task_id for polling via GET /tasks/{task_id}.
 
     Requires X-Role-Id header (JWT) or a svcpass customer API key with
-    customer context.
+    customer context; a key also needs ``service:*`` with ``enroll``.
+
+    Checked exactly as an enrollment request document (#2770): parameters
+    against the channel's schema, secrets, and ``policy`` (required when the
+    channel asks for access). Refused with 422 naming every error and missing
+    secret.
 
     Args:
         shared (bool | Unset): When true, create a shared team enrollment visible to all org

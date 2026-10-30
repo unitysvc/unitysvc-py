@@ -56,7 +56,33 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
 
 ### Files
 
+Account files follow the API key's customer. Legacy `scope="personal"` paths
+map to `home/`; use `scope=None` for the full account tree, and a team key for
+team files. The removed shared-scope selector is refused rather than silently
+selecting another account.
+
 ::: unitysvc.files.Files
+    options:
+      show_root_heading: true
+
+### Rooms
+
+```python
+room = client.rooms.get("helpdesk")
+client.rooms.post("helpdesk", body="Please help", client_message_id="support-1")
+client.rooms.update(str(room.id), description="Contact **our support team** here.")
+members = client.rooms.members(str(room.id))
+```
+
+Descriptions are owner-written Markdown. Policy fields such as `retention_seconds`,
+`keep_forever` and `permanent` describe the rules actually enforced by the server.
+Only owners can update settings, and singleton rooms keep their fixed rules.
+
+::: unitysvc.rooms.Rooms
+    options:
+      show_root_heading: true
+
+::: unitysvc.arooms.AsyncRooms
     options:
       show_root_heading: true
 

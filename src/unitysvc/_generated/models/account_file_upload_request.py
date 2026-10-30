@@ -1,15 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.account_file_upload_request_scope import (
-    AccountFileUploadRequestScope,
-    check_account_file_upload_request_scope,
-)
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AccountFileUploadRequest")
@@ -22,8 +18,7 @@ class AccountFileUploadRequest:
     filename: str
     size: int
     content_type: None | str | Unset = UNSET
-    path: str | Unset = ""
-    scope: AccountFileUploadRequestScope | Unset = "personal"
+    path: str | Unset = "home/"
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -39,10 +34,6 @@ class AccountFileUploadRequest:
 
         path = self.path
 
-        scope: str | Unset = UNSET
-        if not isinstance(self.scope, Unset):
-            scope = self.scope
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -55,8 +46,6 @@ class AccountFileUploadRequest:
             field_dict["content_type"] = content_type
         if path is not UNSET:
             field_dict["path"] = path
-        if scope is not UNSET:
-            field_dict["scope"] = scope
 
         return field_dict
 
@@ -78,19 +67,11 @@ class AccountFileUploadRequest:
 
         path = d.pop("path", UNSET)
 
-        _scope = d.pop("scope", UNSET)
-        scope: AccountFileUploadRequestScope | Unset
-        if isinstance(_scope, Unset):
-            scope = UNSET
-        else:
-            scope = check_account_file_upload_request_scope(_scope)
-
         account_file_upload_request = cls(
             filename=filename,
             size=size,
             content_type=content_type,
             path=path,
-            scope=scope,
         )
 
         account_file_upload_request.additional_properties = d

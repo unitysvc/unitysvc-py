@@ -1,16 +1,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-
-from ..models.account_file_upload_response_scope import (
-    AccountFileUploadResponseScope,
-    check_account_file_upload_response_scope,
-)
-from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.fields import Fields
@@ -21,19 +15,16 @@ T = TypeVar("T", bound="AccountFileUploadResponse")
 
 @_attrs_define
 class AccountFileUploadResponse:
-    """Presigned-POST ticket, echoing the scope it was minted for."""
+    """Presigned-POST ticket for one upload."""
 
     key: str
     url: str
     fields: Fields
     expires_in: int
     max_bytes: int
-    scope: AccountFileUploadResponseScope
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.fields import Fields
-
         key = self.key
 
         url = self.url
@@ -44,8 +35,6 @@ class AccountFileUploadResponse:
 
         max_bytes = self.max_bytes
 
-        scope: str = self.scope
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -55,7 +44,6 @@ class AccountFileUploadResponse:
                 "fields": fields,
                 "expires_in": expires_in,
                 "max_bytes": max_bytes,
-                "scope": scope,
             }
         )
 
@@ -76,15 +64,12 @@ class AccountFileUploadResponse:
 
         max_bytes = d.pop("max_bytes")
 
-        scope = check_account_file_upload_response_scope(d.pop("scope"))
-
         account_file_upload_response = cls(
             key=key,
             url=url,
             fields=fields,
             expires_in=expires_in,
             max_bytes=max_bytes,
-            scope=scope,
         )
 
         account_file_upload_response.additional_properties = d

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -22,10 +22,12 @@ class PreferencePublic:
     """One preference as the current account sees it.
 
     ``value`` is the account's own setting (``null`` when unset), a
-    :class:`PreferenceValue` or, for ``request-log``, a mode string.
+    :class:`PreferenceValue` or, for ``request-log`` and the ``room-*``
+    preferences, a string.
     ``effective`` is what applies now and ``source`` where it comes from:
-    ``account`` (its own value), ``user`` (a team's notices falling back to
-    your own destination), or ``default``. ``null`` when nothing applies.
+    ``account`` (its own value) or ``default``. ``null`` when nothing applies.
+    ``user`` is kept for compatibility but no longer returned: a team's
+    notices never fall back to your own destination (#2686).
 
     """
 
@@ -38,7 +40,6 @@ class PreferencePublic:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.preference_account_public import PreferenceAccountPublic
         from ..models.preference_value import PreferenceValue
 
         name = self.name

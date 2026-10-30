@@ -1,6 +1,5 @@
 from http import HTTPStatus
-from typing import Any, cast
-from urllib.parse import quote
+from typing import Any
 from uuid import UUID
 
 import httpx
@@ -8,7 +7,7 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.recurrent_request_status_enum import RecurrentRequestStatusEnum, check_recurrent_request_status_enum
+from ...models.recurrent_request_status_enum import RecurrentRequestStatusEnum
 from ...models.recurrent_requests_public import RecurrentRequestsPublic
 from ...types import UNSET, Response, Unset
 
