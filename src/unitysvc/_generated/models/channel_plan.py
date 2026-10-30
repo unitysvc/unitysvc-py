@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -9,6 +9,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.channel_plan_customer_access_requests_type_0_item import ChannelPlanCustomerAccessRequestsType0Item
     from ..models.secret_requirement import SecretRequirement
 
 
@@ -33,11 +34,11 @@ class ChannelPlan:
     selector: None | str | Unset = UNSET
     applicable_interfaces: list[str] | None | Unset = UNSET
     request_formats: list[str] | None | Unset = UNSET
+    external_url: None | str | Unset = UNSET
+    customer_access_requests: list[ChannelPlanCustomerAccessRequestsType0Item] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.secret_requirement import SecretRequirement
-
         name = self.name
 
         channel_type = self.channel_type
@@ -110,6 +111,24 @@ class ChannelPlan:
         else:
             request_formats = self.request_formats
 
+        external_url: None | str | Unset
+        if isinstance(self.external_url, Unset):
+            external_url = UNSET
+        else:
+            external_url = self.external_url
+
+        customer_access_requests: list[dict[str, Any]] | None | Unset
+        if isinstance(self.customer_access_requests, Unset):
+            customer_access_requests = UNSET
+        elif isinstance(self.customer_access_requests, list):
+            customer_access_requests = []
+            for customer_access_requests_type_0_item_data in self.customer_access_requests:
+                customer_access_requests_type_0_item = customer_access_requests_type_0_item_data.to_dict()
+                customer_access_requests.append(customer_access_requests_type_0_item)
+
+        else:
+            customer_access_requests = self.customer_access_requests
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -142,11 +161,18 @@ class ChannelPlan:
             field_dict["applicable_interfaces"] = applicable_interfaces
         if request_formats is not UNSET:
             field_dict["request_formats"] = request_formats
+        if external_url is not UNSET:
+            field_dict["external_url"] = external_url
+        if customer_access_requests is not UNSET:
+            field_dict["customer_access_requests"] = customer_access_requests
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.channel_plan_customer_access_requests_type_0_item import (
+            ChannelPlanCustomerAccessRequestsType0Item,
+        )
         from ..models.secret_requirement import SecretRequirement
 
         d = dict(src_dict)
@@ -257,6 +283,41 @@ class ChannelPlan:
 
         request_formats = _parse_request_formats(d.pop("request_formats", UNSET))
 
+        def _parse_external_url(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        external_url = _parse_external_url(d.pop("external_url", UNSET))
+
+        def _parse_customer_access_requests(
+            data: object,
+        ) -> list[ChannelPlanCustomerAccessRequestsType0Item] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                customer_access_requests_type_0 = []
+                _customer_access_requests_type_0 = data
+                for customer_access_requests_type_0_item_data in _customer_access_requests_type_0:
+                    customer_access_requests_type_0_item = ChannelPlanCustomerAccessRequestsType0Item.from_dict(
+                        customer_access_requests_type_0_item_data
+                    )
+
+                    customer_access_requests_type_0.append(customer_access_requests_type_0_item)
+
+                return customer_access_requests_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[ChannelPlanCustomerAccessRequestsType0Item] | None | Unset, data)
+
+        customer_access_requests = _parse_customer_access_requests(d.pop("customer_access_requests", UNSET))
+
         channel_plan = cls(
             name=name,
             channel_type=channel_type,
@@ -272,6 +333,8 @@ class ChannelPlan:
             selector=selector,
             applicable_interfaces=applicable_interfaces,
             request_formats=request_formats,
+            external_url=external_url,
+            customer_access_requests=customer_access_requests,
         )
 
         channel_plan.additional_properties = d

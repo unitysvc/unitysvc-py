@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -17,7 +17,7 @@ class ResolveCandidate:
     """One service the gateway would route to, customer-safe subset.
 
     Omits operational fields (upstream_config with resolved API keys,
-    transformers, response_rules, seller_id, pricing_bundle_id) — those
+    transformers, seller_id, pricing_bundle_id) — those
     are gateway internals. The SDK gets identity + the enrollment
     binding it needs to reason about dispatch.
 

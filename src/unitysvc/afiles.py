@@ -10,7 +10,7 @@ import httpx
 from ._generated.client import AuthenticatedClient
 from ._http import unwrap
 from .exceptions import APIError
-from .files import _STORAGE_TIMEOUT, FileScope
+from .files import _STORAGE_TIMEOUT, FileScope, _account_path
 
 if TYPE_CHECKING:
     from ._generated.client import AuthenticatedClient
@@ -61,7 +61,7 @@ class AsyncFiles:
         self,
         path: str = "",
         *,
-        scope: FileScope = "personal",
+        scope: FileScope | None = "personal",
         max_keys: int = 100,
         continuation_token: str | None = None,
     ) -> AccountFilesListResponse:
@@ -71,8 +71,7 @@ class AsyncFiles:
         return unwrap(
             await customer_list_account_files.asyncio_detailed(
                 client=self._client,
-                scope=scope,
-                path=path,
+                path=_account_path(path, scope),
                 max_keys=max_keys,
                 continuation_token=(continuation_token if continuation_token is not None else UNSET),
             )
@@ -82,7 +81,7 @@ class AsyncFiles:
         self,
         key: str,
         *,
-        scope: FileScope = "personal",
+        scope: FileScope | None = "personal",
         expires_in: int = 900,
     ) -> AccountFileDownloadResponse:
         from ._generated.api.customer import customer_download_account_file
@@ -90,8 +89,7 @@ class AsyncFiles:
         return unwrap(
             await customer_download_account_file.asyncio_detailed(
                 client=self._client,
-                key=key,
-                scope=scope,
+                key=_account_path(key, scope),
                 expires_in=expires_in,
             )
         )
@@ -101,7 +99,7 @@ class AsyncFiles:
         key: str,
         dest: str | Path | None = None,
         *,
-        scope: FileScope = "personal",
+        scope: FileScope | None = "personal",
     ) -> Path:
         presigned = await self.download_url(key, scope=scope)
         target = Path(dest) if dest is not None else Path(Path(key).name)
@@ -125,7 +123,7 @@ class AsyncFiles:
         src: str | Path,
         path: str = "",
         *,
-        scope: FileScope = "personal",
+        scope: FileScope | None = "personal",
         filename: str | None = None,
         content_type: str | None = None,
     ) -> str:
@@ -146,8 +144,7 @@ class AsyncFiles:
                     filename=name,
                     size=size,
                     content_type=content_type if content_type is not None else UNSET,
-                    path=path,
-                    scope=scope,
+                    path=_account_path(path, scope),
                 ),
             )
         )

@@ -5,15 +5,13 @@ from .access_interface_plan import AccessInterfacePlan
 from .access_interface_plan_routing_key_type_0 import AccessInterfacePlanRoutingKeyType0
 from .access_plan import AccessPlan
 from .access_plan_enrollment_mode import AccessPlanEnrollmentMode
+from .account_file_delete_request import AccountFileDeleteRequest
+from .account_file_delete_response import AccountFileDeleteResponse
 from .account_file_download_response import AccountFileDownloadResponse
-from .account_file_download_response_scope import AccountFileDownloadResponseScope
 from .account_file_object import AccountFileObject
 from .account_file_upload_request import AccountFileUploadRequest
-from .account_file_upload_request_scope import AccountFileUploadRequestScope
 from .account_file_upload_response import AccountFileUploadResponse
-from .account_file_upload_response_scope import AccountFileUploadResponseScope
 from .account_files_list_response import AccountFilesListResponse
-from .account_files_list_response_scope import AccountFilesListResponseScope
 from .broadcast_create import BroadcastCreate
 from .broadcast_create_mode import BroadcastCreateMode
 from .broadcast_public import BroadcastPublic
@@ -35,12 +33,18 @@ from .chain_step_update import ChainStepUpdate
 from .chain_update import ChainUpdate
 from .chains_public import ChainsPublic
 from .channel_plan import ChannelPlan
+from .channel_plan_customer_access_requests_type_0_item import ChannelPlanCustomerAccessRequestsType0Item
 from .cursor_page_service_summary import CursorPageServiceSummary
-from .customer_download_account_file_scope import CustomerDownloadAccountFileScope
+from .customer_content_attachment import CustomerContentAttachment
+from .customer_content_edit_public import CustomerContentEditPublic
+from .customer_content_item import CustomerContentItem
+from .customer_content_update import CustomerContentUpdate
+from .customer_content_update_values import CustomerContentUpdateValues
 from .customer_enrollment import CustomerEnrollment
 from .customer_enrollment_cancel_response import CustomerEnrollmentCancelResponse
 from .customer_enrollment_create_response import CustomerEnrollmentCreateResponse
 from .customer_enrollment_parameters_type_0 import CustomerEnrollmentParametersType0
+from .customer_enrollment_policy_type_0_item import CustomerEnrollmentPolicyType0Item
 from .customer_enrollment_service_type_0 import CustomerEnrollmentServiceType0
 from .customer_enrollments_response import CustomerEnrollmentsResponse
 from .customer_group_detail import CustomerGroupDetail
@@ -52,7 +56,6 @@ from .customer_group_membership_response import CustomerGroupMembershipResponse
 from .customer_group_membership_update import CustomerGroupMembershipUpdate
 from .customer_group_view import CustomerGroupView
 from .customer_group_view_details_type_0 import CustomerGroupViewDetailsType0
-from .customer_list_account_files_scope import CustomerListAccountFilesScope
 from .cycle_usage_response import CycleUsageResponse
 from .document_category_enum import DocumentCategoryEnum
 from .fields import Fields
@@ -61,7 +64,10 @@ from .gateway_request_info import GatewayRequestInfo
 from .gateway_request_info_headers_type_0 import GatewayRequestInfoHeadersType0
 from .group_type_enum import GroupTypeEnum
 from .http_validation_error import HTTPValidationError
+from .labels import Labels
 from .message import Message
+from .msg_format_enum import MsgFormatEnum
+from .msg_type_enum import MsgTypeEnum
 from .ops_customer_request_log_detail import OpsCustomerRequestLogDetail
 from .parameter_requirement import ParameterRequirement
 from .plan_meter_public import PlanMeterPublic
@@ -72,6 +78,12 @@ from .preference_public_source_type_0 import PreferencePublicSourceType0
 from .preference_update import PreferenceUpdate
 from .preference_value import PreferenceValue
 from .preferences_public import PreferencesPublic
+from .profile_account_public import ProfileAccountPublic
+from .profile_account_public_type import ProfileAccountPublicType
+from .profile_edit_public import ProfileEditPublic
+from .profile_section import ProfileSection
+from .profile_update import ProfileUpdate
+from .profile_update_sections import ProfileUpdateSections
 from .recurrent_request_create import RecurrentRequestCreate
 from .recurrent_request_create_body_template_type_0 import RecurrentRequestCreateBodyTemplateType0
 from .recurrent_request_create_request_headers_type_0 import RecurrentRequestCreateRequestHeadersType0
@@ -94,6 +106,27 @@ from .resolve_request import ResolveRequest
 from .resolve_request_routing_key_type_0 import ResolveRequestRoutingKeyType0
 from .resolve_response import ResolveResponse
 from .resolve_response_routing_strategy_type_0 import ResolveResponseRoutingStrategyType0
+from .room_invitation_code import RoomInvitationCode
+from .room_invitation_codes import RoomInvitationCodes
+from .room_invitation_create import RoomInvitationCreate
+from .room_invitation_create_role import RoomInvitationCreateRole
+from .room_join_request import RoomJoinRequest
+from .room_list import RoomList
+from .room_member_view import RoomMemberView
+from .room_members import RoomMembers
+from .room_message_page import RoomMessagePage
+from .room_message_view import RoomMessageView
+from .room_message_view_attachments_item import RoomMessageViewAttachmentsItem
+from .room_message_view_event_data_type_0 import RoomMessageViewEventDataType0
+from .room_message_view_links_item import RoomMessageViewLinksItem
+from .room_post_origin import RoomPostOrigin
+from .room_post_request import RoomPostRequest
+from .room_post_request_links_item import RoomPostRequestLinksItem
+from .room_post_response import RoomPostResponse
+from .room_post_response_routed import RoomPostResponseRouted
+from .room_settings_update import RoomSettingsUpdate
+from .room_summary import RoomSummary
+from .room_view import RoomView
 from .routing_endpoint_plan import RoutingEndpointPlan
 from .routing_endpoint_plan_routing_key_type_0 import RoutingEndpointPlanRoutingKeyType0
 from .sanitized_error_info import SanitizedErrorInfo
@@ -102,6 +135,7 @@ from .secret_public import SecretPublic
 from .secret_requirement import SecretRequirement
 from .secret_update import SecretUpdate
 from .secrets_public import SecretsPublic
+from .sections import Sections
 from .service_alias_create import ServiceAliasCreate
 from .service_alias_create_request_routing_key_type_0 import ServiceAliasCreateRequestRoutingKeyType0
 from .service_alias_create_routing_key_override_type_0 import ServiceAliasCreateRoutingKeyOverrideType0
@@ -127,7 +161,7 @@ from .service_document_detail_meta_type_0 import ServiceDocumentDetailMetaType0
 from .service_documents_response import ServiceDocumentsResponse
 from .service_enrollment_create import ServiceEnrollmentCreate
 from .service_enrollment_create_parameters_type_0 import ServiceEnrollmentCreateParametersType0
-from .service_enrollment_create_recurrence_schedule_type_0 import ServiceEnrollmentCreateRecurrenceScheduleType0
+from .service_enrollment_create_policy_type_0_item import ServiceEnrollmentCreatePolicyType0Item
 from .service_enrollment_status_enum import ServiceEnrollmentStatusEnum
 from .service_summary import ServiceSummary
 from .service_usage_public import ServiceUsagePublic
@@ -140,6 +174,7 @@ from .usage_metrics import UsageMetrics
 from .user_request_info import UserRequestInfo
 from .user_request_info_headers_type_0 import UserRequestInfoHeadersType0
 from .validation_error import ValidationError
+from .values import Values
 
 __all__ = (
     "AccessInterface",
@@ -147,15 +182,13 @@ __all__ = (
     "AccessInterfacePlanRoutingKeyType0",
     "AccessPlan",
     "AccessPlanEnrollmentMode",
+    "AccountFileDeleteRequest",
+    "AccountFileDeleteResponse",
     "AccountFileDownloadResponse",
-    "AccountFileDownloadResponseScope",
     "AccountFileObject",
     "AccountFilesListResponse",
-    "AccountFilesListResponseScope",
     "AccountFileUploadRequest",
-    "AccountFileUploadRequestScope",
     "AccountFileUploadResponse",
-    "AccountFileUploadResponseScope",
     "BroadcastCreate",
     "BroadcastCreateMode",
     "BroadcastPublic",
@@ -177,12 +210,18 @@ __all__ = (
     "ChainStepUpdate",
     "ChainUpdate",
     "ChannelPlan",
+    "ChannelPlanCustomerAccessRequestsType0Item",
     "CursorPageServiceSummary",
-    "CustomerDownloadAccountFileScope",
+    "CustomerContentAttachment",
+    "CustomerContentEditPublic",
+    "CustomerContentItem",
+    "CustomerContentUpdate",
+    "CustomerContentUpdateValues",
     "CustomerEnrollment",
     "CustomerEnrollmentCancelResponse",
     "CustomerEnrollmentCreateResponse",
     "CustomerEnrollmentParametersType0",
+    "CustomerEnrollmentPolicyType0Item",
     "CustomerEnrollmentServiceType0",
     "CustomerEnrollmentsResponse",
     "CustomerGroupDetail",
@@ -194,7 +233,6 @@ __all__ = (
     "CustomerGroupMembershipUpdate",
     "CustomerGroupView",
     "CustomerGroupViewDetailsType0",
-    "CustomerListAccountFilesScope",
     "CycleUsageResponse",
     "DocumentCategoryEnum",
     "Fields",
@@ -203,7 +241,10 @@ __all__ = (
     "GatewayRequestInfoHeadersType0",
     "GroupTypeEnum",
     "HTTPValidationError",
+    "Labels",
     "Message",
+    "MsgFormatEnum",
+    "MsgTypeEnum",
     "OpsCustomerRequestLogDetail",
     "ParameterRequirement",
     "PlanMeterPublic",
@@ -214,6 +255,12 @@ __all__ = (
     "PreferencesPublic",
     "PreferenceUpdate",
     "PreferenceValue",
+    "ProfileAccountPublic",
+    "ProfileAccountPublicType",
+    "ProfileEditPublic",
+    "ProfileSection",
+    "ProfileUpdate",
+    "ProfileUpdateSections",
     "RecurrentRequestCreate",
     "RecurrentRequestCreateBodyTemplateType0",
     "RecurrentRequestCreateRequestHeadersType0",
@@ -236,6 +283,27 @@ __all__ = (
     "ResolveRequestRoutingKeyType0",
     "ResolveResponse",
     "ResolveResponseRoutingStrategyType0",
+    "RoomInvitationCode",
+    "RoomInvitationCodes",
+    "RoomInvitationCreate",
+    "RoomInvitationCreateRole",
+    "RoomJoinRequest",
+    "RoomList",
+    "RoomMembers",
+    "RoomMemberView",
+    "RoomMessagePage",
+    "RoomMessageView",
+    "RoomMessageViewAttachmentsItem",
+    "RoomMessageViewEventDataType0",
+    "RoomMessageViewLinksItem",
+    "RoomPostOrigin",
+    "RoomPostRequest",
+    "RoomPostRequestLinksItem",
+    "RoomPostResponse",
+    "RoomPostResponseRouted",
+    "RoomSettingsUpdate",
+    "RoomSummary",
+    "RoomView",
     "RoutingEndpointPlan",
     "RoutingEndpointPlanRoutingKeyType0",
     "SanitizedErrorInfo",
@@ -244,6 +312,7 @@ __all__ = (
     "SecretRequirement",
     "SecretsPublic",
     "SecretUpdate",
+    "Sections",
     "ServiceAliasCreate",
     "ServiceAliasCreateRequestRoutingKeyType0",
     "ServiceAliasCreateRoutingKeyOverrideType0",
@@ -269,7 +338,7 @@ __all__ = (
     "ServiceDocumentsResponse",
     "ServiceEnrollmentCreate",
     "ServiceEnrollmentCreateParametersType0",
-    "ServiceEnrollmentCreateRecurrenceScheduleType0",
+    "ServiceEnrollmentCreatePolicyType0Item",
     "ServiceEnrollmentStatusEnum",
     "ServiceSummary",
     "ServiceUsagePublic",
@@ -282,4 +351,5 @@ __all__ = (
     "UserRequestInfo",
     "UserRequestInfoHeadersType0",
     "ValidationError",
+    "Values",
 )

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -13,10 +13,11 @@ T = TypeVar("T", bound="PreferenceValue")
 
 @_attrs_define
 class PreferenceValue:
-    """A service preference (``notification``, ``ai``).
+    """A service preference (``notification``, ``ai``, ``email``).
 
-    ``service`` is a service path for ``notification`` and a service name
-    (``labs/llm-balanced``) or ``a/<name>`` for ``ai``.
+    ``service`` is a service path for ``notification``, a service name
+    (``labs/llm-balanced``) or ``a/<name>`` for ``ai``, and an SMTP service
+    name or ``e/<code>`` for ``email``.
     ``gateway`` is the door a notification destination is delivered through,
     resolved on write (read-only).
 

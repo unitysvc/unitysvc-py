@@ -63,6 +63,7 @@ if TYPE_CHECKING:
     from .preferences import Preferences
     from .recurrent_requests import RecurrentRequests
     from .request_logs import RequestLogs
+    from .rooms import Rooms
     from .secrets import Secrets
     from .services import Services
 
@@ -161,6 +162,7 @@ class Client:
         self._recurrent_requests: RecurrentRequests | None = None
         self._request_logs: RequestLogs | None = None
         self._secrets: Secrets | None = None
+        self._rooms: Rooms | None = None
         self._services: Services | None = None
 
     # ------------------------------------------------------------------
@@ -386,6 +388,15 @@ class Client:
 
             self._request_logs = RequestLogs(self._client)
         return self._request_logs
+
+    @property
+    def rooms(self) -> Rooms:
+        """Rooms and messages for this account."""
+        if self._rooms is None:
+            from .rooms import Rooms
+
+            self._rooms = Rooms(self._authenticated())
+        return self._rooms
 
     @property
     def secrets(self) -> Secrets:

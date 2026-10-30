@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -12,9 +12,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.service_enrollment_create_parameters_type_0 import ServiceEnrollmentCreateParametersType0
-    from ..models.service_enrollment_create_recurrence_schedule_type_0 import (
-        ServiceEnrollmentCreateRecurrenceScheduleType0,
-    )
+    from ..models.service_enrollment_create_policy_type_0_item import ServiceEnrollmentCreatePolicyType0Item
 
 
 T = TypeVar("T", bound="ServiceEnrollmentCreate")
@@ -32,14 +30,12 @@ class ServiceEnrollmentCreate:
     service_id: UUID
     status: None | ServiceEnrollmentStatusEnum | Unset = UNSET
     parameters: None | ServiceEnrollmentCreateParametersType0 | Unset = UNSET
-    recurrence_schedule: None | ServiceEnrollmentCreateRecurrenceScheduleType0 | Unset = UNSET
+    channel: None | str | Unset = UNSET
+    policy: list[ServiceEnrollmentCreatePolicyType0Item] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.service_enrollment_create_parameters_type_0 import ServiceEnrollmentCreateParametersType0
-        from ..models.service_enrollment_create_recurrence_schedule_type_0 import (
-            ServiceEnrollmentCreateRecurrenceScheduleType0,
-        )
 
         service_id = str(self.service_id)
 
@@ -59,13 +55,23 @@ class ServiceEnrollmentCreate:
         else:
             parameters = self.parameters
 
-        recurrence_schedule: dict[str, Any] | None | Unset
-        if isinstance(self.recurrence_schedule, Unset):
-            recurrence_schedule = UNSET
-        elif isinstance(self.recurrence_schedule, ServiceEnrollmentCreateRecurrenceScheduleType0):
-            recurrence_schedule = self.recurrence_schedule.to_dict()
+        channel: None | str | Unset
+        if isinstance(self.channel, Unset):
+            channel = UNSET
         else:
-            recurrence_schedule = self.recurrence_schedule
+            channel = self.channel
+
+        policy: list[dict[str, Any]] | None | Unset
+        if isinstance(self.policy, Unset):
+            policy = UNSET
+        elif isinstance(self.policy, list):
+            policy = []
+            for policy_type_0_item_data in self.policy:
+                policy_type_0_item = policy_type_0_item_data.to_dict()
+                policy.append(policy_type_0_item)
+
+        else:
+            policy = self.policy
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -78,17 +84,17 @@ class ServiceEnrollmentCreate:
             field_dict["status"] = status
         if parameters is not UNSET:
             field_dict["parameters"] = parameters
-        if recurrence_schedule is not UNSET:
-            field_dict["recurrence_schedule"] = recurrence_schedule
+        if channel is not UNSET:
+            field_dict["channel"] = channel
+        if policy is not UNSET:
+            field_dict["policy"] = policy
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.service_enrollment_create_parameters_type_0 import ServiceEnrollmentCreateParametersType0
-        from ..models.service_enrollment_create_recurrence_schedule_type_0 import (
-            ServiceEnrollmentCreateRecurrenceScheduleType0,
-        )
+        from ..models.service_enrollment_create_policy_type_0_item import ServiceEnrollmentCreatePolicyType0Item
 
         d = dict(src_dict)
         service_id = UUID(d.pop("service_id"))
@@ -127,28 +133,43 @@ class ServiceEnrollmentCreate:
 
         parameters = _parse_parameters(d.pop("parameters", UNSET))
 
-        def _parse_recurrence_schedule(data: object) -> None | ServiceEnrollmentCreateRecurrenceScheduleType0 | Unset:
+        def _parse_channel(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        channel = _parse_channel(d.pop("channel", UNSET))
+
+        def _parse_policy(data: object) -> list[ServiceEnrollmentCreatePolicyType0Item] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
             try:
-                if not isinstance(data, dict):
+                if not isinstance(data, list):
                     raise TypeError()
-                recurrence_schedule_type_0 = ServiceEnrollmentCreateRecurrenceScheduleType0.from_dict(data)
+                policy_type_0 = []
+                _policy_type_0 = data
+                for policy_type_0_item_data in _policy_type_0:
+                    policy_type_0_item = ServiceEnrollmentCreatePolicyType0Item.from_dict(policy_type_0_item_data)
 
-                return recurrence_schedule_type_0
+                    policy_type_0.append(policy_type_0_item)
+
+                return policy_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | ServiceEnrollmentCreateRecurrenceScheduleType0 | Unset, data)
+            return cast(list[ServiceEnrollmentCreatePolicyType0Item] | None | Unset, data)
 
-        recurrence_schedule = _parse_recurrence_schedule(d.pop("recurrence_schedule", UNSET))
+        policy = _parse_policy(d.pop("policy", UNSET))
 
         service_enrollment_create = cls(
             service_id=service_id,
             status=status,
             parameters=parameters,
-            recurrence_schedule=recurrence_schedule,
+            channel=channel,
+            policy=policy,
         )
 
         service_enrollment_create.additional_properties = d

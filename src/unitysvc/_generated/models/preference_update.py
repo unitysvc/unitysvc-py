@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-
-from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.preference_value import PreferenceValue
@@ -17,8 +15,9 @@ T = TypeVar("T", bound="PreferenceUpdate")
 
 @_attrs_define
 class PreferenceUpdate:
-    """``value``: ``{"service": ...}`` (or the service as a string), or a mode
-    for ``request-log``. Use ``DELETE`` to clear.
+    """``value``: ``{"service": ...}`` (or the service as a string), a mode
+    for ``request-log``, or ``auto`` / ``off`` / a path for a ``room-*``
+    preference. Use ``DELETE`` to clear.
 
     """
 

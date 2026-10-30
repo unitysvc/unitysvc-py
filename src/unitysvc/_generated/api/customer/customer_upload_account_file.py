@@ -1,6 +1,5 @@
 from http import HTTPStatus
-from typing import Any, cast
-from urllib.parse import quote
+from typing import Any
 
 import httpx
 
@@ -81,11 +80,10 @@ def sync_detailed(
 
     Bytes never transit this API: POST the returned ``fields`` plus the
     file (last, field name ``file``) as multipart form data to ``url``.
-    The key lands under the caller's scope root at ``{path}{filename}``
-    (existing objects with the same key are overwritten, like a home
-    directory); the size ceiling is enforced by the signed policy, not
-    the declared ``size``. ``scope=shared`` requires a team/enterprise
-    plan.
+    The key lands at ``{path}{filename}`` under the root (an existing object
+    with the same key is overwritten); the size ceiling is enforced by the
+    signed policy, not the declared ``size``. Into an enrollment's folder, it
+    hands that enrollment's app an input.
 
     Args:
         authorization (None | str | Unset):
@@ -126,11 +124,10 @@ def sync(
 
     Bytes never transit this API: POST the returned ``fields`` plus the
     file (last, field name ``file``) as multipart form data to ``url``.
-    The key lands under the caller's scope root at ``{path}{filename}``
-    (existing objects with the same key are overwritten, like a home
-    directory); the size ceiling is enforced by the signed policy, not
-    the declared ``size``. ``scope=shared`` requires a team/enterprise
-    plan.
+    The key lands at ``{path}{filename}`` under the root (an existing object
+    with the same key is overwritten); the size ceiling is enforced by the
+    signed policy, not the declared ``size``. Into an enrollment's folder, it
+    hands that enrollment's app an input.
 
     Args:
         authorization (None | str | Unset):
@@ -166,11 +163,10 @@ async def asyncio_detailed(
 
     Bytes never transit this API: POST the returned ``fields`` plus the
     file (last, field name ``file``) as multipart form data to ``url``.
-    The key lands under the caller's scope root at ``{path}{filename}``
-    (existing objects with the same key are overwritten, like a home
-    directory); the size ceiling is enforced by the signed policy, not
-    the declared ``size``. ``scope=shared`` requires a team/enterprise
-    plan.
+    The key lands at ``{path}{filename}`` under the root (an existing object
+    with the same key is overwritten); the size ceiling is enforced by the
+    signed policy, not the declared ``size``. Into an enrollment's folder, it
+    hands that enrollment's app an input.
 
     Args:
         authorization (None | str | Unset):
@@ -209,11 +205,10 @@ async def asyncio(
 
     Bytes never transit this API: POST the returned ``fields`` plus the
     file (last, field name ``file``) as multipart form data to ``url``.
-    The key lands under the caller's scope root at ``{path}{filename}``
-    (existing objects with the same key are overwritten, like a home
-    directory); the size ceiling is enforced by the signed policy, not
-    the declared ``size``. ``scope=shared`` requires a team/enterprise
-    plan.
+    The key lands at ``{path}{filename}`` under the root (an existing object
+    with the same key is overwritten); the size ceiling is enforced by the
+    signed policy, not the declared ``size``. Into an enrollment's folder, it
+    hands that enrollment's app an input.
 
     Args:
         authorization (None | str | Unset):

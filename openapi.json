@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "UnitySVC Customer API",
+    "title": "Isolated PR2808 review Customer API",
     "version": "1.0.0"
   },
   "paths": {
@@ -54,6 +54,422 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PreferencesPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/preferences/profile": {
+      "get": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Read Profile Preference",
+        "description": "The current account's profile, private sections and flags included.",
+        "operationId": "preferences-read_profile_preference",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileEditPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Set Profile Preference",
+        "description": "Replace the current account's profile: section values and their\n``public`` flags together. 409 when ``version`` is stale, so a save from an\nold copy cannot republish a section made private since.",
+        "operationId": "preferences-set_profile_preference",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileEditPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/preferences/intents": {
+      "get": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Read Intents Preference",
+        "operationId": "preferences-read_intents_preference",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerContentEditPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Update Intents Preference",
+        "operationId": "preferences-update_intents_preference",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerContentUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerContentEditPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/preferences/preferences": {
+      "get": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Read Matching Preferences",
+        "operationId": "preferences-read_matching_preferences",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerContentEditPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Update Matching Preferences",
+        "operationId": "preferences-update_matching_preferences",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerContentUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerContentEditPublic"
                 }
               }
             }
@@ -2324,7 +2740,7 @@
           "enrollments"
         ],
         "summary": "Enroll",
-        "description": "Enroll in a service asynchronously.\n\nCreates a pending enrollment and dispatches a Celery task to activate it.\nReturns a task_id for polling via GET /tasks/{task_id}.\n\nRequires X-Role-Id header (JWT) or a svcpass customer API key with\ncustomer context.",
+        "description": "Enroll in a service asynchronously.\n\nCreates a pending enrollment and dispatches a Celery task to activate it.\nReturns a task_id for polling via GET /tasks/{task_id}.\n\nRequires X-Role-Id header (JWT) or a svcpass customer API key with\ncustomer context; a key also needs ``service:*`` with ``enroll``.\n\nChecked exactly as an enrollment request document (#2770): parameters\nagainst the channel's schema, secrets, and ``policy`` (required when the\nchannel asks for access). Refused with 422 naming every error and missing\nsecret.",
         "operationId": "customer-enroll",
         "parameters": [
           {
@@ -2605,7 +3021,7 @@
           "enrollments"
         ],
         "summary": "Cancel Enrollment",
-        "description": "Cancel (unenroll from) an enrollment.\n\nSets status to ``cancelled`` and invalidates the gateway customer\ncontext cache so in-flight requests stop being proxied. The enrollment\nrow and its AccessInterfaces are preserved for potential\nreactivation via re-enrollment with matching parameters.\n\nCallers can only cancel their own customer's enrollments.",
+        "description": "Cancel (unenroll from) an enrollment.\n\nSets status to ``cancelled`` and invalidates the gateway customer\ncontext cache so in-flight requests stop being proxied. The enrollment\nrow and its AccessInterfaces are preserved for potential\nreactivation via re-enrollment with matching parameters.\n\nCallers can only cancel their own customer's enrollments. A key needs\n``service:*`` with ``enroll``.",
         "operationId": "customer-cancel_enrollment",
         "parameters": [
           {
@@ -2682,36 +3098,20 @@
           "account-files"
         ],
         "summary": "List Account Files",
-        "description": "List the caller's account files (one folder level per call).\n\n``scope=personal`` lists the member's own folder; ``scope=shared``\nlists the team folder and requires a team/enterprise plan. Returned\nkeys and prefixes are relative to the scope root. A missing bucket\nreads as an empty listing (the bucket is provisioned out of band).",
+        "description": "List one folder level of the customer's tree (``\"\"`` is the root:\n``home/`` and ``services/``). Keys and prefixes are relative to the root.\nA missing bucket is a storage outage (503).",
         "operationId": "customer-list_account_files",
         "parameters": [
-          {
-            "name": "scope",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "enum": [
-                "personal",
-                "shared"
-              ],
-              "type": "string",
-              "description": "Which folder tree to list",
-              "default": "personal",
-              "title": "Scope"
-            },
-            "description": "Which folder tree to list"
-          },
           {
             "name": "path",
             "in": "query",
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Folder path relative to the scope root",
+              "description": "Folder path relative to the root",
               "default": "",
               "title": "Path"
             },
-            "description": "Folder path relative to the scope root"
+            "description": "Folder path relative to the root"
           },
           {
             "name": "max_keys",
@@ -2805,7 +3205,7 @@
           "account-files"
         ],
         "summary": "Download Account File",
-        "description": "Generate a short-TTL presigned download URL for one account file.\n\nThe object must exist (404 otherwise) and always resolves under the\ncaller's own scope root \u2014 ``key`` is relative, so other members'\nfolders cannot be addressed.",
+        "description": "A short-lived presigned download URL for one file (an attachment).\nThe object must exist (404 otherwise).",
         "operationId": "customer-download_account_file",
         "parameters": [
           {
@@ -2814,26 +3214,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "description": "Object key relative to the scope root",
+              "description": "File path relative to the root",
               "title": "Key"
             },
-            "description": "Object key relative to the scope root"
-          },
-          {
-            "name": "scope",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "enum": [
-                "personal",
-                "shared"
-              ],
-              "type": "string",
-              "description": "Which folder tree",
-              "default": "personal",
-              "title": "Scope"
-            },
-            "description": "Which folder tree"
+            "description": "File path relative to the root"
           },
           {
             "name": "expires_in",
@@ -2911,7 +3295,7 @@
           "account-files"
         ],
         "summary": "Upload Account File",
-        "description": "Mint a presigned-POST ticket for one direct-to-storage upload.\n\nBytes never transit this API: POST the returned ``fields`` plus the\nfile (last, field name ``file``) as multipart form data to ``url``.\nThe key lands under the caller's scope root at ``{path}{filename}``\n(existing objects with the same key are overwritten, like a home\ndirectory); the size ceiling is enforced by the signed policy, not\nthe declared ``size``. ``scope=shared`` requires a team/enterprise\nplan.",
+        "description": "Mint a presigned-POST ticket for one direct-to-storage upload.\n\nBytes never transit this API: POST the returned ``fields`` plus the\nfile (last, field name ``file``) as multipart form data to ``url``.\nThe key lands at ``{path}{filename}`` under the root (an existing object\nwith the same key is overwritten); the size ceiling is enforced by the\nsigned policy, not the declared ``size``. Into an enrollment's folder, it\nhands that enrollment's app an input.",
         "operationId": "customer-upload_account_file",
         "parameters": [
           {
@@ -2964,6 +3348,83 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AccountFileUploadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/files/delete": {
+      "post": {
+        "tags": [
+          "customer",
+          "account-files"
+        ],
+        "summary": "Delete Account Files",
+        "description": "Delete a file, or a folder (``path`` ending in ``/``) and everything\nin it: a home folder, a service's or an enrollment's files. ``deleted``\ncounts the objects removed; nothing to delete is 0. The root itself is\nnot deleted in one call. A failure part way through a folder (503) may\nleave it partly deleted; deleting it again finishes the job.",
+        "operationId": "customer-delete_account_files",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountFileDeleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountFileDeleteResponse"
                 }
               }
             }
@@ -4750,6 +5211,839 @@
         }
       }
     },
+    "/rooms": {
+      "post": {
+        "tags": [
+          "customer-rooms"
+        ],
+        "summary": "Post Room Message",
+        "description": "Post a message; the room comes from a leading ``@handle``, else the\naccount's ``me`` room.",
+        "operationId": "customer-rooms-post_room_message",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoomPostRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomPostResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "customer-rooms"
+        ],
+        "summary": "List Rooms",
+        "description": "The rooms the account is in, with its role in each, most recently\nactive first. A key limited by ``room=`` sees only its rooms.",
+        "operationId": "customer-rooms-list_rooms",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only rooms of this kind",
+              "title": "Kind"
+            },
+            "description": "Only rooms of this kind"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rooms/join": {
+      "post": {
+        "tags": [
+          "customer-rooms"
+        ],
+        "summary": "Join Room",
+        "description": "Join a room with an invitation code, as this account. Already a\nmember: nothing changes and the code isn't used up. A key limited by\n``room=`` can't join rooms.",
+        "operationId": "customer-rooms-join_room",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoomJoinRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rooms/{target}": {
+      "patch": {
+        "tags": [
+          "customer-rooms"
+        ],
+        "summary": "Update Room Settings",
+        "description": "Change the owner's room name, Markdown description or mutable rules.\n\nSingleton rooms keep their fixed retention and lifetime. The key's\naccount must be the room owner; an api:rooms write grant alone is not ownership.",
+        "operationId": "customer-rooms-update_room_settings",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Target"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoomSettingsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "customer-rooms"
+        ],
+        "summary": "Post Room Message To",
+        "description": "Post a message to the room named by ``target`` (a room id, or a\nhandle such as ``me``); falls back to ``me`` if the account can't post\nthere.",
+        "operationId": "customer-rooms-post_room_message_to",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Target"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoomPostRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomPostResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "customer-rooms"
+        ],
+        "summary": "Get Room Messages",
+        "description": "The room named by ``target`` (id or handle) and its stored messages\nafter ``after``, oldest first.",
+        "operationId": "customer-rooms-get_room_messages",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Target"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The previous page's next",
+              "title": "After"
+            },
+            "description": "The previous page's next"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rooms/{target}/members": {
+      "get": {
+        "tags": [
+          "customer-rooms"
+        ],
+        "summary": "List Room Members",
+        "description": "The room's active member accounts. Private delivery settings are omitted.",
+        "operationId": "customer-rooms-list_room_members",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Target"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomMembers"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rooms/{target}/codes": {
+      "post": {
+        "tags": [
+          "customer-rooms"
+        ],
+        "summary": "Create Room Invitation Code",
+        "description": "Create an invitation code for the room. Owners may invite up to\n``moderator``, moderators up to ``member``.",
+        "operationId": "customer-rooms-create_room_invitation_code",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Target"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoomInvitationCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomInvitationCode"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "customer-rooms"
+        ],
+        "summary": "List Room Invitation Codes",
+        "description": "The room's invitation codes; by default only usable ones. Needs\n``write``, since a code admits whoever holds it.",
+        "operationId": "customer-rooms-list_room_invitation_codes",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Target"
+            }
+          },
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Inactive"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomInvitationCodes"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rooms/{target}/codes/{code_id}": {
+      "delete": {
+        "tags": [
+          "customer-rooms"
+        ],
+        "summary": "Revoke Room Invitation Code",
+        "description": "Revoke a code: no one new can join with it. Members who joined\nwith it stay.",
+        "operationId": "customer-rooms-revoke_room_invitation_code",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Target"
+            }
+          },
+          {
+            "name": "code_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Code Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomInvitationCode"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/secrets/": {
       "get": {
         "tags": [
@@ -5180,7 +6474,7 @@
           "customer-services"
         ],
         "summary": "List Service Interfaces",
-        "description": "List access interfaces dispatchable by the calling customer.\n\nReturns two kinds of interfaces, unified so the SDK can present\nthem as a single ``service.interfaces()`` list:\n\n1. **Shared** interfaces (``enrollment_id IS NULL``) \u2014 usable by\n   any customer, matches the public playground behaviour.\n2. **Enrollment-bound** interfaces whose ``enrollment_id`` belongs\n   to an enrollment owned by the authenticated customer. BYOK /\n   BYOE services create these on enrollment activation so the\n   gateway can substitute customer-supplied secrets at runtime.\n\nInterfaces bound to *other* customers' enrollments are filtered\nout \u2014 existence is not leaked. ``base_url`` is resolved with\n``settings.resolve_gateway_urls`` so SDK consumers can dispatch\ndirectly without knowing gateway substitution rules.",
+        "description": "List access interfaces dispatchable by the calling customer.\n\nReturns two kinds of interfaces, unified so the SDK can present\nthem as a single ``service.interfaces()`` list:\n\n1. **Shared** interfaces (``enrollment_id IS NULL``) \u2014 usable by\n   any customer, matches the public playground behaviour.\n2. **Enrollment-bound** interfaces whose ``enrollment_id`` belongs\n   to an enrollment the caller can use: one of the customer's\n   shared enrollments (``owner_id IS NULL``) or the caller's own\n   personal one. BYOK / BYOE services create these on enrollment\n   activation so the gateway can substitute customer-supplied\n   secrets at runtime.\n\nInterfaces bound to *other* customers' enrollments, and to\nteammates' personal enrollments, are filtered out \u2014 existence is\nnot leaked (#2701), matching the gateway's owner rule. ``base_url``\nis resolved with ``settings.resolve_gateway_urls`` so SDK consumers\ncan dispatch directly without knowing gateway substitution rules.",
         "operationId": "customer-services-list_service_interfaces",
         "parameters": [
           {
@@ -6007,16 +7301,40 @@
         "title": "AccessPlan",
         "description": "The generic, context-free access plan served to every consumer (#1638)."
       },
+      "AccountFileDeleteRequest": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "title": "AccountFileDeleteRequest",
+        "description": "A file, or a folder (ending in ``/``) and everything in it."
+      },
+      "AccountFileDeleteResponse": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "deleted": {
+            "type": "integer",
+            "title": "Deleted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "deleted"
+        ],
+        "title": "AccountFileDeleteResponse"
+      },
       "AccountFileDownloadResponse": {
         "properties": {
-          "scope": {
-            "type": "string",
-            "enum": [
-              "personal",
-              "shared"
-            ],
-            "title": "Scope"
-          },
           "key": {
             "type": "string",
             "title": "Key"
@@ -6032,13 +7350,12 @@
         },
         "type": "object",
         "required": [
-          "scope",
           "key",
           "url",
           "expires_in"
         ],
         "title": "AccountFileDownloadResponse",
-        "description": "Presigned download URL for one account file."
+        "description": "Presigned download URL for one file."
       },
       "AccountFileObject": {
         "properties": {
@@ -6088,16 +7405,7 @@
           "path": {
             "type": "string",
             "title": "Path",
-            "default": ""
-          },
-          "scope": {
-            "type": "string",
-            "enum": [
-              "personal",
-              "shared"
-            ],
-            "title": "Scope",
-            "default": "personal"
+            "default": "home/"
           }
         },
         "type": "object",
@@ -6132,14 +7440,6 @@
           "max_bytes": {
             "type": "integer",
             "title": "Max Bytes"
-          },
-          "scope": {
-            "type": "string",
-            "enum": [
-              "personal",
-              "shared"
-            ],
-            "title": "Scope"
           }
         },
         "type": "object",
@@ -6148,22 +7448,13 @@
           "url",
           "fields",
           "expires_in",
-          "max_bytes",
-          "scope"
+          "max_bytes"
         ],
         "title": "AccountFileUploadResponse",
-        "description": "Presigned-POST ticket, echoing the scope it was minted for."
+        "description": "Presigned-POST ticket for one upload."
       },
       "AccountFilesListResponse": {
         "properties": {
-          "scope": {
-            "type": "string",
-            "enum": [
-              "personal",
-              "shared"
-            ],
-            "title": "Scope"
-          },
           "path": {
             "type": "string",
             "title": "Path"
@@ -6182,6 +7473,13 @@
             "type": "array",
             "title": "Common Prefixes"
           },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Labels"
+          },
           "is_truncated": {
             "type": "boolean",
             "title": "Is Truncated"
@@ -6196,24 +7494,19 @@
               }
             ],
             "title": "Next Continuation Token"
-          },
-          "shared_enabled": {
-            "type": "boolean",
-            "title": "Shared Enabled"
           }
         },
         "type": "object",
         "required": [
-          "scope",
           "path",
           "objects",
           "common_prefixes",
+          "labels",
           "is_truncated",
-          "next_continuation_token",
-          "shared_enabled"
+          "next_continuation_token"
         ],
         "title": "AccountFilesListResponse",
-        "description": "One page of an account-files listing."
+        "description": "One folder level of the customer's tree."
       },
       "BroadcastCreate": {
         "properties": {
@@ -7029,6 +8322,32 @@
               }
             ],
             "title": "Request Formats"
+          },
+          "external_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Url"
+          },
+          "customer_access_requests": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Access Requests"
           }
         },
         "type": "object",
@@ -7070,6 +8389,136 @@
           "data"
         ],
         "title": "CursorPage[ServiceSummary]"
+      },
+      "CustomerContentAttachment": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "maxLength": 2048,
+            "title": "Url"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "media_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Type"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "title": "CustomerContentAttachment"
+      },
+      "CustomerContentEditPublic": {
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/ProfileAccountPublic"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "values": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/CustomerContentItem"
+              },
+              "type": "array",
+              "maxItems": 128
+            },
+            "type": "object",
+            "title": "Values"
+          },
+          "can_edit": {
+            "type": "boolean",
+            "title": "Can Edit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account",
+          "version",
+          "values",
+          "can_edit"
+        ],
+        "title": "CustomerContentEditPublic",
+        "description": "Private account editor for one matching document; version is a revision."
+      },
+      "CustomerContentItem": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "public": {
+            "type": "boolean",
+            "title": "Public",
+            "default": false
+          },
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/CustomerContentAttachment"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Attachments"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "CustomerContentItem"
+      },
+      "CustomerContentUpdate": {
+        "properties": {
+          "version": {
+            "type": "integer",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0.0,
+            "title": "Version"
+          },
+          "values": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/CustomerContentItem"
+              },
+              "type": "array",
+              "maxItems": 128
+            },
+            "type": "object",
+            "title": "CustomerContentUpdateValues"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version",
+          "values"
+        ],
+        "title": "CustomerContentUpdate",
+        "description": "Owner replacement. The current revision is required, even for an empty save."
       },
       "CustomerEnrollment": {
         "properties": {
@@ -7160,6 +8609,32 @@
               }
             ],
             "title": "Code"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "policy": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy"
           }
         },
         "type": "object",
@@ -7208,6 +8683,10 @@
             "format": "uuid",
             "title": "Service Id"
           },
+          "channel": {
+            "type": "string",
+            "title": "Channel"
+          },
           "owner_id": {
             "anyOf": [
               {
@@ -7236,6 +8715,7 @@
         "required": [
           "id",
           "service_id",
+          "channel",
           "status",
           "task_id",
           "message"
@@ -7823,6 +9303,26 @@
         ],
         "title": "Message"
       },
+      "MsgFormatEnum": {
+        "type": "string",
+        "enum": [
+          "text",
+          "markdown"
+        ],
+        "title": "MsgFormatEnum",
+        "description": "The msg envelope's ``format`` (``html`` is deprecated)."
+      },
+      "MsgTypeEnum": {
+        "type": "string",
+        "enum": [
+          "info",
+          "success",
+          "warning",
+          "failure"
+        ],
+        "title": "MsgTypeEnum",
+        "description": "The msg envelope's ``type`` (notification-services.md \u00a74)."
+      },
       "OpsCustomerRequestLogDetail": {
         "properties": {
           "log_id": {
@@ -8112,7 +9612,7 @@
           "can_edit"
         ],
         "title": "PreferencePublic",
-        "description": "One preference as the current account sees it.\n\n``value`` is the account's own setting (``null`` when unset), a\n:class:`PreferenceValue` or, for ``request-log``, a mode string.\n``effective`` is what applies now and ``source`` where it comes from:\n``account`` (its own value), ``user`` (a team's notices falling back to\nyour own destination), or ``default``. ``null`` when nothing applies."
+        "description": "One preference as the current account sees it.\n\n``value`` is the account's own setting (``null`` when unset), a\n:class:`PreferenceValue` or, for ``request-log`` and the ``room-*``\npreferences, a string.\n``effective`` is what applies now and ``source`` where it comes from:\n``account`` (its own value) or ``default``. ``null`` when nothing applies.\n``user`` is kept for compatibility but no longer returned: a team's\nnotices never fall back to your own destination (#2686)."
       },
       "PreferenceUpdate": {
         "properties": {
@@ -8133,7 +9633,7 @@
           "value"
         ],
         "title": "PreferenceUpdate",
-        "description": "``value``: ``{\"service\": ...}`` (or the service as a string), or a mode\nfor ``request-log``. Use ``DELETE`` to clear."
+        "description": "``value``: ``{\"service\": ...}`` (or the service as a string), a mode\nfor ``request-log``, or ``auto`` / ``off`` / a path for a ``room-*``\npreference. Use ``DELETE`` to clear."
       },
       "PreferenceValue": {
         "properties": {
@@ -8158,7 +9658,7 @@
           "service"
         ],
         "title": "PreferenceValue",
-        "description": "A service preference (``notification``, ``ai``).\n\n``service`` is a service path for ``notification`` and a service name\n(``labs/llm-balanced``) or ``a/<name>`` for ``ai``.\n``gateway`` is the door a notification destination is delivered through,\nresolved on write (read-only)."
+        "description": "A service preference (``notification``, ``ai``, ``email``).\n\n``service`` is a service path for ``notification``, a service name\n(``labs/llm-balanced``) or ``a/<name>`` for ``ai``, and an SMTP service\nname or ``e/<code>`` for ``email``.\n``gateway`` is the door a notification destination is delivered through,\nresolved on write (read-only)."
       },
       "PreferencesPublic": {
         "properties": {
@@ -8175,6 +9675,119 @@
           "data"
         ],
         "title": "PreferencesPublic"
+      },
+      "ProfileAccountPublic": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "seller"
+            ],
+            "title": "Type"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "joined_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Joined At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "name"
+        ],
+        "title": "ProfileAccountPublic"
+      },
+      "ProfileEditPublic": {
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/ProfileAccountPublic"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "sections": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ProfileSection"
+            },
+            "type": "object",
+            "title": "Sections"
+          },
+          "can_edit": {
+            "type": "boolean",
+            "title": "Can Edit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account",
+          "version",
+          "sections",
+          "can_edit"
+        ],
+        "title": "ProfileEditPublic",
+        "description": "The current account's whole profile, for its editor. ``version`` goes\nback with the next ``PUT``."
+      },
+      "ProfileSection": {
+        "properties": {
+          "public": {
+            "type": "boolean",
+            "title": "Public",
+            "default": false
+          },
+          "data": {
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "title": "ProfileSection",
+        "description": "One named section. ``public`` defaults to private."
+      },
+      "ProfileUpdate": {
+        "properties": {
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "sections": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ProfileSection"
+            },
+            "type": "object",
+            "title": "ProfileUpdateSections"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "sections"
+        ],
+        "title": "ProfileUpdate",
+        "description": "The whole profile. ``version`` is the one you read (``0`` before the\nfirst save); a section without ``public`` is private."
       },
       "RecurrentRequestCreate": {
         "properties": {
@@ -8821,7 +10434,7 @@
           "service_id"
         ],
         "title": "ResolveCandidate",
-        "description": "One service the gateway would route to, customer-safe subset.\n\nOmits operational fields (upstream_config with resolved API keys,\ntransformers, response_rules, seller_id, pricing_bundle_id) \u2014 those\nare gateway internals. The SDK gets identity + the enrollment\nbinding it needs to reason about dispatch."
+        "description": "One service the gateway would route to, customer-safe subset.\n\nOmits operational fields (upstream_config with resolved API keys,\ntransformers, seller_id, pricing_bundle_id) \u2014 those\nare gateway internals. The SDK gets identity + the enrollment\nbinding it needs to reason about dispatch."
       },
       "ResolveRequest": {
         "properties": {
@@ -8908,6 +10521,942 @@
         ],
         "title": "ResolveResponse",
         "description": "Dry-run result: candidate services, strategy, optional pre-pick."
+      },
+      "RoomInvitationCode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "use_count": {
+            "type": "integer",
+            "title": "Use Count"
+          },
+          "max_uses": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Uses"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "token",
+          "role",
+          "status",
+          "use_count",
+          "expires_at",
+          "created_at"
+        ],
+        "title": "RoomInvitationCode"
+      },
+      "RoomInvitationCodes": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/RoomInvitationCode"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "RoomInvitationCodes"
+      },
+      "RoomInvitationCreate": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "readonly",
+              "member",
+              "moderator"
+            ],
+            "title": "Role",
+            "default": "member"
+          },
+          "expires_in_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 365.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires In Days",
+            "description": "Defaults to 7 days"
+          },
+          "max_uses": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Uses",
+            "description": "None = unlimited"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "RoomInvitationCreate",
+        "description": "A code for others to join the room with (#2819)."
+      },
+      "RoomJoinRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 16,
+            "minLength": 4,
+            "title": "Token",
+            "description": "The invitation code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "RoomJoinRequest"
+      },
+      "RoomList": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/RoomSummary"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "RoomList"
+      },
+      "RoomMemberView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "account_type": {
+            "type": "string",
+            "title": "Account Type"
+          },
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "joined_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Joined At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "account_type",
+          "account_id",
+          "name",
+          "role",
+          "joined_at"
+        ],
+        "title": "RoomMemberView"
+      },
+      "RoomMembers": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/RoomMemberView"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "RoomMembers"
+      },
+      "RoomMessagePage": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/RoomMessageView"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "next": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "next"
+        ],
+        "title": "RoomMessagePage"
+      },
+      "RoomMessageView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sent At"
+          },
+          "sender_type": {
+            "type": "string",
+            "title": "Sender Type"
+          },
+          "sender_member_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sender Member Id"
+          },
+          "sender_name": {
+            "type": "string",
+            "title": "Sender Name"
+          },
+          "via": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Via"
+          },
+          "origin_service": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Service"
+          },
+          "origin_author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Author"
+          },
+          "reply_to_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply To Id"
+          },
+          "event": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event"
+          },
+          "event_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Data"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format"
+          },
+          "links": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Links"
+          },
+          "attachments": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Attachments"
+          },
+          "is_internal": {
+            "type": "boolean",
+            "title": "Is Internal"
+          },
+          "is_system": {
+            "type": "boolean",
+            "title": "Is System"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "offset",
+          "sent_at",
+          "sender_type",
+          "sender_member_id",
+          "sender_name",
+          "via",
+          "origin_service",
+          "origin_author",
+          "reply_to_id",
+          "event",
+          "event_data",
+          "title",
+          "body",
+          "type",
+          "format",
+          "links",
+          "attachments",
+          "is_internal",
+          "is_system"
+        ],
+        "title": "RoomMessageView"
+      },
+      "RoomPostOrigin": {
+        "properties": {
+          "service": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Service",
+            "description": "Bridge the message came through"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id",
+            "description": "Message id on the external platform"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author",
+            "description": "Display name of the external person"
+          }
+        },
+        "type": "object",
+        "required": [
+          "service"
+        ],
+        "title": "RoomPostOrigin"
+      },
+      "RoomPostRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 32000,
+            "minLength": 1,
+            "title": "Body"
+          },
+          "format": {
+            "$ref": "#/components/schemas/MsgFormatEnum",
+            "default": "text"
+          },
+          "type": {
+            "$ref": "#/components/schemas/MsgTypeEnum",
+            "default": "info"
+          },
+          "links": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Links"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoomPostOrigin"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "client_message_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Message Id",
+            "description": "Idempotency key: retries with the same id post once. Defaults to origin.external_id."
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "RoomPostRequest",
+        "description": "A message in the msg format."
+      },
+      "RoomPostResponse": {
+        "properties": {
+          "room_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Room Id"
+          },
+          "message_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Message Id"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "routed": {
+            "type": "string",
+            "enum": [
+              "room_id",
+              "handle",
+              "me"
+            ],
+            "title": "Routed"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "duplicate": {
+            "type": "boolean",
+            "title": "Duplicate",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "room_id",
+          "message_id",
+          "offset",
+          "routed"
+        ],
+        "title": "RoomPostResponse"
+      },
+      "RoomSettingsUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Markdown; null clears the description"
+          },
+          "retention_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2592000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retention Seconds"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "idle_expiry_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idle Expiry Seconds"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RoomSettingsUpdate"
+      },
+      "RoomSummary": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "owner_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Name"
+          },
+          "retention_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retention Seconds",
+            "description": "Effective message retention; null when kept forever"
+          },
+          "keep_forever": {
+            "type": "boolean",
+            "title": "Keep Forever",
+            "default": false
+          },
+          "permanent": {
+            "type": "boolean",
+            "title": "Permanent",
+            "default": false
+          },
+          "fixed_membership": {
+            "type": "boolean",
+            "title": "Fixed Membership",
+            "default": false
+          },
+          "invitable": {
+            "type": "boolean",
+            "title": "Invitable",
+            "default": false
+          },
+          "can_manage": {
+            "type": "boolean",
+            "title": "Can Manage",
+            "default": false
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "idle_expiry_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idle Expiry Seconds"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "member_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Member Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "handle": {
+            "type": "string",
+            "title": "Handle"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "last_message_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Message At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "member_id",
+          "kind",
+          "name",
+          "handle",
+          "status",
+          "role",
+          "created_at"
+        ],
+        "title": "RoomSummary",
+        "description": "A room the account is in, and the account's place in it."
+      },
+      "RoomView": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "owner_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Name"
+          },
+          "retention_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retention Seconds",
+            "description": "Effective message retention; null when kept forever"
+          },
+          "keep_forever": {
+            "type": "boolean",
+            "title": "Keep Forever",
+            "default": false
+          },
+          "permanent": {
+            "type": "boolean",
+            "title": "Permanent",
+            "default": false
+          },
+          "fixed_membership": {
+            "type": "boolean",
+            "title": "Fixed Membership",
+            "default": false
+          },
+          "invitable": {
+            "type": "boolean",
+            "title": "Invitable",
+            "default": false
+          },
+          "can_manage": {
+            "type": "boolean",
+            "title": "Can Manage",
+            "default": false
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "idle_expiry_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idle Expiry Seconds"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "member_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Member Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "handle": {
+            "type": "string",
+            "title": "Handle"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/RoomMessagePage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "member_id",
+          "kind",
+          "name",
+          "handle",
+          "status",
+          "role",
+          "messages"
+        ],
+        "title": "RoomView"
       },
       "RoutingEndpointPlan": {
         "properties": {
@@ -9771,16 +12320,13 @@
             ],
             "title": "List Price"
           },
-          "enrollment_channel": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Enrollment Channel"
+          "enrollment_channels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Enrollment Channels",
+            "default": []
           },
           "channel_types": {
             "anyOf": [
@@ -9978,17 +12524,31 @@
             ],
             "title": "Parameters"
           },
-          "recurrence_schedule": {
+          "channel": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Recurrence Schedule"
+            "title": "Channel"
+          },
+          "policy": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy"
           }
         },
         "type": "object",

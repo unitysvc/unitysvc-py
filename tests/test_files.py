@@ -57,7 +57,7 @@ def _patch_storage(
 # ---------------------------------------------------------------------------
 # list
 # ---------------------------------------------------------------------------
-def test_list_sends_scope_and_path() -> None:
+def test_list_translates_legacy_personal_paths_to_the_account_tree() -> None:
     payload = {
         "scope": "personal",
         "path": "reports/",
@@ -65,7 +65,7 @@ def test_list_sends_scope_and_path() -> None:
         "common_prefixes": ["reports/2026/"],
         "is_truncated": False,
         "next_continuation_token": None,
-        "shared_enabled": True,
+        "labels": {},
     }
     captured: list[httpx.Request] = []
     with Client(api_key="svcpass_test") as client:
@@ -73,9 +73,9 @@ def test_list_sends_scope_and_path() -> None:
         resp = client.files.list("reports", scope="personal")
 
     assert captured[0].url.path.endswith("/files/list")
-    assert captured[0].url.params["scope"] == "personal"
-    assert captured[0].url.params["path"] == "reports"
-    assert resp.shared_enabled is True
+    assert "scope" not in captured[0].url.params
+    assert captured[0].url.params["path"] == "home/reports"
+    assert resp.labels.additional_properties == {}
     assert [o.key for o in resp.objects] == ["reports/q2.pdf"]
     assert resp.common_prefixes == ["reports/2026/"]
 
@@ -105,8 +105,8 @@ def test_upload_mints_then_posts_fields_before_file(tmp_path: Path, monkeypatch:
     mint = json.loads(api_captured[0].content)
     assert mint["filename"] == "report.pdf"
     assert mint["size"] == 5
-    assert mint["path"] == "reports"
-    assert mint["scope"] == "personal"
+    assert mint["path"] == "home/reports"
+    assert "scope" not in mint
 
     # Storage POST: multipart with every policy field, and the file LAST.
     body = storage_captured[0].content
@@ -162,7 +162,7 @@ def test_download_streams_to_dest(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     assert written == dest
     assert dest.read_bytes() == b"pdf-bytes"
     assert api_captured[0].url.path.endswith("/files/download")
-    assert api_captured[0].url.params["key"] == "reports/q2.pdf"
+    assert api_captured[0].url.params["key"] == "home/reports/q2.pdf"
     assert str(storage_captured[0].url) == presign["url"]
     assert "authorization" not in {k.lower() for k in storage_captured[0].headers}
 
@@ -182,3 +182,12 @@ def test_split_vpath() -> None:
         _split_vpath("reports/q2.pdf")
     with pytest.raises(typer.BadParameter):
         _split_vpath("")
+
+
+def test_account_tree_paths_and_legacy_shared_scope_are_explicit() -> None:
+    from unitysvc.files import _account_path
+
+    assert _account_path("services/example/", None) == "services/example/"
+    assert _account_path("home/report.pdf", "personal") == "home/report.pdf"
+    with pytest.raises(ValueError, match="team's API key"):
+        _account_path("report.pdf", "shared")

@@ -1,33 +1,24 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, BinaryIO, Generator, TextIO, TypeVar, cast
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-
-from ..models.account_file_download_response_scope import (
-    AccountFileDownloadResponseScope,
-    check_account_file_download_response_scope,
-)
-from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AccountFileDownloadResponse")
 
 
 @_attrs_define
 class AccountFileDownloadResponse:
-    """Presigned download URL for one account file."""
+    """Presigned download URL for one file."""
 
-    scope: AccountFileDownloadResponseScope
     key: str
     url: str
     expires_in: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        scope: str = self.scope
-
         key = self.key
 
         url = self.url
@@ -38,7 +29,6 @@ class AccountFileDownloadResponse:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "scope": scope,
                 "key": key,
                 "url": url,
                 "expires_in": expires_in,
@@ -50,8 +40,6 @@ class AccountFileDownloadResponse:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        scope = check_account_file_download_response_scope(d.pop("scope"))
-
         key = d.pop("key")
 
         url = d.pop("url")
@@ -59,7 +47,6 @@ class AccountFileDownloadResponse:
         expires_in = d.pop("expires_in")
 
         account_file_download_response = cls(
-            scope=scope,
             key=key,
             url=url,
             expires_in=expires_in,
