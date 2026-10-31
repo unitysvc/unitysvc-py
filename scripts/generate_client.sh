@@ -71,6 +71,9 @@ if [ "${need_bootstrap}" = "1" ]; then
         "ruff==${PINNED_RUFF_VERSION}"
 fi
 
+# Use the pinned Ruff for the generator's own cleanup integration too.
+export PATH="${REPO_ROOT}/.tool-venv/bin:${PATH}"
+
 # ---------------------------------------------------------------------------
 # Mirror the spec into the repo so the committed copy is always in sync
 # with what the generated client was last produced from.

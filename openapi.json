@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Isolated PR2808 review Customer API",
+    "title": "UnitySVC Customer API",
     "version": "1.0.0"
   },
   "paths": {
@@ -5716,6 +5716,164 @@
         }
       }
     },
+    "/rooms/{target}/delivery": {
+      "get": {
+        "tags": [
+          "customer-rooms"
+        ],
+        "summary": "Get Room Delivery",
+        "description": "How this room reaches your account: its notify and email settings.",
+        "operationId": "customer-rooms-get_room_delivery",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Target"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomDelivery"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "customer-rooms"
+        ],
+        "summary": "Update Room Delivery",
+        "description": "Change how this room reaches your account: ``auto``, ``off`` or a\npath for notify and email. A path is checked like the account's room\ndefaults.",
+        "operationId": "customer-rooms-update_room_delivery",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Target"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoomDeliveryUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomDelivery"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/rooms/{target}/members": {
       "get": {
         "tags": [
@@ -8635,6 +8793,14 @@
               }
             ],
             "title": "Policy"
+          },
+          "resources": {
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentResource"
+            },
+            "type": "array",
+            "title": "Resources",
+            "default": []
           }
         },
         "type": "object",
@@ -9219,6 +9385,31 @@
           "other"
         ],
         "title": "DocumentCategoryEnum"
+      },
+      "EnrollmentResource": {
+        "properties": {
+          "object": {
+            "type": "string",
+            "title": "Object"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "room_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Room Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "object",
+          "kind",
+          "room_id"
+        ],
+        "title": "EnrollmentResource",
+        "description": "A resource the platform provisioned for the enrollment from its approved\npolicy (#2830): for ``resource:room``, the room of that kind."
       },
       "GatewayKind": {
         "type": "string",
@@ -10522,6 +10713,63 @@
         "title": "ResolveResponse",
         "description": "Dry-run result: candidate services, strategy, optional pre-pick."
       },
+      "RoomDelivery": {
+        "properties": {
+          "notify": {
+            "type": "string",
+            "title": "Notify"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "can_edit": {
+            "type": "boolean",
+            "title": "Can Edit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "notify",
+          "email",
+          "can_edit"
+        ],
+        "title": "RoomDelivery",
+        "description": "How the room reaches the calling account: ``auto``, ``off`` or a path\nfor each channel. A new member starts with its account's room defaults\n(``room-{notify,email}-as-{host,guest}``)."
+      },
+      "RoomDeliveryUpdate": {
+        "properties": {
+          "notify": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notify"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "title": "RoomDeliveryUpdate",
+        "description": "Fields left out keep their value."
+      },
       "RoomInvitationCode": {
         "properties": {
           "id": {
@@ -11155,7 +11403,6 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 2592000.0,
                 "minimum": 0.0
               },
               {
@@ -11221,12 +11468,29 @@
               }
             ],
             "title": "Retention Seconds",
-            "description": "Effective message retention; null when kept forever"
+            "description": "Effective message retention; null when kept indefinitely"
+          },
+          "max_retention_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Retention Seconds",
+            "description": "The kind's longest retention; null when it has none"
           },
           "keep_forever": {
             "type": "boolean",
             "title": "Keep Forever",
             "default": false
+          },
+          "owner_sets_retention": {
+            "type": "boolean",
+            "title": "Owner Sets Retention",
+            "default": true
           },
           "permanent": {
             "type": "boolean",
@@ -11361,12 +11625,29 @@
               }
             ],
             "title": "Retention Seconds",
-            "description": "Effective message retention; null when kept forever"
+            "description": "Effective message retention; null when kept indefinitely"
+          },
+          "max_retention_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Retention Seconds",
+            "description": "The kind's longest retention; null when it has none"
           },
           "keep_forever": {
             "type": "boolean",
             "title": "Keep Forever",
             "default": false
+          },
+          "owner_sets_retention": {
+            "type": "boolean",
+            "title": "Owner Sets Retention",
+            "default": true
           },
           "permanent": {
             "type": "boolean",

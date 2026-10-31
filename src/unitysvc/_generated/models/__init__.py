@@ -58,6 +58,7 @@ from .customer_group_view import CustomerGroupView
 from .customer_group_view_details_type_0 import CustomerGroupViewDetailsType0
 from .cycle_usage_response import CycleUsageResponse
 from .document_category_enum import DocumentCategoryEnum
+from .enrollment_resource import EnrollmentResource
 from .fields import Fields
 from .gateway_kind import GatewayKind
 from .gateway_request_info import GatewayRequestInfo
@@ -106,6 +107,8 @@ from .resolve_request import ResolveRequest
 from .resolve_request_routing_key_type_0 import ResolveRequestRoutingKeyType0
 from .resolve_response import ResolveResponse
 from .resolve_response_routing_strategy_type_0 import ResolveResponseRoutingStrategyType0
+from .room_delivery import RoomDelivery
+from .room_delivery_update import RoomDeliveryUpdate
 from .room_invitation_code import RoomInvitationCode
 from .room_invitation_codes import RoomInvitationCodes
 from .room_invitation_create import RoomInvitationCreate
@@ -235,6 +238,7 @@ __all__ = (
     "CustomerGroupViewDetailsType0",
     "CycleUsageResponse",
     "DocumentCategoryEnum",
+    "EnrollmentResource",
     "Fields",
     "GatewayKind",
     "GatewayRequestInfo",
@@ -283,6 +287,8 @@ __all__ = (
     "ResolveRequestRoutingKeyType0",
     "ResolveResponse",
     "ResolveResponseRoutingStrategyType0",
+    "RoomDelivery",
+    "RoomDeliveryUpdate",
     "RoomInvitationCode",
     "RoomInvitationCodes",
     "RoomInvitationCreate",
