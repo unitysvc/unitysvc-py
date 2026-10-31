@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from ._generated.models.customer_enrollment_create_response import (
         CustomerEnrollmentCreateResponse,
     )
+    from ._generated.models.room_list import RoomList
     from .client import Client
 
 
@@ -51,6 +52,8 @@ class Enrollment:
 
     - :meth:`cancel` — sets status to ``cancelled`` (preserves
       parameters so a re-enroll reactivates).
+    - :meth:`rooms` — the enrollment's rooms (``client.rooms.list``
+      narrowed to this enrollment).
     - :meth:`refresh` — re-fetch the enrollment with the latest server
       state. Returns a new :class:`Enrollment` wrapping the full
       :class:`CustomerEnrollment` record (useful when this wrapper
@@ -78,6 +81,12 @@ class Enrollment:
     def cancel(self) -> CustomerEnrollmentCancelResponse:
         """Cancel this enrollment. See :meth:`Enrollments.cancel`."""
         return self._parent.enrollments.cancel(self._raw.id)
+
+    def rooms(self, *, kind: str | None = None) -> RoomList:
+        """The rooms of this enrollment you can reach now (``client.rooms.list``
+        narrowed to it). A paused or cancelled enrollment's rooms are kept but
+        closed, so none are listed until it is active again."""
+        return self._parent.rooms.list(enrollment=self._raw.id, kind=kind)
 
     def refresh(self, *, include_service_details: bool = True) -> Enrollment:
         """Re-fetch this enrollment to observe status transitions.

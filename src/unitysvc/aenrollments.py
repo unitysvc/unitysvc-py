@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from ._generated.models.customer_enrollment_create_response import (
         CustomerEnrollmentCreateResponse,
     )
+    from ._generated.models.room_list import RoomList
     from .aclient import AsyncClient
 
 
@@ -42,10 +43,13 @@ class AsyncEnrollment:
     async def cancel(self) -> CustomerEnrollmentCancelResponse:
         return await self._parent.enrollments.cancel(self._raw.id)
 
+    async def rooms(self, *, kind: str | None = None) -> RoomList:
+        """The rooms of this enrollment you can reach now (``client.rooms.list``
+        narrowed to it)."""
+        return await self._parent.rooms.list(enrollment=self._raw.id, kind=kind)
+
     async def refresh(self, *, include_service_details: bool = True) -> AsyncEnrollment:
-        return await self._parent.enrollments.get(
-            self._raw.id, include_service_details=include_service_details
-        )
+        return await self._parent.enrollments.get(self._raw.id, include_service_details=include_service_details)
 
 
 @dataclass
