@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
@@ -113,24 +114,27 @@ class AsyncEnrollments:
         service_id: str | UUID,
         parameters: dict[str, Any] | None = None,
         shared: bool = False,
+        channel: str | None = None,
+        policy: Sequence[dict[str, Any]] | None = None,
     ) -> AsyncEnrollment:
-        """Create a personal enrollment by default; pass ``shared=True`` for team scope."""
+        """Create a personal enrollment by default; pass ``shared=True`` for team scope.
+
+        ``channel`` picks the channel; ``policy`` approves its access requests
+        (see :meth:`unitysvc.enrollments.Enrollments.create`)."""
         from ._generated.api.customer import customer_enroll
         from ._generated.models.service_enrollment_create import ServiceEnrollmentCreate
-        from ._generated.models.service_enrollment_create_parameters_type_0 import (
-            ServiceEnrollmentCreateParametersType0,
-        )
-        from ._generated.types import UNSET
 
-        svc_uuid = UUID(str(service_id)) if not isinstance(service_id, UUID) else service_id
-        params_obj = ServiceEnrollmentCreateParametersType0.from_dict(parameters) if parameters else UNSET
+        body: dict[str, Any] = {"service_id": str(service_id)}
+        if parameters:
+            body["parameters"] = parameters
+        if channel is not None:
+            body["channel"] = channel
+        if policy is not None:
+            body["policy"] = [dict(entry) for entry in policy]
         raw = unwrap(
             await customer_enroll.asyncio_detailed(
                 client=self._client,
-                body=ServiceEnrollmentCreate(
-                    service_id=svc_uuid,
-                    parameters=params_obj,  # type: ignore[arg-type]
-                ),
+                body=ServiceEnrollmentCreate.from_dict(body),
                 shared=shared,
             )
         )
