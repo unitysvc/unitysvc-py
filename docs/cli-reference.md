@@ -31,6 +31,7 @@ $ usvc [OPTIONS] COMMAND [ARGS]...
 * `recurrent-requests`: Remote recurrent-request operations (list,...
 * `groups`: Service-group operations (list, show,...
 * `files`: Account files (ls, get, put, url).
+* `rooms`: Rooms: list, read, post, settings,...
 * `services`: Per-service operations (show, usage,...
 * `enrollments`: Enrollment management (list, show, cancel).
 * `preferences`: Preferences of the account your key acts...
@@ -647,6 +648,274 @@ $ usvc files url [OPTIONS] {path}
 **Options**:
 
 * `--expires <int>`: URL validity in seconds (60-3600).  [default: 900]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+## `usvc rooms`
+
+Rooms: list, read, post, settings, delivery and invitations.
+
+**Usage**:
+
+```console
+$ usvc rooms [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`: List the rooms the account can reach, most...
+* `show`: Show a room and its messages, oldest first.
+* `post`: Post a message to a room.
+* `members`: List the room&#x27;s members and their roles.
+* `set`: Change the room&#x27;s settings (owner only).
+* `delivery`: Show, or with --notify / --email change,...
+* `invite`: Create an invitation code for the room.
+* `invitations`: List the room&#x27;s invitation codes.
+* `revoke`: Revoke an invitation code.
+* `join`: Join a room with an invitation code.
+* `leave`: Leave a room you joined (chat rooms; the...
+
+### `usvc rooms list`
+
+List the rooms the account can reach, most recently active first.
+
+**Usage**:
+
+```console
+$ usvc rooms list [OPTIONS]
+```
+
+**Options**:
+
+* `--kind <str>`: Only rooms of this kind (chat, me, helpdesk).
+* `--enrollment <str>`: Only rooms of this enrollment.
+* `--service <str>`: Only rooms of this service (not its enrollments&#x27;).
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms show`
+
+Show a room and its messages, oldest first.
+
+**Usage**:
+
+```console
+$ usvc rooms show [OPTIONS] {room}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+
+**Options**:
+
+* `--after <int>`: Resume after this offset (a previous page&#x27;s next).
+* `--limit <int>`: Messages per page (at most 200).  [default: 50]
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms post`
+
+Post a message to a room.
+
+**Usage**:
+
+```console
+$ usvc rooms post [OPTIONS] {room} {text}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+* `text`: Message body.  [required]
+
+**Options**:
+
+* `--title <str>`: Optional title.
+* `--id <str>`: Idempotency key: retrying with the same key posts once.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms members`
+
+List the room&#x27;s members and their roles.
+
+**Usage**:
+
+```console
+$ usvc rooms members [OPTIONS] {room}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+
+**Options**:
+
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms set`
+
+Change the room&#x27;s settings (owner only).
+
+**Usage**:
+
+```console
+$ usvc rooms set [OPTIONS] {room}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+
+**Options**:
+
+* `--name <str>`: New room name.
+* `--description <str>`: Markdown description; &#x27;&#x27; clears it.
+* `--retention <int>`: Seconds to keep messages (0 = don&#x27;t store).
+* `--status <str>`: active | readonly (only owner and moderators post).
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms delivery`
+
+Show, or with --notify / --email change, how this room reaches you.
+
+**Usage**:
+
+```console
+$ usvc rooms delivery [OPTIONS] {room}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+
+**Options**:
+
+* `--notify <str>`: auto | off | a notify service path.
+* `--email <str>`: auto | off | an email service path.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms invite`
+
+Create an invitation code for the room.
+
+**Usage**:
+
+```console
+$ usvc rooms invite [OPTIONS] {room}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+
+**Options**:
+
+* `--role <str>`: readonly | member | moderator.  [default: member]
+* `--max-uses <int>`: Uses before the code stops working.
+* `--expires-in-days <int>`: Defaults to 7 days.
+* `--note <str>`: A note for yourself.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms invitations`
+
+List the room&#x27;s invitation codes.
+
+**Usage**:
+
+```console
+$ usvc rooms invitations [OPTIONS] {room}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+
+**Options**:
+
+* `--all`: Include used-up, expired and revoked codes.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms revoke`
+
+Revoke an invitation code.
+
+**Usage**:
+
+```console
+$ usvc rooms revoke [OPTIONS] {room} {code_id}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+* `code_id`: Invitation code id (from invitations).  [required]
+
+**Options**:
+
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms join`
+
+Join a room with an invitation code.
+
+**Usage**:
+
+```console
+$ usvc rooms join [OPTIONS] {code}
+```
+
+**Arguments**:
+
+* `code`: Invitation code.  [required]
+
+**Options**:
+
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms leave`
+
+Leave a room you joined (chat rooms; the owner can&#x27;t leave).
+
+**Usage**:
+
+```console
+$ usvc rooms leave [OPTIONS] {room}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+
+**Options**:
+
+* `-y, --yes`: Skip confirmation prompt.
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
