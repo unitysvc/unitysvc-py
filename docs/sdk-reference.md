@@ -50,6 +50,19 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
 
 ### Enrollments
 
+After an enrollment activates, its `resources` list identifies provisioned
+rooms by `object` (the Python attribute is `object_`), `kind` and `room_id`.
+Read the enrollment again after the
+initial create acknowledgement to discover these resources:
+
+```python
+enrollment = client.enrollments.get(enrollment_id)
+if isinstance(enrollment.resources, list):
+    for resource in enrollment.resources:
+        if resource.object_ == "resource:room":
+            room = client.rooms.get(str(resource.room_id))
+```
+
 ::: unitysvc.enrollments.Enrollments
     options:
       show_root_heading: true
@@ -72,11 +85,16 @@ room = client.rooms.get("helpdesk")
 client.rooms.post("helpdesk", body="Please help", client_message_id="support-1")
 client.rooms.update(str(room.id), description="Contact **our support team** here.")
 members = client.rooms.members(str(room.id))
+delivery = client.rooms.delivery(str(room.id))
+if delivery.can_edit:
+    client.rooms.set_delivery(str(room.id), notify="auto", email="off")
 ```
 
 Descriptions are owner-written Markdown. Policy fields such as `retention_seconds`,
-`keep_forever` and `permanent` describe the rules actually enforced by the server.
-Only owners can update settings, and singleton rooms keep their fixed rules.
+`max_retention_seconds`, `owner_sets_retention`, `keep_forever` and `permanent`
+describe the rules actually enforced by the server. A null maximum means the
+kind has no retention cap. Owners can change retention only when
+`owner_sets_retention` is true; permanent rooms keep their fixed lifetime.
 
 ::: unitysvc.rooms.Rooms
     options:

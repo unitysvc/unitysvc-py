@@ -62,8 +62,9 @@ class AsyncClient:
         api_key: A customer API key (``svcpass_...``). Omit it (or pass
         base_url: Override the control-plane URL. Falls back to
             ``UNITYSVC_API_URL``, then to :data:`DEFAULT_API_URL`.
-        api_base_url, s3_base_url, smtp_base_url: Optional gateway
-            base URLs, matching the sync :class:`Client`.
+        api_base_url: Optional HTTP gateway base URL, matching :class:`Client`.
+        s3_base_url: Optional S3 gateway base URL, matching :class:`Client`.
+        smtp_base_url: Optional SMTP gateway base URL, matching :class:`Client`.
         timeout: Per-request timeout in seconds. Default 30s.
         verify_ssl: Whether to verify TLS certificates. Default ``True``.
     """

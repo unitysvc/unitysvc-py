@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from ..models.customer_enrollment_parameters_type_0 import CustomerEnrollmentParametersType0
     from ..models.customer_enrollment_policy_type_0_item import CustomerEnrollmentPolicyType0Item
     from ..models.customer_enrollment_service_type_0 import CustomerEnrollmentServiceType0
+    from ..models.enrollment_resource import EnrollmentResource
 
 
 T = TypeVar("T", bound="CustomerEnrollment")
@@ -70,6 +71,7 @@ class CustomerEnrollment:
     code: None | str | Unset = UNSET
     channel: None | str | Unset = UNSET
     policy: list[CustomerEnrollmentPolicyType0Item] | None | Unset = UNSET
+    resources: list[EnrollmentResource] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -146,6 +148,13 @@ class CustomerEnrollment:
         else:
             policy = self.policy
 
+        resources: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.resources, Unset):
+            resources = []
+            for resources_item_data in self.resources:
+                resources_item = resources_item_data.to_dict()
+                resources.append(resources_item)
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -172,6 +181,8 @@ class CustomerEnrollment:
             field_dict["channel"] = channel
         if policy is not UNSET:
             field_dict["policy"] = policy
+        if resources is not UNSET:
+            field_dict["resources"] = resources
 
         return field_dict
 
@@ -180,6 +191,7 @@ class CustomerEnrollment:
         from ..models.customer_enrollment_parameters_type_0 import CustomerEnrollmentParametersType0
         from ..models.customer_enrollment_policy_type_0_item import CustomerEnrollmentPolicyType0Item
         from ..models.customer_enrollment_service_type_0 import CustomerEnrollmentServiceType0
+        from ..models.enrollment_resource import EnrollmentResource
 
         d = dict(src_dict)
         id = UUID(d.pop("id"))
@@ -307,6 +319,15 @@ class CustomerEnrollment:
 
         policy = _parse_policy(d.pop("policy", UNSET))
 
+        _resources = d.pop("resources", UNSET)
+        resources: list[EnrollmentResource] | Unset = UNSET
+        if _resources is not UNSET:
+            resources = []
+            for resources_item_data in _resources:
+                resources_item = EnrollmentResource.from_dict(resources_item_data)
+
+                resources.append(resources_item)
+
         customer_enrollment = cls(
             id=id,
             service_id=service_id,
@@ -320,6 +341,7 @@ class CustomerEnrollment:
             code=code,
             channel=channel,
             policy=policy,
+            resources=resources,
         )
 
         customer_enrollment.additional_properties = d

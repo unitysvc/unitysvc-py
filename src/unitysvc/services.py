@@ -401,7 +401,8 @@ class Services:
                 ignored when there is exactly one interface.
             path: Optional sub-path appended to the interface base URL.
             method: HTTP method. Defaults to ``POST``.
-            json / data: Request body (mutually exclusive).
+            json: JSON request body; mutually exclusive with ``data``.
+            data: Raw request body; mutually exclusive with ``json``.
             headers: Extra headers merged on top of the auth header.
             timeout: Per-request timeout in seconds.
         """
@@ -508,9 +509,12 @@ class Services:
                 {"schedule_type": "cron", "cron_expression": "*/5 * * * *",
                  "timezone": "UTC"}
 
-            interface / enrollment / path / method / json / headers:
-                Same as :meth:`dispatch` — resolve the target interface
-                and compose the gateway URL.
+            interface: Optional interface name or UUID, as in :meth:`dispatch`.
+            enrollment: Optional enrollment hint, as in :meth:`dispatch`.
+            path: Sub-path appended to the interface's gateway URL.
+            method: HTTP method, defaulting to ``POST``.
+            json: JSON request body.
+            headers: Extra request headers, as in :meth:`dispatch`.
             name: Optional human label for the recurrent request.
         """
         from ._generated.api.customer_recurrent_requests import (
