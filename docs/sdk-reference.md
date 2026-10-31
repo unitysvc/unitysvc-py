@@ -80,6 +80,9 @@ selecting another account.
 
 ### Rooms
 
+The [Rooms guide](rooms.md) explains kinds, roles and every operation; this
+section is the reference.
+
 ```python
 room = client.rooms.get("helpdesk")
 client.rooms.post("helpdesk", body="Please help", client_message_id="support-1")
