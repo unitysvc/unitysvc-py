@@ -58,6 +58,17 @@ chats = client.rooms.list(kind="chat")
 for_one_enrollment = client.rooms.list(enrollment=enrollment_id)
 ```
 
+A service can ask, when you enroll, to create a room for you: its channel
+lists a `resource:room` request. Approve it by passing the request back in
+`policy`; the platform creates the room when the enrollment activates:
+
+```python
+enrollment = client.enrollments.create(
+    service_id=service_id,
+    policy=[{"object": "resource:room", "permissions": ["create"], "options": "kind=chat&max_members=20"}],
+)
+```
+
 An enrollment lists its own rooms:
 
 ```python

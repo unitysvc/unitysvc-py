@@ -20,6 +20,7 @@ the generated record (forwarded via ``__getattr__``) and adds
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
@@ -197,6 +198,8 @@ class Enrollments:
         service_id: str | UUID,
         parameters: dict[str, Any] | None = None,
         shared: bool = False,
+        channel: str | None = None,
+        policy: Sequence[dict[str, Any]] | None = None,
     ) -> Enrollment:
         """Enroll in a service (async — poll status via :meth:`Enrollment.refresh`).
 
@@ -213,24 +216,26 @@ class Enrollments:
                 model selection, etc.). Secret-shaped keys
                 (``api_key``, ``password``, ...) are masked on reads.
             shared: Create a team-shared enrollment instead of a personal one.
+            channel: The channel to enroll in, when the service has several.
+            policy: What you approve of the channel's ``customer_access_requests``
+                (one entry per request you approve, e.g. ``resource:room`` with
+                its fixed options). Required when the channel asks for access;
+                ``[]`` declines every optional request.
         """
         from ._generated.api.customer import customer_enroll
         from ._generated.models.service_enrollment_create import ServiceEnrollmentCreate
-        from ._generated.models.service_enrollment_create_parameters_type_0 import (
-            ServiceEnrollmentCreateParametersType0,
-        )
-        from ._generated.types import UNSET
 
-        svc_uuid = UUID(str(service_id)) if not isinstance(service_id, UUID) else service_id
-        params_obj = ServiceEnrollmentCreateParametersType0.from_dict(parameters) if parameters else UNSET
-
+        body: dict[str, Any] = {"service_id": str(service_id)}
+        if parameters:
+            body["parameters"] = parameters
+        if channel is not None:
+            body["channel"] = channel
+        if policy is not None:
+            body["policy"] = [dict(entry) for entry in policy]
         raw = unwrap(
             customer_enroll.sync_detailed(
                 client=self._client,
-                body=ServiceEnrollmentCreate(
-                    service_id=svc_uuid,
-                    parameters=params_obj,  # type: ignore[arg-type]
-                ),
+                body=ServiceEnrollmentCreate.from_dict(body),
                 shared=shared,
             )
         )
