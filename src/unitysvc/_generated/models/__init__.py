@@ -128,6 +128,7 @@ from .room_post_request_links_item import RoomPostRequestLinksItem
 from .room_post_response import RoomPostResponse
 from .room_post_response_routed import RoomPostResponseRouted
 from .room_settings_update import RoomSettingsUpdate
+from .room_settings_update_status_type_0 import RoomSettingsUpdateStatusType0
 from .room_summary import RoomSummary
 from .room_view import RoomView
 from .routing_endpoint_plan import RoutingEndpointPlan
@@ -308,6 +309,7 @@ __all__ = (
     "RoomPostResponse",
     "RoomPostResponseRouted",
     "RoomSettingsUpdate",
+    "RoomSettingsUpdateStatusType0",
     "RoomSummary",
     "RoomView",
     "RoutingEndpointPlan",
