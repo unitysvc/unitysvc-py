@@ -125,6 +125,45 @@ usvc rooms post book-club "Chapter 3 tonight" --title Reminder --id reminder-202
 message once, for 24 hours. Use it whenever a script or an agent might send
 the same message twice.
 
+## Chat in the terminal
+
+`usvc rooms chat` opens a room and keeps it live: new messages appear as they
+are stored, and what you type is posted to that room. It needs prompt_toolkit
+(`pip install "unitysvc-py[chat]"`) and a key with `api:rooms` read and write.
+
+```bash
+usvc rooms chat                       # the most recently active room
+usvc rooms chat @helpdesk             # by handle, id or name prefix
+usvc rooms chat --enrollment <id>     # the room an app made for an enrollment
+usvc rooms chat --join <CODE>         # redeem an invitation, then open the room
+```
+
+Inside the chat, Enter posts (Esc then Enter adds a line) and these commands work:
+
+| Command | |
+|---|---|
+| `/rooms` | list rooms: `●` new activity, `⚑` flagged to follow up |
+| `/open ROOM` | switch: a number from `/rooms`, `@handle`, id or name prefix |
+| `/next`, Ctrl-N | open the next room with new activity |
+| `/members` | who is in the room |
+| `/follow [off]` | flag the room to revisit, or clear the flag |
+| `/refresh`, `/help`, `/quit` (Ctrl-D) | |
+
+The chat records what you have seen (`rooms.mark_active`), so the web inbox
+and other clients agree on which rooms have new activity. It only ever posts
+to the open room: if the server can't post there, the chat says so instead of
+letting the message fall back to your `me` room. Sellers use the same chat
+as `usvc_seller rooms chat`, and programs can reuse it through
+`unitysvc.chat.ChatSession`.
+
+The same SDK methods are available directly:
+
+```python
+client.rooms.unread()                     # rooms with activity you haven't seen
+client.rooms.mark_active("helpdesk", 42)  # you've seen it through offset 42
+client.rooms.set_follow_up("helpdesk")    # flag it; set_follow_up(..., False) clears
+```
+
 ## Members
 
 ```python

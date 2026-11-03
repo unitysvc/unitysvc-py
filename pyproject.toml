@@ -29,7 +29,12 @@ dependencies = [
 requires-python = ">= 3.11"
 
 [project.optional-dependencies]
+# Interactive `usvc rooms chat`; kept optional so the SDK stays light.
+chat = [
+  "prompt_toolkit>=3.0",
+]
 test = [
+  "prompt_toolkit>=3.0",
   "coverage",
   "pytest",
   "pytest-asyncio",

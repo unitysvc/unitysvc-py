@@ -12,6 +12,7 @@ the account's handles (``me``, ``helpdesk``, or a room's own handle):
 - ``usvc rooms invite ROOM [--role R] [--max-uses N] [--expires-in-days N] [--note T]``
 - ``usvc rooms invitations ROOM [--all]`` / ``revoke ROOM CODE_ID``
 - ``usvc rooms join CODE`` / ``leave ROOM``
+- ``usvc rooms chat [ROOM] [--enrollment ID] [--service ID] [--join CODE]`` — interactive
 
 What the account may do is decided by the server from its role in the room.
 
@@ -330,3 +331,42 @@ def leave(
 
     run_async(_impl(), error_prefix="Failed to leave")
     console.print(f"[green]✓[/green] Left {escape(room)}")
+
+
+@app.command("chat")
+def chat(
+    room: str | None = typer.Argument(None, help="Room id, @handle or name prefix; default: most recently active."),
+    enrollment: str | None = typer.Option(None, "--enrollment", help="Open this enrollment's room."),
+    service: str | None = typer.Option(None, "--service", help="Open this service's room."),
+    join_code: str | None = typer.Option(None, "--join", help="Redeem an invitation code, then open its room."),
+    interval: float = typer.Option(3.0, "--interval", help="Seconds between checks for new messages."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Chat in a room interactively: live messages, posting and switching rooms.
+
+    Needs prompt_toolkit (the package's chat extra) and a key with
+    api:rooms read and write. Type /help inside the chat for commands.
+    """
+    filters = {key: value for key, value in (("enrollment", enrollment), ("service", service)) if value}
+    run_chat_command(
+        lambda: async_client(api_key, base_url), room, filters=filters, join_code=join_code, interval=interval
+    )
+
+
+def run_chat_command(open_client: Any, room: str | None, **options: Any) -> None:
+    """Run :func:`unitysvc.chat.run_chat` from a CLI command; shared with ``usvc_seller rooms chat``.
+
+    ``open_client`` returns an async context manager yielding a client with ``.rooms``.
+    """
+    try:
+        from ..chat import run_chat
+    except ImportError as exc:
+        console.print("[red]✗[/red] The chat needs prompt_toolkit: " + escape('pip install "unitysvc-py[chat]"'))
+        raise typer.Exit(code=1) from exc
+
+    async def _impl() -> None:
+        async with open_client() as client:
+            await run_chat(client.rooms, room, console=console, **options)
+
+    run_async(_impl(), error_prefix="Chat failed")
