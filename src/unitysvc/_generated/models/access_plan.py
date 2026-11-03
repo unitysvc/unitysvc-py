@@ -11,6 +11,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.access_interface_plan import AccessInterfacePlan
+    from ..models.access_plan_links_type_0 import AccessPlanLinksType0
     from ..models.channel_plan import ChannelPlan
     from ..models.parameter_requirement import ParameterRequirement
     from ..models.routing_endpoint_plan import RoutingEndpointPlan
@@ -30,9 +31,14 @@ class AccessPlan:
     routing_endpoints: list[RoutingEndpointPlan] | Unset = UNSET
     input_formats: list[str] | None | Unset = UNSET
     gateway_type: str | Unset = "api"
+    links: AccessPlanLinksType0 | None | Unset = UNSET
+    is_external_app: bool | Unset = False
+    has_gateway_interface: bool | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.access_plan_links_type_0 import AccessPlanLinksType0
+
         enrollment_mode: str | Unset = UNSET
         if not isinstance(self.enrollment_mode, Unset):
             enrollment_mode = self.enrollment_mode
@@ -76,6 +82,18 @@ class AccessPlan:
 
         gateway_type = self.gateway_type
 
+        links: dict[str, Any] | None | Unset
+        if isinstance(self.links, Unset):
+            links = UNSET
+        elif isinstance(self.links, AccessPlanLinksType0):
+            links = self.links.to_dict()
+        else:
+            links = self.links
+
+        is_external_app = self.is_external_app
+
+        has_gateway_interface = self.has_gateway_interface
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
@@ -93,12 +111,19 @@ class AccessPlan:
             field_dict["input_formats"] = input_formats
         if gateway_type is not UNSET:
             field_dict["gateway_type"] = gateway_type
+        if links is not UNSET:
+            field_dict["links"] = links
+        if is_external_app is not UNSET:
+            field_dict["is_external_app"] = is_external_app
+        if has_gateway_interface is not UNSET:
+            field_dict["has_gateway_interface"] = has_gateway_interface
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.access_interface_plan import AccessInterfacePlan
+        from ..models.access_plan_links_type_0 import AccessPlanLinksType0
         from ..models.channel_plan import ChannelPlan
         from ..models.parameter_requirement import ParameterRequirement
         from ..models.routing_endpoint_plan import RoutingEndpointPlan
@@ -166,6 +191,27 @@ class AccessPlan:
 
         gateway_type = d.pop("gateway_type", UNSET)
 
+        def _parse_links(data: object) -> AccessPlanLinksType0 | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                links_type_0 = AccessPlanLinksType0.from_dict(data)
+
+                return links_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(AccessPlanLinksType0 | None | Unset, data)
+
+        links = _parse_links(d.pop("links", UNSET))
+
+        is_external_app = d.pop("is_external_app", UNSET)
+
+        has_gateway_interface = d.pop("has_gateway_interface", UNSET)
+
         access_plan = cls(
             enrollment_mode=enrollment_mode,
             parameters=parameters,
@@ -174,6 +220,9 @@ class AccessPlan:
             routing_endpoints=routing_endpoints,
             input_formats=input_formats,
             gateway_type=gateway_type,
+            links=links,
+            is_external_app=is_external_app,
+            has_gateway_interface=has_gateway_interface,
         )
 
         access_plan.additional_properties = d

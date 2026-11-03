@@ -39,6 +39,7 @@ class ServiceDetail:
     service_type: None | str | Unset = UNSET
     gateway_type: None | str | Unset = UNSET
     description: None | str | Unset = UNSET
+    audience: list[str] | None | Unset = UNSET
     provider_name: None | str | Unset = UNSET
     seller_name: None | str | Unset = UNSET
     capabilities: list[str] | None | Unset = UNSET
@@ -78,6 +79,15 @@ class ServiceDetail:
             description = UNSET
         else:
             description = self.description
+
+        audience: list[str] | None | Unset
+        if isinstance(self.audience, Unset):
+            audience = UNSET
+        elif isinstance(self.audience, list):
+            audience = self.audience
+
+        else:
+            audience = self.audience
 
         provider_name: None | str | Unset
         if isinstance(self.provider_name, Unset):
@@ -146,6 +156,8 @@ class ServiceDetail:
             field_dict["gateway_type"] = gateway_type
         if description is not UNSET:
             field_dict["description"] = description
+        if audience is not UNSET:
+            field_dict["audience"] = audience
         if provider_name is not UNSET:
             field_dict["provider_name"] = provider_name
         if seller_name is not UNSET:
@@ -207,6 +219,23 @@ class ServiceDetail:
             return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
+
+        def _parse_audience(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                audience_type_0 = cast(list[str], data)
+
+                return audience_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        audience = _parse_audience(d.pop("audience", UNSET))
 
         def _parse_provider_name(data: object) -> None | str | Unset:
             if data is None:
@@ -303,6 +332,7 @@ class ServiceDetail:
             service_type=service_type,
             gateway_type=gateway_type,
             description=description,
+            audience=audience,
             provider_name=provider_name,
             seller_name=seller_name,
             capabilities=capabilities,

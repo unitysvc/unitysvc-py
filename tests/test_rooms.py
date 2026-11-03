@@ -32,6 +32,7 @@ def summary(**overrides):
         "keep_forever": True,
         "fixed_membership": True,
         "can_manage": True,
+        "delivery_state": "inbox",
         **overrides,
     }
 
