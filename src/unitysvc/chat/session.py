@@ -5,6 +5,11 @@ see :class:`RoomsClient`) and hands rendered lines to an ``emit`` callback,
 so it can be tested without a terminal and reused by every CLI that has a
 rooms client.
 
+What the person has seen is recorded the way the web inbox does it (#2877):
+when a room opens, through the newest message loaded, and when it stops
+being shown (a switch or quitting), through the newest message shown. Polls
+never record anything, so a terminal left open doesn't clear new activity.
+
 Messages are user content from other accounts: everything shown is built as
 literal :class:`rich.text.Text` after control characters (including ANSI
 escape sequences) are stripped, never as markup.
@@ -12,9 +17,9 @@ escape sequences) are stripped, never as markup.
 
 from __future__ import annotations
 
+import asyncio
 import re
 import uuid
-from collections import deque
 from collections.abc import Callable
 from datetime import datetime
 from typing import Any, Protocol
@@ -22,20 +27,23 @@ from typing import Any, Protocol
 import httpx
 from rich.text import Text
 
-from ..exceptions import UnitysvcSDKError
+from ..exceptions import NotFoundError, UnitysvcSDKError
+from ..exceptions import PermissionError as ForbiddenError
 
 # Everything a terminal could act on except newline and tab.
 _CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f]")
-# History is oldest-first, so opening a room reads forward to its end.
 PAGE = 200
+# ``mark_active`` caps at what ``rooms-deliver`` has recorded so far; retry a
+# capped mark once, as the web inbox does.
+MARK_RETRY_SECONDS = 4.0
 
 
 class RoomsClient(Protocol):
     """The part of ``AsyncRooms`` the chat uses (customer and seller both match)."""
 
     async def list(self, *, kind: str | None = ..., enrollment: Any = ..., service: Any = ...) -> Any: ...
-    async def get(self, target: str, *, after: int | None = ..., limit: int = ...) -> Any: ...
-    async def post(self, target: str | None = ..., *, body: str, **message: Any) -> Any: ...
+    async def get(self, target: str, *, after: int | None = ..., limit: int = ..., tail: int | None = ...) -> Any: ...
+    async def post(self, target: str | None = ..., *, body: str, fallback: bool = ..., **message: Any) -> Any: ...
     async def mark_active(self, target: str, offset: int) -> Any: ...
     async def members(self, target: str) -> Any: ...
     async def set_follow_up(self, target: str, follow_up: bool = ...) -> Any: ...
@@ -125,6 +133,7 @@ class ChatSession:
         self.seen: int | None = None  # highest offset shown in this room
         self.marked: int | None = None  # last offset the server accepted as seen
         self.shown_ids: set[str] = set()
+        self._retry: asyncio.Task[None] | None = None
 
     # ---- rooms -------------------------------------------------------------
 
@@ -168,14 +177,11 @@ class ChatSession:
         """Leave the current room (recording what was seen) and show the end of another."""
         target = self.resolve(query)
         await self.mark_seen()
-        view = as_dict(await self.rooms.get(target, limit=PAGE))
+        # One request: the latest messages, whose ``next`` resumes with newer ones.
+        view = as_dict(await self.rooms.get(target, tail=min(self.history, PAGE)))
         page = view.get("messages") or {}
-        messages: deque[dict[str, Any]] = deque(page.get("data") or [], maxlen=self.history)
+        messages = page.get("data") or []
         cursor = page.get("next")
-        while len(page.get("data") or []) >= PAGE:
-            page = as_dict(await self.rooms.get(target, after=cursor, limit=PAGE)).get("messages") or {}
-            messages.extend(page.get("data") or [])
-            cursor = _next(page, cursor)
 
         self.room = {key: value for key, value in view.items() if key != "messages"}
         self.cursor, self.seen, self.marked, self.shown_ids = cursor, None, view.get("last_active_offset"), set()
@@ -189,7 +195,7 @@ class ChatSession:
             self._show(message)
         if not messages:
             self.emit(Text("No messages yet", style="dim"))
-        await self.mark_seen()
+        await self.mark_seen(retry=True)
 
     def _header(self) -> None:
         room = self.room or {}
@@ -214,7 +220,8 @@ class ChatSession:
     # ---- live --------------------------------------------------------------
 
     async def poll(self) -> int:
-        """Show messages stored since the last read; return how many were new."""
+        """Show messages stored since the last read; return how many were new.
+        Records nothing as seen (that happens on open, switch and quit)."""
         if self.room is None:
             return 0
         shown = 0
@@ -228,19 +235,34 @@ class ChatSession:
             self.cursor = _next(page, self.cursor)
             if len(data) < PAGE:
                 break
-        if shown:
-            await self.mark_seen()
         return shown
 
-    async def mark_seen(self) -> None:
-        """Tell the server how far this person has seen the open room; a
-        ``capped`` answer (storage behind) is retried on the next call."""
+    async def mark_seen(self, *, retry: bool = False) -> None:
+        """Record that the open room has been seen through the newest message
+        shown. Called on open (``retry``: once more after a ``capped`` answer)
+        and when the room stops being shown; best effort."""
+        if self._retry is not None:
+            self._retry.cancel()
+            self._retry = None
         if self.room is None or self.seen is None or (self.marked is not None and self.seen <= self.marked):
             return
+        room_id, offset = str(self.room["id"]), self.seen
         try:
-            marked = as_dict(await self.rooms.mark_active(self.room["id"], self.seen))
+            marked = as_dict(await self.rooms.mark_active(room_id, offset))
         except UnitysvcSDKError:
-            return  # best effort: the next poll or switch tries again
+            return
+        self.marked = marked.get("last_active_offset")
+        if retry and marked.get("capped"):
+            self._retry = asyncio.create_task(self._mark_again(room_id, offset))
+
+    async def _mark_again(self, room_id: str, offset: int) -> None:
+        await asyncio.sleep(MARK_RETRY_SECONDS)
+        if self.room is None or str(self.room["id"]) != room_id:
+            return
+        try:
+            marked = as_dict(await self.rooms.mark_active(room_id, offset))
+        except UnitysvcSDKError:
+            return
         self.marked = marked.get("last_active_offset")
 
     async def send(self, text: str) -> None:
@@ -251,14 +273,24 @@ class ChatSession:
         if not body:
             return
         client_message_id = str(uuid.uuid4())
+        # ``fallback=False``: a room that can't take the post is an error, never
+        # a post to the account's ``me`` room.
+        room_id = str(self.room["id"])
+
+        async def post() -> dict[str, Any]:
+            return as_dict(
+                await self.rooms.post(room_id, body=body, client_message_id=client_message_id, fallback=False)
+            )
+
         try:
-            posted = as_dict(await self.rooms.post(self.room["id"], body=body, client_message_id=client_message_id))
-        except httpx.TransportError:  # a dropped connection: the same id posts at most once
-            posted = as_dict(await self.rooms.post(self.room["id"], body=body, client_message_id=client_message_id))
-        if str(posted.get("room_id")) != str(self.room["id"]):
-            # The API falls back to the account's ``me`` room when it can't post here.
-            reason = clean(posted.get("reason")) or "you can't post in this room"
-            raise ChatError(f"Not posted here ({reason}); the server put it in your me room instead")
+            try:
+                posted = await post()
+            except httpx.TransportError:  # a dropped connection: the same id posts at most once
+                posted = await post()
+        except ForbiddenError as exc:
+            raise ChatError("Not posted: you can't post in this room") from exc
+        except NotFoundError as exc:
+            raise ChatError("Not posted: this room is no longer reachable") from exc
         message_id = str(posted.get("message_id"))
         self.shown_ids.add(message_id)
         now = datetime.now().astimezone().isoformat()
@@ -276,4 +308,5 @@ class ChatSession:
         return False
 
     async def close(self) -> None:
+        """Quitting stops showing the room: record what was seen."""
         await self.mark_seen()

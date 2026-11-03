@@ -94,6 +94,9 @@ for message in page.messages.data:
     print(message.offset, message.sender_name, message.body)
 
 more = client.rooms.get("helpdesk", after=page.messages.next_, limit=100)
+
+latest = client.rooms.get("helpdesk", tail=20)  # the newest 20, oldest first
+newer = client.rooms.get("helpdesk", after=latest.messages.next_)  # only what came after
 ```
 
 ```bash
@@ -120,6 +123,10 @@ client.rooms.post(
 usvc rooms post helpdesk "My invoice shows two charges."
 usvc rooms post book-club "Chapter 3 tonight" --title Reminder --id reminder-2026-10-31
 ```
+
+A post to a room you can't post in goes to your `me` room instead (the
+response's `routed` says `me`). Pass `fallback=False` to get an error instead,
+as an interactive client should.
 
 `client_message_id` makes a post safe to retry: the same key posts the
 message once, for 24 hours. Use it whenever a script or an agent might send
@@ -149,10 +156,12 @@ Inside the chat, Enter posts (Esc then Enter adds a line) and these commands wor
 | `/follow [off]` | flag the room to revisit, or clear the flag |
 | `/refresh`, `/help`, `/quit` (Ctrl-D) | |
 
-The chat records what you have seen (`rooms.mark_active`), so the web inbox
-and other clients agree on which rooms have new activity. It only ever posts
-to the open room: if the server can't post there, the chat says so instead of
-letting the message fall back to your `me` room. Sellers use the same chat
+A room opens at its latest messages (`rooms.get(room, tail=50)`), so a long
+history isn't read from the start. The chat records what you have seen the way
+the web inbox does: when a room opens and when you switch away or quit, never
+just because a new message arrived while it was open. It only ever posts to
+the open room (`rooms.post(room, ..., fallback=False)`): if the room can't take
+the post, the chat says so and nothing is posted anywhere else. Sellers use the same chat
 as `usvc_seller rooms chat`, and programs can reuse it through
 `unitysvc.chat.ChatSession`.
 
