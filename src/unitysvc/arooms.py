@@ -70,10 +70,20 @@ class AsyncRooms:
 
         unwrap(await customer_rooms_leave_room.asyncio_detailed(target, client=self._client))
 
-    async def get(self, target: str, *, after: int | None = None, limit: int = 50, tail: int | None = None) -> RoomView:
+    async def get(
+        self,
+        target: str,
+        *,
+        after: int | None = None,
+        limit: int = 50,
+        tail: int | None = None,
+        before: int | None = None,
+    ) -> RoomView:
         """Read a room by UUID or handle; resume history with the previous messages.next.
         ``tail`` (instead of ``after``) reads the latest N messages, still oldest first;
-        their ``next`` resumes with newer messages only."""
+        their ``next`` resumes with newer messages only, and ``messages.previous``
+        (null when nothing older is stored) reads the page before them with
+        ``tail=N, before=previous``."""
         from ._generated.api.customer_rooms import customer_rooms_get_room_messages
 
         return unwrap(
@@ -83,6 +93,7 @@ class AsyncRooms:
                 after=UNSET if after is None else after,
                 limit=limit,
                 tail=UNSET if tail is None else tail,
+                before=UNSET if before is None else before,
             )
         )
 

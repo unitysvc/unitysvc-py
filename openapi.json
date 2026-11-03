@@ -5736,6 +5736,25 @@
             "description": "Instead of after: the latest N messages, oldest first; resume with the returned next"
           },
           {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "With tail: the latest N messages below this offset (the returned previous), to page back through history",
+              "title": "Before"
+            },
+            "description": "With tail: the latest N messages below this offset (the returned previous), to page back through history"
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -11865,6 +11884,17 @@
               }
             ],
             "title": "Next"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous"
           }
         },
         "type": "object",

@@ -17,6 +17,7 @@ def _get_kwargs(
     after: int | None | Unset = UNSET,
     limit: int | Unset = 50,
     tail: int | None | Unset = UNSET,
+    before: int | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -44,6 +45,13 @@ def _get_kwargs(
     else:
         json_tail = tail
     params["tail"] = json_tail
+
+    json_before: int | None | Unset
+    if isinstance(before, Unset):
+        json_before = UNSET
+    else:
+        json_before = before
+    params["before"] = json_before
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -96,6 +104,7 @@ def sync_detailed(
     after: int | None | Unset = UNSET,
     limit: int | Unset = 50,
     tail: int | None | Unset = UNSET,
+    before: int | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | RoomView]:
@@ -110,6 +119,8 @@ def sync_detailed(
         limit (int | Unset):  Default: 50.
         tail (int | None | Unset): Instead of after: the latest N messages, oldest first; resume
             with the returned next
+        before (int | None | Unset): With tail: the latest N messages below this offset (the
+            returned previous), to page back through history
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -126,6 +137,7 @@ def sync_detailed(
         after=after,
         limit=limit,
         tail=tail,
+        before=before,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -144,6 +156,7 @@ def sync(
     after: int | None | Unset = UNSET,
     limit: int | Unset = 50,
     tail: int | None | Unset = UNSET,
+    before: int | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | RoomView | None:
@@ -158,6 +171,8 @@ def sync(
         limit (int | Unset):  Default: 50.
         tail (int | None | Unset): Instead of after: the latest N messages, oldest first; resume
             with the returned next
+        before (int | None | Unset): With tail: the latest N messages below this offset (the
+            returned previous), to page back through history
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -175,6 +190,7 @@ def sync(
         after=after,
         limit=limit,
         tail=tail,
+        before=before,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -187,6 +203,7 @@ async def asyncio_detailed(
     after: int | None | Unset = UNSET,
     limit: int | Unset = 50,
     tail: int | None | Unset = UNSET,
+    before: int | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | RoomView]:
@@ -201,6 +218,8 @@ async def asyncio_detailed(
         limit (int | Unset):  Default: 50.
         tail (int | None | Unset): Instead of after: the latest N messages, oldest first; resume
             with the returned next
+        before (int | None | Unset): With tail: the latest N messages below this offset (the
+            returned previous), to page back through history
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -217,6 +236,7 @@ async def asyncio_detailed(
         after=after,
         limit=limit,
         tail=tail,
+        before=before,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -233,6 +253,7 @@ async def asyncio(
     after: int | None | Unset = UNSET,
     limit: int | Unset = 50,
     tail: int | None | Unset = UNSET,
+    before: int | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | RoomView | None:
@@ -247,6 +268,8 @@ async def asyncio(
         limit (int | Unset):  Default: 50.
         tail (int | None | Unset): Instead of after: the latest N messages, oldest first; resume
             with the returned next
+        before (int | None | Unset): With tail: the latest N messages below this offset (the
+            returned previous), to page back through history
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -265,6 +288,7 @@ async def asyncio(
             after=after,
             limit=limit,
             tail=tail,
+            before=before,
             authorization=authorization,
             x_role_id=x_role_id,
         )

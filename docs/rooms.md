@@ -154,10 +154,13 @@ Inside the chat, Enter posts (Esc then Enter adds a line) and these commands wor
 | `/next`, Ctrl-N | open the next room with new activity |
 | `/members` | who is in the room |
 | `/follow [off]` | flag the room to revisit, or clear the flag |
+| `/older`, `/more` | show the messages before the earliest one shown |
 | `/refresh`, `/help`, `/quit` (Ctrl-D) | |
 
 A room opens at its latest messages (`rooms.get(room, tail=50)`), so a long
-history isn't read from the start. The chat records what you have seen the way
+history isn't read from the start; `/older` reads the page before them
+(`rooms.get(room, tail=50, before=messages.previous)`) until `previous` is
+null. The chat records what you have seen the way
 the web inbox does: when a room opens and when you switch away or quit, never
 just because a new message arrived while it was open. It only ever posts to
 the open room (`rooms.post(room, ..., fallback=False)`): if the room can't take

@@ -11,6 +11,7 @@ import asyncio
 import contextlib
 from typing import Any
 
+import httpx
 from rich.console import Console
 from rich.text import Text
 
@@ -24,6 +25,7 @@ Type a message and press Enter to post it to the open room (Esc then Enter adds 
   /next  (Ctrl-N)    open the next room with new activity
   /members           who is in this room
   /follow [off]      flag this room to revisit, or clear the flag
+  /older  (/more)    show the messages before the earliest one shown
   /refresh           reload this room
   /help              this help
   /quit  (Ctrl-D)    leave the chat"""
@@ -49,6 +51,8 @@ async def _command(session: ChatSession, line: str) -> bool:
     elif name == "next":
         if not await session.next_with_activity():
             session.emit(Text("No other room has new activity", style="dim"))
+    elif name in ("older", "more"):
+        await session.older()
     elif name == "refresh":
         if session.room:
             await session.open(str(session.room["id"]))
@@ -66,6 +70,25 @@ async def _command(session: ChatSession, line: str) -> bool:
     else:
         raise ChatError(f"Unknown command /{clean(name)} (try /help)")
     return True
+
+
+# A poll that fails for any of these is retried at the next interval: a
+# timeout or a dropped connection must not stop the room from updating.
+TRANSIENT = (UnitysvcSDKError, httpx.TransportError, OSError)
+
+
+async def _watch(session: ChatSession, interval: float, rooms_interval: float) -> None:
+    """Poll the open room, and less often the room list, until cancelled."""
+    elapsed = 0.0
+    while True:
+        await asyncio.sleep(interval)
+        elapsed += interval
+        with contextlib.suppress(*TRANSIENT):
+            await session.poll()
+        if elapsed >= rooms_interval:
+            elapsed = 0.0
+            with contextlib.suppress(*TRANSIENT):
+                await session.refresh_rooms()
 
 
 async def run_chat(
@@ -116,17 +139,6 @@ async def run_chat(
         busy = f"  ·  {others} other room(s) with new activity (Ctrl-N)" if others else ""
         return f" {clean(room.get('name'))} @{clean(room.get('handle'))}{busy}"
 
-    async def watch() -> None:
-        elapsed = 0.0
-        while True:
-            await asyncio.sleep(interval)
-            elapsed += interval
-            with contextlib.suppress(UnitysvcSDKError, OSError):
-                await session.poll()
-                if elapsed >= rooms_interval:
-                    elapsed = 0.0
-                    await session.refresh_rooms()
-
     prompt: PromptSession[str] = PromptSession(
         key_bindings=bindings,
         bottom_toolbar=toolbar,
@@ -134,7 +146,7 @@ async def run_chat(
         erase_when_done=True,
     )
     with patch_stdout(raw=True):
-        poller = asyncio.create_task(watch())
+        poller = asyncio.create_task(_watch(session, interval, rooms_interval))
         try:
             while True:
                 try:
@@ -153,8 +165,12 @@ async def run_chat(
                     console.print(Text(str(exc), style="yellow"))
                 except UnitysvcSDKError as exc:
                     console.print(Text(f"✗ {clean(exc)}", style="red"))
+                except httpx.TransportError as exc:
+                    console.print(Text(f"✗ Connection problem, try again: {clean(exc)}", style="red"))
         finally:
             poller.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await poller
-            await session.close()
+            try:
+                with contextlib.suppress(asyncio.CancelledError):
+                    await poller
+            finally:
+                await session.close()  # recording what was seen, whatever the poller did

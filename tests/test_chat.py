@@ -6,6 +6,7 @@ collected as plain text.
 
 from __future__ import annotations
 
+import asyncio
 from types import SimpleNamespace
 from typing import Any
 
@@ -42,6 +43,7 @@ class FakeRooms:
         self.readonly: set[str] = set()  # rooms that refuse posts
         self.fail_posts = 0
         self.capped = 0  # how many mark_active answers come back capped
+        self.hold: dict[str, asyncio.Event] = {}  # forward reads of a room wait for its event
 
     async def list(self, **filters: Any) -> Any:
         self.calls.append(("list", filters))
@@ -49,15 +51,30 @@ class FakeRooms:
         return SimpleNamespace(data=rooms)
 
     async def get(
-        self, target: str, *, after: int | None = None, limit: int = 50, tail: int | None = None
+        self,
+        target: str,
+        *,
+        after: int | None = None,
+        limit: int = 50,
+        tail: int | None = None,
+        before: int | None = None,
     ) -> dict[str, Any]:
-        self.calls.append(("get", target, after, tail))
+        self.calls.append(("get", target, after, tail) if before is None else ("get", target, after, tail, before))
         room = {"a": A, "b": B}[target]
         stored = self.messages[target]
         if tail is not None:
-            # The server returns the latest N and resumes after its stored bound.
-            page = {"data": stored[-tail:], "next": stored[-1]["offset"] if stored else None}
+            # The server returns the latest N (below ``before``), resuming after its
+            # stored bound, with ``previous`` (its oldest offset) when the page is full.
+            below = [m for m in stored if before is None or m["offset"] < before]
+            data = below[-tail:]
+            page = {
+                "data": data,
+                "next": stored[-1]["offset"] if stored else None,
+                "previous": data[0]["offset"] if len(data) >= tail else None,
+            }
         else:
+            if target in self.hold:
+                await self.hold[target].wait()
             newer = [m for m in stored if after is None or m["offset"] > after][:limit]
             page = {"data": newer, "next": newer[-1]["offset"] if newer else after}
         return {**room, "last_active_offset": self.last_active[target], "messages": page}
@@ -230,3 +247,93 @@ async def test_terminal_loop_posts_switches_and_quits() -> None:
     assert any(call[:3] == ("post", "a", "hello") for call in rooms.calls)
     assert "help!" in text and "Unknown command /bogus" in text
     assert ("active", "b", 2) in rooms.calls
+
+
+@pytest.mark.asyncio
+async def test_a_poll_in_flight_across_a_switch_is_discarded() -> None:
+    """A poll of A answered after /open B must not show A's message in B, nor
+    move B's cursor or read marker past B's own messages."""
+    rooms = FakeRooms({"a": [_msg(1, "a1")], "b": [_msg(10, "b10")]}, {"a": 1, "b": None})
+    session, out = _session(rooms)
+    await session.open("a")
+    rooms.messages["a"].append(_msg(900, "a900"))
+    rooms.hold["a"] = asyncio.Event()
+    poll = asyncio.create_task(session.poll())
+    await asyncio.sleep(0)  # the poll is now waiting on A's answer
+
+    await session.open("b")
+    rooms.hold["a"].set()
+    assert await poll == 0
+
+    assert "a900" not in "\n".join(out)
+    assert session.cursor == 10 and session.seen == 10
+    await session.close()
+    assert not any(call[:2] == ("active", "b") and call[2] > 10 for call in rooms.calls)
+
+
+@pytest.mark.asyncio
+async def test_older_pages_back_to_the_start_of_the_conversation() -> None:
+    rooms = FakeRooms({"a": [_msg(i, f"m{i}") for i in range(120)], "b": []}, {"a": 119, "b": None})
+    session, out = _session(rooms)
+    await session.open("a")  # the latest 50: 70..119
+    assert session.previous == 70
+
+    assert await session.older() == 50  # 20..69
+    assert ("get", "a", None, 50, 70) in rooms.calls
+    assert await session.older() == 20  # 0..19: a short page, nothing older
+    assert session.previous is None
+    assert "start of the stored conversation" in out[-1]
+    assert await session.older() == 0
+    assert out[-1] == "No older messages"
+
+    bodies = [line.rsplit(" ", 1)[-1] for line in out if "] alice" in line]
+    assert sorted(bodies, key=lambda body: int(body[1:])) == [f"m{i}" for i in range(120)]
+    assert session.cursor == 119  # paging back never moves the forward cursor
+
+
+@pytest.mark.asyncio
+async def test_the_watcher_keeps_polling_after_a_transport_failure() -> None:
+    from unitysvc.chat.terminal import _watch
+
+    polls = 0
+
+    class Flaky:
+        async def poll(self) -> int:
+            nonlocal polls
+            polls += 1
+            if polls == 1:
+                raise httpx.ReadTimeout("slow")
+            return 0
+
+        async def refresh_rooms(self) -> list[Any]:
+            raise httpx.ConnectError("down")
+
+    watcher = asyncio.create_task(_watch(Flaky(), 0.001, 0.002))  # type: ignore[arg-type]
+    while polls < 4:
+        await asyncio.sleep(0.005)
+    assert not watcher.done()
+    watcher.cancel()
+
+
+@pytest.mark.asyncio
+async def test_terminal_older_shows_history_before_the_latest() -> None:
+    """With 60 stored messages the chat opens at 11-60; /older shows 1-10."""
+    import io
+
+    from prompt_toolkit.application import create_app_session
+    from prompt_toolkit.input import create_pipe_input
+    from prompt_toolkit.output import DummyOutput
+    from rich.console import Console
+
+    from unitysvc.chat import run_chat
+
+    rooms = FakeRooms({"a": [_msg(i, f"m{i}") for i in range(1, 61)], "b": []}, {"a": 60, "b": None})
+    buffer = io.StringIO()
+    with create_pipe_input() as pipe, create_app_session(input=pipe, output=DummyOutput()):
+        pipe.send_text("/older\r/quit\r")
+        await run_chat(rooms, "a", interval=60, console=Console(file=buffer, width=120))
+
+    text = buffer.getvalue()
+    assert "Unknown command" not in text
+    assert "alice  m1\n" in text and "10 earlier message(s)" in text
+    assert "start of the stored conversation" in text

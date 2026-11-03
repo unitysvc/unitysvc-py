@@ -42,7 +42,15 @@ class RoomsClient(Protocol):
     """The part of ``AsyncRooms`` the chat uses (customer and seller both match)."""
 
     async def list(self, *, kind: str | None = ..., enrollment: Any = ..., service: Any = ...) -> Any: ...
-    async def get(self, target: str, *, after: int | None = ..., limit: int = ..., tail: int | None = ...) -> Any: ...
+    async def get(
+        self,
+        target: str,
+        *,
+        after: int | None = ...,
+        limit: int = ...,
+        tail: int | None = ...,
+        before: int | None = ...,
+    ) -> Any: ...
     async def post(self, target: str | None = ..., *, body: str, fallback: bool = ..., **message: Any) -> Any: ...
     async def mark_active(self, target: str, offset: int) -> Any: ...
     async def members(self, target: str) -> Any: ...
@@ -130,10 +138,14 @@ class ChatSession:
         self.room_list: list[dict[str, Any]] = []
         self.room: dict[str, Any] | None = None
         self.cursor: int | None = None  # resume reading with after=cursor
+        self.previous: int | None = None  # read older history with before=previous
         self.seen: int | None = None  # highest offset shown in this room
         self.marked: int | None = None  # last offset the server accepted as seen
         self.shown_ids: set[str] = set()
         self._retry: asyncio.Task[None] | None = None
+        # Bumped whenever the open room changes: a read that was in flight
+        # across a switch belongs to the room before it and is discarded.
+        self._generation = 0
 
     # ---- rooms -------------------------------------------------------------
 
@@ -177,14 +189,16 @@ class ChatSession:
         """Leave the current room (recording what was seen) and show the end of another."""
         target = self.resolve(query)
         await self.mark_seen()
+        self._generation += 1  # a poll of the room being left is now stale
         # One request: the latest messages, whose ``next`` resumes with newer ones.
         view = as_dict(await self.rooms.get(target, tail=min(self.history, PAGE)))
         page = view.get("messages") or {}
         messages = page.get("data") or []
-        cursor = page.get("next")
 
+        self._generation += 1  # and so is one that started while this was loading
         self.room = {key: value for key, value in view.items() if key != "messages"}
-        self.cursor, self.seen, self.marked, self.shown_ids = cursor, None, view.get("last_active_offset"), set()
+        self.cursor, self.previous = page.get("next"), page.get("previous")
+        self.seen, self.marked, self.shown_ids = None, view.get("last_active_offset"), set()
         self._header()
         last_seen = self.marked
         divided = last_seen is None
@@ -226,7 +240,10 @@ class ChatSession:
             return 0
         shown = 0
         while True:
+            generation = self._generation
             page = as_dict(await self.rooms.get(self.room["id"], after=self.cursor, limit=PAGE)).get("messages") or {}
+            if generation != self._generation:
+                return shown  # the room changed while reading: not this room's messages
             data = page.get("data") or []
             for message in data:
                 if str(message.get("id")) not in self.shown_ids:
@@ -235,6 +252,31 @@ class ChatSession:
             self.cursor = _next(page, self.cursor)
             if len(data) < PAGE:
                 break
+        return shown
+
+    async def older(self) -> int:
+        """Show the messages before the earliest one loaded; return how many.
+        A scrolling terminal can't insert above, so they print below, framed."""
+        if self.room is None:
+            raise ChatError("No room is open; use /rooms and /open")
+        if self.previous is None:
+            self.emit(Text("No older messages", style="dim"))
+            return 0
+        generation, size = self._generation, min(self.history, PAGE)
+        view = as_dict(await self.rooms.get(self.room["id"], tail=size, before=self.previous))
+        if generation != self._generation:
+            return 0
+        page = view.get("messages") or {}
+        messages = page.get("data") or []
+        self.previous = page.get("previous")
+        self.emit(Text(f"── {len(messages)} earlier message(s) ──", style="yellow"))
+        shown = 0
+        for message in messages:
+            if str(message.get("id")) not in self.shown_ids:
+                shown += 1
+                self._show(message)
+        end = "── start of the stored conversation ──" if self.previous is None else "── /older for more ──"
+        self.emit(Text(end, style="yellow"))
         return shown
 
     async def mark_seen(self, *, retry: bool = False) -> None:
@@ -249,7 +291,7 @@ class ChatSession:
         room_id, offset = str(self.room["id"]), self.seen
         try:
             marked = as_dict(await self.rooms.mark_active(room_id, offset))
-        except UnitysvcSDKError:
+        except (UnitysvcSDKError, httpx.TransportError):  # best effort
             return
         self.marked = marked.get("last_active_offset")
         if retry and marked.get("capped"):
@@ -261,7 +303,7 @@ class ChatSession:
             return
         try:
             marked = as_dict(await self.rooms.mark_active(room_id, offset))
-        except UnitysvcSDKError:
+        except (UnitysvcSDKError, httpx.TransportError):  # best effort
             return
         self.marked = marked.get("last_active_offset")
 
