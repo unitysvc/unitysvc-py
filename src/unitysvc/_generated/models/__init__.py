@@ -5,6 +5,7 @@ from .access_interface_plan import AccessInterfacePlan
 from .access_interface_plan_routing_key_type_0 import AccessInterfacePlanRoutingKeyType0
 from .access_plan import AccessPlan
 from .access_plan_enrollment_mode import AccessPlanEnrollmentMode
+from .access_plan_links_type_0 import AccessPlanLinksType0
 from .account_file_delete_request import AccountFileDeleteRequest
 from .account_file_delete_response import AccountFileDeleteResponse
 from .account_file_download_response import AccountFileDownloadResponse
@@ -107,12 +108,19 @@ from .resolve_request import ResolveRequest
 from .resolve_request_routing_key_type_0 import ResolveRequestRoutingKeyType0
 from .resolve_response import ResolveResponse
 from .resolve_response_routing_strategy_type_0 import ResolveResponseRoutingStrategyType0
+from .room_active_request import RoomActiveRequest
+from .room_active_response import RoomActiveResponse
 from .room_delivery import RoomDelivery
 from .room_delivery_update import RoomDeliveryUpdate
+from .room_email_invitation import RoomEmailInvitation
+from .room_email_invite import RoomEmailInvite
+from .room_follow_up import RoomFollowUp
 from .room_invitation_code import RoomInvitationCode
 from .room_invitation_codes import RoomInvitationCodes
 from .room_invitation_create import RoomInvitationCreate
 from .room_invitation_create_role import RoomInvitationCreateRole
+from .room_invitation_update import RoomInvitationUpdate
+from .room_invitation_update_role_type_0 import RoomInvitationUpdateRoleType0
 from .room_join_request import RoomJoinRequest
 from .room_list import RoomList
 from .room_member_view import RoomMemberView
@@ -130,6 +138,7 @@ from .room_post_response_routed import RoomPostResponseRouted
 from .room_settings_update import RoomSettingsUpdate
 from .room_settings_update_status_type_0 import RoomSettingsUpdateStatusType0
 from .room_summary import RoomSummary
+from .room_unread import RoomUnread
 from .room_view import RoomView
 from .routing_endpoint_plan import RoutingEndpointPlan
 from .routing_endpoint_plan_routing_key_type_0 import RoutingEndpointPlanRoutingKeyType0
@@ -186,6 +195,7 @@ __all__ = (
     "AccessInterfacePlanRoutingKeyType0",
     "AccessPlan",
     "AccessPlanEnrollmentMode",
+    "AccessPlanLinksType0",
     "AccountFileDeleteRequest",
     "AccountFileDeleteResponse",
     "AccountFileDownloadResponse",
@@ -288,12 +298,19 @@ __all__ = (
     "ResolveRequestRoutingKeyType0",
     "ResolveResponse",
     "ResolveResponseRoutingStrategyType0",
+    "RoomActiveRequest",
+    "RoomActiveResponse",
     "RoomDelivery",
     "RoomDeliveryUpdate",
+    "RoomEmailInvitation",
+    "RoomEmailInvite",
+    "RoomFollowUp",
     "RoomInvitationCode",
     "RoomInvitationCodes",
     "RoomInvitationCreate",
     "RoomInvitationCreateRole",
+    "RoomInvitationUpdate",
+    "RoomInvitationUpdateRoleType0",
     "RoomJoinRequest",
     "RoomList",
     "RoomMembers",
@@ -311,6 +328,7 @@ __all__ = (
     "RoomSettingsUpdate",
     "RoomSettingsUpdateStatusType0",
     "RoomSummary",
+    "RoomUnread",
     "RoomView",
     "RoutingEndpointPlan",
     "RoutingEndpointPlanRoutingKeyType0",

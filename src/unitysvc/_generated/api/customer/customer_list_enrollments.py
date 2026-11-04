@@ -15,7 +15,7 @@ def _get_kwargs(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
-    shared: bool | Unset = True,
+    shared: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -34,7 +34,12 @@ def _get_kwargs(
 
     params["include_service_details"] = include_service_details
 
-    params["shared"] = shared
+    json_shared: bool | None | Unset
+    if isinstance(shared, Unset):
+        json_shared = UNSET
+    else:
+        json_shared = shared
+    params["shared"] = json_shared
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -84,13 +89,13 @@ def sync_detailed(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
-    shared: bool | Unset = True,
+    shared: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[CustomerEnrollmentsResponse | HTTPValidationError]:
     """List Enrollments
 
-     List user's service enrollments with optional enriched service data.
+     List the enrollments the caller can use, with optional enriched service data.
 
     Uses live service/content rows when include_service_details=True.
 
@@ -98,9 +103,9 @@ def sync_detailed(
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
         include_service_details (bool | Unset):  Default: True.
-        shared (bool | Unset): When true (default), list shared team enrollments. When false, list
-            the caller's personal enrollments. The default preserves legacy shared enrollment
-            visibility during the migration. Default: True.
+        shared (bool | None | Unset): Omit to list your personal enrollments plus the account's
+            shared ones, personal first. true: shared team enrollments only. false: your personal
+            enrollments only.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -134,13 +139,13 @@ def sync(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
-    shared: bool | Unset = True,
+    shared: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> CustomerEnrollmentsResponse | HTTPValidationError | None:
     """List Enrollments
 
-     List user's service enrollments with optional enriched service data.
+     List the enrollments the caller can use, with optional enriched service data.
 
     Uses live service/content rows when include_service_details=True.
 
@@ -148,9 +153,9 @@ def sync(
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
         include_service_details (bool | Unset):  Default: True.
-        shared (bool | Unset): When true (default), list shared team enrollments. When false, list
-            the caller's personal enrollments. The default preserves legacy shared enrollment
-            visibility during the migration. Default: True.
+        shared (bool | None | Unset): Omit to list your personal enrollments plus the account's
+            shared ones, personal first. true: shared team enrollments only. false: your personal
+            enrollments only.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -179,13 +184,13 @@ async def asyncio_detailed(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
-    shared: bool | Unset = True,
+    shared: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[CustomerEnrollmentsResponse | HTTPValidationError]:
     """List Enrollments
 
-     List user's service enrollments with optional enriched service data.
+     List the enrollments the caller can use, with optional enriched service data.
 
     Uses live service/content rows when include_service_details=True.
 
@@ -193,9 +198,9 @@ async def asyncio_detailed(
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
         include_service_details (bool | Unset):  Default: True.
-        shared (bool | Unset): When true (default), list shared team enrollments. When false, list
-            the caller's personal enrollments. The default preserves legacy shared enrollment
-            visibility during the migration. Default: True.
+        shared (bool | None | Unset): Omit to list your personal enrollments plus the account's
+            shared ones, personal first. true: shared team enrollments only. false: your personal
+            enrollments only.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -227,13 +232,13 @@ async def asyncio(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
-    shared: bool | Unset = True,
+    shared: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> CustomerEnrollmentsResponse | HTTPValidationError | None:
     """List Enrollments
 
-     List user's service enrollments with optional enriched service data.
+     List the enrollments the caller can use, with optional enriched service data.
 
     Uses live service/content rows when include_service_details=True.
 
@@ -241,9 +246,9 @@ async def asyncio(
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
         include_service_details (bool | Unset):  Default: True.
-        shared (bool | Unset): When true (default), list shared team enrollments. When false, list
-            the caller's personal enrollments. The default preserves legacy shared enrollment
-            visibility during the migration. Default: True.
+        shared (bool | None | Unset): Omit to list your personal enrollments plus the account's
+            shared ones, personal first. true: shared team enrollments only. false: your personal
+            enrollments only.
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 

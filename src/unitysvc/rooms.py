@@ -14,13 +14,16 @@ from ._http import unwrap
 
 if TYPE_CHECKING:
     from ._generated.client import AuthenticatedClient
+    from ._generated.models.room_active_response import RoomActiveResponse
     from ._generated.models.room_delivery import RoomDelivery
+    from ._generated.models.room_follow_up import RoomFollowUp
     from ._generated.models.room_invitation_code import RoomInvitationCode
     from ._generated.models.room_invitation_codes import RoomInvitationCodes
     from ._generated.models.room_list import RoomList
     from ._generated.models.room_members import RoomMembers
     from ._generated.models.room_post_response import RoomPostResponse
     from ._generated.models.room_summary import RoomSummary
+    from ._generated.models.room_unread import RoomUnread
     from ._generated.models.room_view import RoomView
 
 
@@ -67,13 +70,60 @@ class Rooms:
 
         unwrap(customer_rooms_leave_room.sync_detailed(target, client=self._client))
 
-    def get(self, target: str, *, after: int | None = None, limit: int = 50) -> RoomView:
-        """Read a room by UUID or handle; resume history with the previous messages.next."""
+    def get(
+        self,
+        target: str,
+        *,
+        after: int | None = None,
+        limit: int = 50,
+        tail: int | None = None,
+        before: int | None = None,
+    ) -> RoomView:
+        """Read a room by UUID or handle; resume history with the previous messages.next.
+        ``tail`` (instead of ``after``) reads the latest N messages, still oldest first;
+        their ``next`` resumes with newer messages only, and ``messages.previous``
+        (null when nothing older is stored) reads the page before them with
+        ``tail=N, before=previous``."""
         from ._generated.api.customer_rooms import customer_rooms_get_room_messages
 
         return unwrap(
             customer_rooms_get_room_messages.sync_detailed(
-                target, client=self._client, after=UNSET if after is None else after, limit=limit
+                target,
+                client=self._client,
+                after=UNSET if after is None else after,
+                limit=limit,
+                tail=UNSET if tail is None else tail,
+                before=UNSET if before is None else before,
+            )
+        )
+
+    def unread(self) -> RoomUnread:
+        """How many of the account's rooms have activity it hasn't seen."""
+        from ._generated.api.customer_rooms import customer_rooms_count_unread_rooms
+
+        return unwrap(customer_rooms_count_unread_rooms.sync_detailed(client=self._client))
+
+    def mark_active(self, target: str, offset: int) -> RoomActiveResponse:
+        """Record that the account has seen the room through ``offset`` (a message's offset).
+        Call it when a person opens a room and when they stop viewing it; reading
+        history records nothing. ``capped`` means storage hasn't reached ``offset`` yet."""
+        from ._generated.api.customer_rooms import customer_rooms_mark_room_active
+        from ._generated.models.room_active_request import RoomActiveRequest
+
+        return unwrap(
+            customer_rooms_mark_room_active.sync_detailed(
+                target, client=self._client, body=RoomActiveRequest(offset=offset)
+            )
+        )
+
+    def set_follow_up(self, target: str, follow_up: bool = True) -> RoomFollowUp:
+        """Flag the room for this account to revisit, or clear the flag."""
+        from ._generated.api.customer_rooms import customer_rooms_set_room_follow_up
+        from ._generated.models.room_follow_up import RoomFollowUp
+
+        return unwrap(
+            customer_rooms_set_room_follow_up.sync_detailed(
+                target, client=self._client, body=RoomFollowUp(follow_up=follow_up)
             )
         )
 
@@ -114,9 +164,11 @@ class Rooms:
             )
         )
 
-    def post(self, target: str | None = None, *, body: str, **message: Any) -> RoomPostResponse:
+    def post(self, target: str | None = None, *, body: str, fallback: bool = True, **message: Any) -> RoomPostResponse:
         """Post a message in msg format. Target is a UUID or handle; None uses a leading @handle or the me
-        fallback. Pass client_message_id for idempotent retries.
+        fallback. With a target and ``fallback=False``, a room that can't take the post raises
+        (NotFoundError / PermissionError) instead of posting to ``me``. Pass client_message_id for
+        idempotent retries.
         """
         from ._generated.api.customer_rooms import customer_rooms_post_room_message
         from ._generated.models.room_post_request import RoomPostRequest
@@ -126,7 +178,10 @@ class Rooms:
 
             return unwrap(
                 customer_rooms_post_room_message_to.sync_detailed(
-                    target, client=self._client, body=RoomPostRequest.from_dict({"body": body, **message})
+                    target,
+                    client=self._client,
+                    body=RoomPostRequest.from_dict({"body": body, **message}),
+                    fallback=fallback,
                 )
             )
 

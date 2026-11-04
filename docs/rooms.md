@@ -94,6 +94,9 @@ for message in page.messages.data:
     print(message.offset, message.sender_name, message.body)
 
 more = client.rooms.get("helpdesk", after=page.messages.next_, limit=100)
+
+latest = client.rooms.get("helpdesk", tail=20)  # the newest 20, oldest first
+newer = client.rooms.get("helpdesk", after=latest.messages.next_)  # only what came after
 ```
 
 ```bash
@@ -121,9 +124,57 @@ usvc rooms post helpdesk "My invoice shows two charges."
 usvc rooms post book-club "Chapter 3 tonight" --title Reminder --id reminder-2026-10-31
 ```
 
+A post to a room you can't post in goes to your `me` room instead (the
+response's `routed` says `me`). Pass `fallback=False` to get an error instead,
+as an interactive client should.
+
 `client_message_id` makes a post safe to retry: the same key posts the
 message once, for 24 hours. Use it whenever a script or an agent might send
 the same message twice.
+
+## Chat in the terminal
+
+`usvc rooms chat` opens a room and keeps it live: new messages appear as they
+are stored, and what you type is posted to that room. It needs prompt_toolkit
+(`pip install "unitysvc-py[chat]"`) and a key with `api:rooms` read and write.
+
+```bash
+usvc rooms chat                       # the most recently active room
+usvc rooms chat @helpdesk             # by handle, id or name prefix
+usvc rooms chat --enrollment <id>     # the room an app made for an enrollment
+usvc rooms chat --join <CODE>         # redeem an invitation, then open the room
+```
+
+Inside the chat, Enter posts (Esc then Enter adds a line) and these commands work:
+
+| Command | |
+|---|---|
+| `/rooms` | list rooms: `●` new activity, `⚑` flagged to follow up |
+| `/open ROOM` | switch: a number from `/rooms`, `@handle`, id or name prefix |
+| `/next`, Ctrl-N | open the next room with new activity |
+| `/members` | who is in the room |
+| `/follow [off]` | flag the room to revisit, or clear the flag |
+| `/older`, `/more` | show the messages before the earliest one shown |
+| `/refresh`, `/help`, `/quit` (Ctrl-D) | |
+
+A room opens at its latest messages (`rooms.get(room, tail=50)`), so a long
+history isn't read from the start; `/older` reads the page before them
+(`rooms.get(room, tail=50, before=messages.previous)`) until `previous` is
+null. The chat records what you have seen the way
+the web inbox does: when a room opens and when you switch away or quit, never
+just because a new message arrived while it was open. It only ever posts to
+the open room (`rooms.post(room, ..., fallback=False)`): if the room can't take
+the post, the chat says so and nothing is posted anywhere else. Sellers use the same chat
+as `usvc_seller rooms chat`, and programs can reuse it through
+`unitysvc.chat.ChatSession`.
+
+The same SDK methods are available directly:
+
+```python
+client.rooms.unread()                     # rooms with activity you haven't seen
+client.rooms.mark_active("helpdesk", 42)  # you've seen it through offset 42
+client.rooms.set_follow_up("helpdesk")    # flag it; set_follow_up(..., False) clears
+```
 
 ## Members
 

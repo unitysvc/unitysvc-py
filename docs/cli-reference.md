@@ -679,6 +679,7 @@ $ usvc rooms [OPTIONS] COMMAND [ARGS]...
 * `revoke`: Revoke an invitation code.
 * `join`: Join a room with an invitation code.
 * `leave`: Leave a room you joined (chat rooms; the...
+* `chat`: Chat in a room interactively: live...
 
 ### `usvc rooms list`
 
@@ -916,6 +917,33 @@ $ usvc rooms leave [OPTIONS] {room}
 **Options**:
 
 * `-y, --yes`: Skip confirmation prompt.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms chat`
+
+Chat in a room interactively: live messages, posting and switching rooms.
+
+Needs prompt_toolkit (the package&#x27;s chat extra) and a key with
+api:rooms read and write. Type /help inside the chat for commands.
+
+**Usage**:
+
+```console
+$ usvc rooms chat [OPTIONS] [room]
+```
+
+**Arguments**:
+
+* `room`: Room id, @handle or name prefix; default: most recently active.
+
+**Options**:
+
+* `--enrollment <str>`: Open this enrollment&#x27;s room.
+* `--service <str>`: Open this service&#x27;s room.
+* `--join <str>`: Redeem an invitation code, then open its room.
+* `--interval <float>`: Seconds between checks for new messages.  [default: 3.0]
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.

@@ -34,7 +34,6 @@ class ChannelPlan:
     selector: None | str | Unset = UNSET
     applicable_interfaces: list[str] | None | Unset = UNSET
     request_formats: list[str] | None | Unset = UNSET
-    external_url: None | str | Unset = UNSET
     customer_access_requests: list[ChannelPlanCustomerAccessRequestsType0Item] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -111,12 +110,6 @@ class ChannelPlan:
         else:
             request_formats = self.request_formats
 
-        external_url: None | str | Unset
-        if isinstance(self.external_url, Unset):
-            external_url = UNSET
-        else:
-            external_url = self.external_url
-
         customer_access_requests: list[dict[str, Any]] | None | Unset
         if isinstance(self.customer_access_requests, Unset):
             customer_access_requests = UNSET
@@ -161,8 +154,6 @@ class ChannelPlan:
             field_dict["applicable_interfaces"] = applicable_interfaces
         if request_formats is not UNSET:
             field_dict["request_formats"] = request_formats
-        if external_url is not UNSET:
-            field_dict["external_url"] = external_url
         if customer_access_requests is not UNSET:
             field_dict["customer_access_requests"] = customer_access_requests
 
@@ -283,15 +274,6 @@ class ChannelPlan:
 
         request_formats = _parse_request_formats(d.pop("request_formats", UNSET))
 
-        def _parse_external_url(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
-
-        external_url = _parse_external_url(d.pop("external_url", UNSET))
-
         def _parse_customer_access_requests(
             data: object,
         ) -> list[ChannelPlanCustomerAccessRequestsType0Item] | None | Unset:
@@ -333,7 +315,6 @@ class ChannelPlan:
             selector=selector,
             applicable_interfaces=applicable_interfaces,
             request_formats=request_formats,
-            external_url=external_url,
             customer_access_requests=customer_access_requests,
         )
 

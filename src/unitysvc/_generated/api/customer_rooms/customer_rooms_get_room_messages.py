@@ -16,6 +16,8 @@ def _get_kwargs(
     *,
     after: int | None | Unset = UNSET,
     limit: int | Unset = 50,
+    tail: int | None | Unset = UNSET,
+    before: int | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -36,6 +38,20 @@ def _get_kwargs(
     params["after"] = json_after
 
     params["limit"] = limit
+
+    json_tail: int | None | Unset
+    if isinstance(tail, Unset):
+        json_tail = UNSET
+    else:
+        json_tail = tail
+    params["tail"] = json_tail
+
+    json_before: int | None | Unset
+    if isinstance(before, Unset):
+        json_before = UNSET
+    else:
+        json_before = before
+    params["before"] = json_before
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -87,18 +103,24 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     after: int | None | Unset = UNSET,
     limit: int | Unset = 50,
+    tail: int | None | Unset = UNSET,
+    before: int | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | RoomView]:
     """Get Room Messages
 
      The room named by ``target`` (id or handle) and its stored messages
-    after ``after``, oldest first.
+    after ``after`` (or its latest ``tail``), oldest first.
 
     Args:
         target (str):
         after (int | None | Unset): The previous page's next
         limit (int | Unset):  Default: 50.
+        tail (int | None | Unset): Instead of after: the latest N messages, oldest first; resume
+            with the returned next
+        before (int | None | Unset): With tail: the latest N messages below this offset (the
+            returned previous), to page back through history
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -114,6 +136,8 @@ def sync_detailed(
         target=target,
         after=after,
         limit=limit,
+        tail=tail,
+        before=before,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -131,18 +155,24 @@ def sync(
     client: AuthenticatedClient | Client,
     after: int | None | Unset = UNSET,
     limit: int | Unset = 50,
+    tail: int | None | Unset = UNSET,
+    before: int | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | RoomView | None:
     """Get Room Messages
 
      The room named by ``target`` (id or handle) and its stored messages
-    after ``after``, oldest first.
+    after ``after`` (or its latest ``tail``), oldest first.
 
     Args:
         target (str):
         after (int | None | Unset): The previous page's next
         limit (int | Unset):  Default: 50.
+        tail (int | None | Unset): Instead of after: the latest N messages, oldest first; resume
+            with the returned next
+        before (int | None | Unset): With tail: the latest N messages below this offset (the
+            returned previous), to page back through history
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -159,6 +189,8 @@ def sync(
         client=client,
         after=after,
         limit=limit,
+        tail=tail,
+        before=before,
         authorization=authorization,
         x_role_id=x_role_id,
     ).parsed
@@ -170,18 +202,24 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     after: int | None | Unset = UNSET,
     limit: int | Unset = 50,
+    tail: int | None | Unset = UNSET,
+    before: int | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | RoomView]:
     """Get Room Messages
 
      The room named by ``target`` (id or handle) and its stored messages
-    after ``after``, oldest first.
+    after ``after`` (or its latest ``tail``), oldest first.
 
     Args:
         target (str):
         after (int | None | Unset): The previous page's next
         limit (int | Unset):  Default: 50.
+        tail (int | None | Unset): Instead of after: the latest N messages, oldest first; resume
+            with the returned next
+        before (int | None | Unset): With tail: the latest N messages below this offset (the
+            returned previous), to page back through history
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -197,6 +235,8 @@ async def asyncio_detailed(
         target=target,
         after=after,
         limit=limit,
+        tail=tail,
+        before=before,
         authorization=authorization,
         x_role_id=x_role_id,
     )
@@ -212,18 +252,24 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     after: int | None | Unset = UNSET,
     limit: int | Unset = 50,
+    tail: int | None | Unset = UNSET,
+    before: int | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
 ) -> HTTPValidationError | RoomView | None:
     """Get Room Messages
 
      The room named by ``target`` (id or handle) and its stored messages
-    after ``after``, oldest first.
+    after ``after`` (or its latest ``tail``), oldest first.
 
     Args:
         target (str):
         after (int | None | Unset): The previous page's next
         limit (int | Unset):  Default: 50.
+        tail (int | None | Unset): Instead of after: the latest N messages, oldest first; resume
+            with the returned next
+        before (int | None | Unset): With tail: the latest N messages below this offset (the
+            returned previous), to page back through history
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -241,6 +287,8 @@ async def asyncio(
             client=client,
             after=after,
             limit=limit,
+            tail=tail,
+            before=before,
             authorization=authorization,
             x_role_id=x_role_id,
         )
