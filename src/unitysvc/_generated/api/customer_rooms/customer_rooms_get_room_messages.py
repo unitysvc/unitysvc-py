@@ -110,17 +110,19 @@ def sync_detailed(
 ) -> Response[HTTPValidationError | RoomView]:
     """Get Room Messages
 
-     The room named by ``target`` (id or handle) and its stored messages
-    after ``after`` (or its latest ``tail``), oldest first.
+     The room named by ``target`` (id or handle) and its stored messages,
+    oldest first. ``after``, ``before`` and ``tail`` combine: messages
+    after ``after`` and below ``before``, and with ``tail`` only the
+    latest ``tail`` of them.
 
     Args:
         target (str):
         after (int | None | Unset): The previous page's next
         limit (int | Unset):  Default: 50.
-        tail (int | None | Unset): Instead of after: the latest N messages, oldest first; resume
-            with the returned next
-        before (int | None | Unset): With tail: the latest N messages below this offset (the
-            returned previous), to page back through history
+        tail (int | None | Unset): Only the latest N messages (after ``after``, if given), oldest
+            first; resume with the returned next
+        before (int | None | Unset): Only messages below this offset; with tail, page back through
+            history with the returned previous
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -162,17 +164,19 @@ def sync(
 ) -> HTTPValidationError | RoomView | None:
     """Get Room Messages
 
-     The room named by ``target`` (id or handle) and its stored messages
-    after ``after`` (or its latest ``tail``), oldest first.
+     The room named by ``target`` (id or handle) and its stored messages,
+    oldest first. ``after``, ``before`` and ``tail`` combine: messages
+    after ``after`` and below ``before``, and with ``tail`` only the
+    latest ``tail`` of them.
 
     Args:
         target (str):
         after (int | None | Unset): The previous page's next
         limit (int | Unset):  Default: 50.
-        tail (int | None | Unset): Instead of after: the latest N messages, oldest first; resume
-            with the returned next
-        before (int | None | Unset): With tail: the latest N messages below this offset (the
-            returned previous), to page back through history
+        tail (int | None | Unset): Only the latest N messages (after ``after``, if given), oldest
+            first; resume with the returned next
+        before (int | None | Unset): Only messages below this offset; with tail, page back through
+            history with the returned previous
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -209,17 +213,19 @@ async def asyncio_detailed(
 ) -> Response[HTTPValidationError | RoomView]:
     """Get Room Messages
 
-     The room named by ``target`` (id or handle) and its stored messages
-    after ``after`` (or its latest ``tail``), oldest first.
+     The room named by ``target`` (id or handle) and its stored messages,
+    oldest first. ``after``, ``before`` and ``tail`` combine: messages
+    after ``after`` and below ``before``, and with ``tail`` only the
+    latest ``tail`` of them.
 
     Args:
         target (str):
         after (int | None | Unset): The previous page's next
         limit (int | Unset):  Default: 50.
-        tail (int | None | Unset): Instead of after: the latest N messages, oldest first; resume
-            with the returned next
-        before (int | None | Unset): With tail: the latest N messages below this offset (the
-            returned previous), to page back through history
+        tail (int | None | Unset): Only the latest N messages (after ``after``, if given), oldest
+            first; resume with the returned next
+        before (int | None | Unset): Only messages below this offset; with tail, page back through
+            history with the returned previous
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 
@@ -259,17 +265,19 @@ async def asyncio(
 ) -> HTTPValidationError | RoomView | None:
     """Get Room Messages
 
-     The room named by ``target`` (id or handle) and its stored messages
-    after ``after`` (or its latest ``tail``), oldest first.
+     The room named by ``target`` (id or handle) and its stored messages,
+    oldest first. ``after``, ``before`` and ``tail`` combine: messages
+    after ``after`` and below ``before``, and with ``tail`` only the
+    latest ``tail`` of them.
 
     Args:
         target (str):
         after (int | None | Unset): The previous page's next
         limit (int | Unset):  Default: 50.
-        tail (int | None | Unset): Instead of after: the latest N messages, oldest first; resume
-            with the returned next
-        before (int | None | Unset): With tail: the latest N messages below this offset (the
-            returned previous), to page back through history
+        tail (int | None | Unset): Only the latest N messages (after ``after``, if given), oldest
+            first; resume with the returned next
+        before (int | None | Unset): Only messages below this offset; with tail, page back through
+            history with the returned previous
         authorization (None | str | Unset):
         x_role_id (None | str | Unset):
 

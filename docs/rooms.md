@@ -56,6 +56,23 @@ for room in client.rooms.list().data:
 
 chats = client.rooms.list(kind="chat")
 for_one_enrollment = client.rooms.list(enrollment=enrollment_id)
+acme = client.rooms.list(q="acme")                # name starts with "acme", any case
+waiting = client.rooms.list(new_activity=True)    # activity you haven't seen
+```
+
+Each row also says whether this key can post there (`can_post`) and who sent
+the latest message (`last_sender_name`, or `sent_latest_message` when it was
+you). Without `limit` the list holds every room; with it, read the next page
+with `cursor=page.next_cursor` until `next_cursor` is null:
+
+```python
+page = client.rooms.list(limit=50)
+while True:
+    for room in page.data:
+        print(room.name, room.last_sender_name, room.can_post)
+    if page.next_cursor is None:
+        break
+    page = client.rooms.list(limit=50, cursor=page.next_cursor)
 ```
 
 A service can ask, when you enroll, to create a room for you: its channel
@@ -149,7 +166,7 @@ Inside the chat, Enter posts (Esc then Enter adds a line) and these commands wor
 
 | Command | |
 |---|---|
-| `/rooms` | list rooms: `●` new activity, `⚑` flagged to follow up |
+| `/rooms` | list rooms: `●` new activity, `⚑` flagged to follow up, the latest sender, `(read-only)` where you can't post |
 | `/open ROOM` | switch: a number from `/rooms`, `@handle`, id or name prefix |
 | `/next`, Ctrl-N | open the next room with new activity |
 | `/members` | who is in the room |
@@ -157,6 +174,9 @@ Inside the chat, Enter posts (Esc then Enter adds a line) and these commands wor
 | `/older`, `/more` | show the messages before the earliest one shown |
 | `/refresh`, `/help`, `/quit` (Ctrl-D) | |
 
+New messages arrive through one long-polled feed for all your rooms
+(`rooms.feed`, below), so the chat sees activity in every room without
+polling each one, and the bottom bar counts the other rooms waiting for you.
 A room opens at its latest messages (`rooms.get(room, tail=50)`), so a long
 history isn't read from the start; `/older` reads the page before them
 (`rooms.get(room, tail=50, before=messages.previous)`) until `previous` is
@@ -175,6 +195,28 @@ client.rooms.unread()                     # rooms with activity you haven't seen
 client.rooms.mark_active("helpdesk", 42)  # you've seen it through offset 42
 client.rooms.set_follow_up("helpdesk")    # flag it; set_follow_up(..., False) clears
 ```
+
+## Follow new messages in every room
+
+`rooms.feed` returns new messages from all your rooms, each tagged with its
+`room_id`. The first call (no `since`) only takes the current position: it
+returns no backlog. Pass its `cursor` back as `since` to get what was stored
+after it; `wait` (up to 25 seconds) holds the request until something arrives,
+so a loop of feed calls is a live stream over plain HTTP:
+
+```python
+feed = client.rooms.feed()                 # start here, no backlog
+while True:
+    feed = client.rooms.feed(since=feed.cursor, wait=20)
+    for message in feed.messages:
+        print(message.room_id, message.sender_name, message.body)
+```
+
+Keep `wait` below the client's timeout (30 seconds by default). `rooms=[...]`
+narrows the feed to some rooms. If a saved cursor is rejected
+(`ValidationError`), start again with a call without `since`. Reading the feed
+records nothing as seen; call `mark_active` when a person has actually seen a
+room.
 
 ## Members
 

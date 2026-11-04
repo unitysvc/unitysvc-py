@@ -1,7 +1,8 @@
-"""Tests for :mod:`unitysvc.chat` (unitysvc#2885 Phase 1).
+"""Tests for :mod:`unitysvc.chat` (unitysvc#2885).
 
-A fake rooms client stands in for ``AsyncRooms``; the session's output is
-collected as plain text.
+A fake rooms client stands in for ``AsyncRooms``: rooms' stored messages, and a
+feed over everything ``deliver``ed (a log; its cursor is a position in it).
+The session's output is collected as plain text.
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ from rich.text import Text
 from unitysvc.chat import ChatError, ChatSession, format_message
 from unitysvc.chat import session as chat_session
 from unitysvc.exceptions import PermissionError as ForbiddenError
+from unitysvc.exceptions import ValidationError
 
 ME = "m-me"
 A = {"id": "a", "member_id": ME, "kind": "chat", "name": "Acme support", "handle": "acme", "role": "member"}
@@ -43,12 +45,37 @@ class FakeRooms:
         self.readonly: set[str] = set()  # rooms that refuse posts
         self.fail_posts = 0
         self.capped = 0  # how many mark_active answers come back capped
-        self.hold: dict[str, asyncio.Event] = {}  # forward reads of a room wait for its event
+        self.log: list[dict[str, Any]] = []  # what the feed has seen stored, in order
+        self.feed_hold: asyncio.Event | None = None  # a feed request waits for it
+        self.can_post: dict[str, bool] = {"a": True, "b": True}
+
+    def deliver(self, room_id: str, message: dict[str, Any]) -> None:
+        """A message stored in a room: history and the feed both see it."""
+        self.messages[room_id].append(message)
+        self.log.append({**message, "room_id": room_id})
+        self.activity.add(room_id)
 
     async def list(self, **filters: Any) -> Any:
         self.calls.append(("list", filters))
-        rooms = [{**room, "has_new_activity": room["id"] in self.activity} for room in (A, B)]
+        rooms = [
+            {**room, "has_new_activity": room["id"] in self.activity, "can_post": self.can_post[room["id"]]}
+            for room in (A, B)
+        ]
+        if filters.get("new_activity"):
+            rooms = [room for room in rooms if room["has_new_activity"]]
         return SimpleNamespace(data=rooms)
+
+    async def feed(self, *, since: str | None = None, wait: float = 0, limit: int = 100) -> dict[str, Any]:
+        self.calls.append(("feed", since, wait))
+        if since == "bad":
+            raise ValidationError("Invalid cursor", status_code=400)
+        start = len(self.log) if since is None else int(since)
+        if self.feed_hold is not None:
+            await self.feed_hold.wait()
+        elif start >= len(self.log) and wait > 0:
+            await asyncio.sleep(min(wait, 0.01))  # a long-poll with nothing new
+        new = self.log[start : start + limit]
+        return {"messages": new, "cursor": str(start + len(new)), "rooms_with_new_activity": len(self.activity)}
 
     async def get(
         self,
@@ -73,8 +100,6 @@ class FakeRooms:
                 "previous": data[0]["offset"] if len(data) >= tail else None,
             }
         else:
-            if target in self.hold:
-                await self.hold[target].wait()
             newer = [m for m in stored if after is None or m["offset"] > after][:limit]
             page = {"data": newer, "next": newer[-1]["offset"] if newer else after}
         return {**room, "last_active_offset": self.last_active[target], "messages": page}
@@ -127,21 +152,22 @@ async def test_open_reads_only_the_latest_messages() -> None:
     assert [call for call in rooms.calls if call[0] == "get"] == [("get", "a", None, 5)]
     shown = [line for line in out if "] alice" in line]
     assert [line.rsplit(" ", 1)[-1] for line in shown] == [f"m{i}" for i in range(4995, 5000)]
-    assert session.cursor == 4999
 
 
 @pytest.mark.asyncio
-async def test_poll_shows_only_new_messages() -> None:
+async def test_the_feed_shows_only_new_messages_of_the_open_room() -> None:
     rooms = FakeRooms({"a": [_msg(1, "hi")], "b": []}, {"a": 1, "b": None})
     session, out = _session(rooms)
+    await session.start_feed()
     await session.open("a")
     out.clear()
 
-    assert await session.poll() == 0
-    rooms.messages["a"].append(_msg(2, "any update?"))
-    assert await session.poll() == 1
+    assert await session.follow(wait=0) == 0
+    rooms.deliver("a", _msg(2, "any update?"))
+    assert await session.follow(wait=0) == 1
     assert any("any update?" in line for line in out)
-    # Polls never record activity (#2877): a terminal left open keeps it new...
+    assert await session.follow(wait=0) == 0  # the cursor moved past it
+    # The feed never records activity (#2877): a terminal left open keeps it new...
     assert ("active", "a", 2) not in rooms.calls
     # ...until the room stops being shown.
     await session.close()
@@ -160,10 +186,10 @@ async def test_send_echoes_once_and_is_idempotent_on_retry() -> None:
     assert len(posts) == 2 and posts[0][3] == posts[1][3]  # same client_message_id
     assert all(post[4] is False for post in posts)  # never the me fallback
     assert sum("you  hello" in line for line in out) == 1
-    # The stored copy arriving later is not shown twice.
-    rooms.messages["a"].append({**_msg(3, "hello", sender=ME), "id": "new"})
+    # The stored copy arriving later through the feed is not shown twice.
+    rooms.deliver("a", {**_msg(3, "hello", sender=ME), "id": "new"})
     out.clear()
-    await session.poll()
+    await session.follow(wait=0)
     assert out == []
 
 
@@ -202,6 +228,7 @@ async def test_next_opens_another_room_with_activity() -> None:
 
     rooms.activity = {"a", "b"}
     assert await session.next_with_activity() is True
+    assert ("list", {"new_activity": True}) in rooms.calls  # the server picks the queue
     assert session.room and session.room["id"] == "b"
     assert any("help!" in line for line in out)
 
@@ -241,7 +268,7 @@ async def test_terminal_loop_posts_switches_and_quits() -> None:
     buffer = io.StringIO()
     with create_pipe_input() as pipe, create_app_session(input=pipe, output=DummyOutput()):
         pipe.send_text("hello\r/open @helpdesk\r/bogus\r/quit\r")
-        await run_chat(rooms, "a", interval=60, console=Console(file=buffer, width=120))
+        await run_chat(rooms, "a", wait=0.01, console=Console(file=buffer, width=120))
 
     text = buffer.getvalue()
     assert any(call[:3] == ("post", "a", "hello") for call in rooms.calls)
@@ -250,25 +277,84 @@ async def test_terminal_loop_posts_switches_and_quits() -> None:
 
 
 @pytest.mark.asyncio
-async def test_a_poll_in_flight_across_a_switch_is_discarded() -> None:
-    """A poll of A answered after /open B must not show A's message in B, nor
-    move B's cursor or read marker past B's own messages."""
+async def test_a_feed_answer_that_spans_a_switch_shows_the_new_rooms_message_once() -> None:
+    """A feed request started in A and answered after /open B is applied to B:
+    a B message that came with B's history and again in the feed shows once."""
     rooms = FakeRooms({"a": [_msg(1, "a1")], "b": [_msg(10, "b10")]}, {"a": 1, "b": None})
     session, out = _session(rooms)
+    await session.start_feed()
     await session.open("a")
-    rooms.messages["a"].append(_msg(900, "a900"))
-    rooms.hold["a"] = asyncio.Event()
-    poll = asyncio.create_task(session.poll())
-    await asyncio.sleep(0)  # the poll is now waiting on A's answer
+    rooms.feed_hold = asyncio.Event()
+    waiting = asyncio.create_task(session.follow(wait=5))
+    await asyncio.sleep(0)  # the request is now waiting
 
+    rooms.deliver("b", _msg(11, "b11"))  # stored before B's history is read
     await session.open("b")
-    rooms.hold["a"].set()
-    assert await poll == 0
+    rooms.feed_hold.set()
+    assert await waiting == 0  # b11 already came with B's history
+    assert sum("b11" in line for line in out) == 1
+    rooms.feed_hold = None
+    assert await session.follow(wait=0) == 0  # the cursor moved past it
 
-    assert "a900" not in "\n".join(out)
-    assert session.cursor == 10 and session.seen == 10
-    await session.close()
-    assert not any(call[:2] == ("active", "b") and call[2] > 10 for call in rooms.calls)
+
+@pytest.mark.asyncio
+async def test_a_feed_answer_during_the_history_load_is_kept_for_the_new_room() -> None:
+    """The review's probe: B's history is slow; a B message stored after B's
+    history snapshot arrives in a feed answer that completes while B is still
+    loading. It must show in B once B is open, not be dropped."""
+    rooms = FakeRooms({"a": [_msg(1, "a1")], "b": [_msg(10, "b10")]}, {"a": 1, "b": None})
+    session, out = _session(rooms)
+    await session.start_feed()
+    await session.open("a")
+
+    history_read = asyncio.Event()
+    release_history = asyncio.Event()
+    original_get = rooms.get
+
+    async def slow_get(target: str, **kwargs: Any) -> dict[str, Any]:
+        view = await original_get(target, **kwargs)  # B's snapshot: b10 only
+        if target == "b":
+            history_read.set()
+            await release_history.wait()
+        return view
+
+    rooms.get = slow_get  # type: ignore[method-assign]
+    opening = asyncio.create_task(session.open("b"))
+    await history_read.wait()
+    rooms.deliver("b", _msg(11, "b11"))  # stored after the snapshot
+    following = asyncio.create_task(session.follow(wait=0))  # answered while B loads
+    await asyncio.sleep(0.01)
+    assert not following.done()  # held until the switch finishes
+
+    release_history.set()
+    await opening
+    assert await following == 1
+    assert sum("b11" in line for line in out) == 1
+    assert await session.follow(wait=0) == 0
+
+
+@pytest.mark.asyncio
+async def test_activity_elsewhere_refreshes_the_room_list() -> None:
+    rooms = FakeRooms({"a": [], "b": []}, {"a": None, "b": None})
+    session, out = _session(rooms)
+    await session.start_feed()
+    await session.refresh_rooms()
+    await session.open("a")
+    assert session.others_with_activity() == 0
+
+    rooms.deliver("b", _msg(5, "help!"))
+    assert await session.follow(wait=0) == 0  # not the open room: not shown
+    assert "help!" not in "\n".join(out)
+    assert session.others_with_activity() == 1  # the toolbar's count, from a fresh list
+
+
+@pytest.mark.asyncio
+async def test_an_invalid_feed_position_starts_again_at_the_end() -> None:
+    rooms = FakeRooms({"a": [], "b": []}, {"a": None, "b": None})
+    session, _ = _session(rooms)
+    session.feed_cursor = "bad"
+    assert await session.follow(wait=0) == 0
+    assert session.feed_cursor == "0"  # a fresh position, no backlog
 
 
 @pytest.mark.asyncio
@@ -288,21 +374,23 @@ async def test_older_pages_back_to_the_start_of_the_conversation() -> None:
 
     bodies = [line.rsplit(" ", 1)[-1] for line in out if "] alice" in line]
     assert sorted(bodies, key=lambda body: int(body[1:])) == [f"m{i}" for i in range(120)]
-    assert session.cursor == 119  # paging back never moves the forward cursor
 
 
 @pytest.mark.asyncio
-async def test_the_watcher_keeps_polling_after_a_transport_failure() -> None:
+async def test_the_watcher_keeps_following_after_a_transport_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    from unitysvc.chat import terminal
     from unitysvc.chat.terminal import _watch
 
+    monkeypatch.setattr(terminal, "RETRY_SECONDS", 0.001)
     polls = 0
 
     class Flaky:
-        async def poll(self) -> int:
+        async def follow(self, wait: float) -> int:
             nonlocal polls
             polls += 1
             if polls == 1:
                 raise httpx.ReadTimeout("slow")
+            await asyncio.sleep(0.001)
             return 0
 
         async def refresh_rooms(self) -> list[Any]:
@@ -331,9 +419,49 @@ async def test_terminal_older_shows_history_before_the_latest() -> None:
     buffer = io.StringIO()
     with create_pipe_input() as pipe, create_app_session(input=pipe, output=DummyOutput()):
         pipe.send_text("/older\r/quit\r")
-        await run_chat(rooms, "a", interval=60, console=Console(file=buffer, width=120))
+        await run_chat(rooms, "a", wait=0.01, console=Console(file=buffer, width=120))
 
     text = buffer.getvalue()
     assert "Unknown command" not in text
     assert "alice  m1\n" in text and "10 earlier message(s)" in text
     assert "start of the stored conversation" in text
+
+
+def test_room_rows_show_the_last_sender_and_read_only_rooms() -> None:
+    from unitysvc.chat.session import room_line
+
+    row = room_line(1, {**A, "last_sender_name": "alice", "can_post": True}).plain
+    assert "· alice" in row and "read-only" not in row
+    row = room_line(2, {**B, "sent_latest_message": True, "last_sender_name": "x", "can_post": False}).plain
+    assert "· you" in row and "(read-only)" in row
+
+
+def test_attachments_link_only_http_urls() -> None:
+    line = format_message(
+        {
+            "sender_name": "alice",
+            "body": "see attached",
+            "sent_at": "2026-11-03T10:00:00+00:00",
+            "attachments": [
+                {"filename": "shot.png", "mime_type": "image/png", "size": 2048, "url": "https://s3.example/shot"},
+                {"filename": "evil.html", "url": "data:text/html;base64,PHNjcmlwdD4="},
+                {"filename": "old.pdf", "url": "https://s3.example/old", "expired": True},
+                {"base64": "aGk=", "note": "not kept: too large"},
+            ],
+        }
+    ).plain
+    assert "[attachment] shot.png (image/png, 2 KB) https://s3.example/shot" in line
+    assert "data:" not in line and "aGk=" not in line
+    assert "[attachment] evil.html" in line
+    assert "old.pdf" in line and "expired" in line and "https://s3.example/old" not in line
+    assert "[attachment] file (not kept: too large)" in line
+
+
+@pytest.mark.asyncio
+async def test_the_header_says_when_you_cannot_post() -> None:
+    rooms = FakeRooms({"a": [], "b": []}, {"a": None, "b": None})
+    rooms.can_post["a"] = False
+    session, out = _session(rooms)
+    await session.refresh_rooms()
+    await session.open("a")
+    assert "You can't post in this room." in out
