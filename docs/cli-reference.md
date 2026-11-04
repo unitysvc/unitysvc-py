@@ -696,6 +696,8 @@ $ usvc rooms list [OPTIONS]
 * `--kind <str>`: Only rooms of this kind (chat, me, helpdesk).
 * `--enrollment <str>`: Only rooms of this enrollment.
 * `--service <str>`: Only rooms of this service (not its enrollments&#x27;).
+* `--name <str>`: Only rooms whose name starts with this (any case).
+* `--new`: Only rooms with activity you haven&#x27;t seen.
 * `-f, --format <str>`: Output format: table | json.  [default: table]
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
@@ -943,7 +945,6 @@ $ usvc rooms chat [OPTIONS] [room]
 * `--enrollment <str>`: Open this enrollment&#x27;s room.
 * `--service <str>`: Open this service&#x27;s room.
 * `--join <str>`: Redeem an invitation code, then open its room.
-* `--interval <float>`: Seconds between checks for new messages.  [default: 3.0]
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.

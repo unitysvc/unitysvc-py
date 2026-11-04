@@ -7,8 +7,10 @@ rooms client.
 
 What the person has seen is recorded the way the web inbox does it (#2877):
 when a room opens, through the newest message loaded, and when it stops
-being shown (a switch or quitting), through the newest message shown. Polls
-never record anything, so a terminal left open doesn't clear new activity.
+being shown (a switch or quitting), through the newest message shown. New
+messages arrive through one long-polled feed for all rooms (``rooms.feed``),
+which never records anything, so a terminal left open doesn't clear new
+activity.
 
 Messages are user content from other accounts: everything shown is built as
 literal :class:`rich.text.Text` after control characters (including ANSI
@@ -27,7 +29,7 @@ from typing import Any, Protocol
 import httpx
 from rich.text import Text
 
-from ..exceptions import NotFoundError, UnitysvcSDKError
+from ..exceptions import NotFoundError, UnitysvcSDKError, ValidationError
 from ..exceptions import PermissionError as ForbiddenError
 
 # Everything a terminal could act on except newline and tab.
@@ -36,12 +38,23 @@ PAGE = 200
 # ``mark_active`` caps at what ``rooms-deliver`` has recorded so far; retry a
 # capped mark once, as the web inbox does.
 MARK_RETRY_SECONDS = 4.0
+# How long one feed request long-polls; under the client's 30 s timeout.
+FEED_WAIT_SECONDS = 20.0
 
 
 class RoomsClient(Protocol):
     """The part of ``AsyncRooms`` the chat uses (customer and seller both match)."""
 
-    async def list(self, *, kind: str | None = ..., enrollment: Any = ..., service: Any = ...) -> Any: ...
+    async def list(
+        self,
+        *,
+        kind: str | None = ...,
+        enrollment: Any = ...,
+        service: Any = ...,
+        q: str | None = ...,
+        new_activity: bool = ...,
+    ) -> Any: ...
+    async def feed(self, *, since: str | None = ..., wait: float = ..., limit: int = ...) -> Any: ...
     async def get(
         self,
         target: str,
@@ -75,11 +88,6 @@ def clean(value: Any) -> str:
     return _CONTROL.sub("", "" if value is None else str(value))
 
 
-def _next(page: dict[str, Any], cursor: int | None) -> int | None:
-    """The page's resume offset, keeping the old one when the page has none."""
-    return cursor if page.get("next") is None else page["next"]
-
-
 def _clock(sent_at: Any, today: datetime | None = None) -> str:
     try:
         sent = datetime.fromisoformat(str(sent_at)).astimezone()
@@ -103,15 +111,37 @@ def format_message(message: dict[str, Any], my_member_id: Any = None) -> Text:
         line.append("\n")
     line.append(clean(message.get("body")))
     for attachment in message.get("attachments") or []:
-        size = attachment.get("size")
-        line.append(f"\n  [attachment] {clean(attachment.get('filename'))}", style="magenta")
-        if size:
-            line.append(f" ({int(size) // 1024 or 1} KB)", style="dim")
+        line.append("\n")
+        line.append(attachment_line(attachment))
+    return line
+
+
+def attachment_line(attachment: dict[str, Any]) -> Text:
+    """``[attachment] name (type, size) link``. Another member chose every
+    field, so only an ``http(s)`` URL is shown as a link: never ``data:`` or
+    inline base64 bytes."""
+    line = Text("  ")
+    line.append(f"[attachment] {clean(attachment.get('filename')) or 'file'}", style="magenta")
+    details = [clean(attachment.get("mime_type") or attachment.get("mimeType"))]
+    size = attachment.get("size")
+    if isinstance(size, int) and size > 0:
+        details.append(f"{size // 1024 or 1} KB")
+    details = [detail for detail in details if detail]
+    if details:
+        line.append(f" ({', '.join(details)})", style="dim")
+    url = str(attachment.get("url") or "")
+    if attachment.get("expired"):
+        line.append(" expired", style="dim")
+    elif url.startswith(("https://", "http://")):
+        line.append(f" {clean(url)}", style="underline")
+    if attachment.get("note"):
+        line.append(f" ({clean(attachment['note'])})", style="dim")
     return line
 
 
 def room_line(index: int, room: dict[str, Any], current: bool = False) -> Text:
-    """A row of ``/rooms``: number, activity dot, follow-up flag, kind, name, handle."""
+    """A row of ``/rooms``: number, activity dot, follow-up flag, kind, name,
+    handle, who sent the latest message, and whether you can post there."""
     line = Text()
     line.append(f"{index:>3} ", style="dim")
     line.append("● " if room.get("has_new_activity") else "  ", style="yellow")
@@ -119,6 +149,12 @@ def room_line(index: int, room: dict[str, Any], current: bool = False) -> Text:
     line.append(f"{clean(room.get('kind')):<9}", style="dim")
     line.append(clean(room.get("name")), style="bold reverse" if current else "bold")
     line.append(f"  @{clean(room.get('handle'))}", style="dim")
+    if room.get("sent_latest_message"):
+        line.append("  · you", style="dim")
+    elif room.get("last_sender_name"):
+        line.append(f"  · {clean(room['last_sender_name'])}", style="dim")
+    if room.get("can_post") is False:
+        line.append("  (read-only)", style="dim")
     return line
 
 
@@ -137,11 +173,11 @@ class ChatSession:
         self.history = history
         self.room_list: list[dict[str, Any]] = []
         self.room: dict[str, Any] | None = None
-        self.cursor: int | None = None  # resume reading with after=cursor
         self.previous: int | None = None  # read older history with before=previous
         self.seen: int | None = None  # highest offset shown in this room
         self.marked: int | None = None  # last offset the server accepted as seen
         self.shown_ids: set[str] = set()
+        self.feed_cursor: str | None = None  # resume the cross-room feed with since=
         self._retry: asyncio.Task[None] | None = None
         # Bumped whenever the open room changes: a read that was in flight
         # across a switch belongs to the room before it and is discarded.
@@ -197,7 +233,7 @@ class ChatSession:
 
         self._generation += 1  # and so is one that started while this was loading
         self.room = {key: value for key, value in view.items() if key != "messages"}
-        self.cursor, self.previous = page.get("next"), page.get("previous")
+        self.previous = page.get("previous")
         self.seen, self.marked, self.shown_ids = None, view.get("last_active_offset"), set()
         self._header()
         last_seen = self.marked
@@ -218,8 +254,9 @@ class ChatSession:
         details = f"{clean(room.get('kind'))} · @{clean(room.get('handle'))} · {clean(room.get('role'))}"
         head.append(f"({details})", style="dim")
         self.emit(head)
-        if room.get("status") == "readonly" and room.get("role") in ("member", "readonly"):
-            self.emit(Text("This room is read-only for you.", style="yellow"))
+        listed = next((row for row in self.room_list if row.get("id") == room.get("id")), None)
+        if listed is not None and listed.get("can_post") is False:
+            self.emit(Text("You can't post in this room.", style="yellow"))
 
     def _show(self, message: dict[str, Any]) -> None:
         message_id = str(message.get("id"))
@@ -233,25 +270,38 @@ class ChatSession:
 
     # ---- live --------------------------------------------------------------
 
-    async def poll(self) -> int:
-        """Show messages stored since the last read; return how many were new.
-        Records nothing as seen (that happens on open, switch and quit)."""
-        if self.room is None:
+    async def start_feed(self) -> None:
+        """Take the feed's current position (no backlog). Call it before
+        opening a room: whatever is stored after this reaches :meth:`follow`."""
+        self.feed_cursor = as_dict(await self.rooms.feed()).get("cursor")
+
+    async def follow(self, wait: float = FEED_WAIT_SECONDS) -> int:
+        """Long-poll the account's feed once; show the open room's new messages
+        and refresh the room list when another room has some. Returns how many
+        were shown. Records nothing as seen (that happens on open, switch and
+        quit). An expired or invalid position starts again at the current end."""
+        generation = self._generation
+        try:
+            feed = as_dict(await self.rooms.feed(since=self.feed_cursor, wait=wait))
+        except ValidationError:
+            await self.start_feed()
             return 0
-        shown = 0
-        while True:
-            generation = self._generation
-            page = as_dict(await self.rooms.get(self.room["id"], after=self.cursor, limit=PAGE)).get("messages") or {}
-            if generation != self._generation:
-                return shown  # the room changed while reading: not this room's messages
-            data = page.get("data") or []
-            for message in data:
-                if str(message.get("id")) not in self.shown_ids:
-                    shown += 1
-                self._show(message)
-            self.cursor = _next(page, self.cursor)
-            if len(data) < PAGE:
-                break
+        if generation != self._generation:
+            # The room changed while waiting: reread from the same position,
+            # so none of the new room's messages are dropped.
+            return 0
+        self.feed_cursor = feed.get("cursor", self.feed_cursor)
+        current = str((self.room or {}).get("id"))
+        shown, elsewhere = 0, False
+        for message in feed.get("messages") or []:
+            if str(message.get("room_id")) != current:
+                elsewhere = True
+                continue
+            if str(message.get("id")) not in self.shown_ids:
+                shown += 1
+            self._show(message)
+        if elsewhere:
+            await self.refresh_rooms()
         return shown
 
     async def older(self) -> int:
@@ -341,10 +391,11 @@ class ChatSession:
 
     async def next_with_activity(self) -> bool:
         """Open the next room with unseen activity (a helpdesk queue); False if none."""
-        await self.refresh_rooms()
+        waiting = as_dict(await self.rooms.list(new_activity=True)).get("data") or []
         current = self.room and self.room["id"]
-        for room in self.room_list:
-            if room.get("has_new_activity") and room.get("id") != current:
+        for room in (as_dict(row) for row in waiting):
+            if room.get("id") != current:
+                await self.refresh_rooms()  # keep /rooms numbering and the toolbar current
                 await self.open(str(room["id"]))
                 return True
         return False

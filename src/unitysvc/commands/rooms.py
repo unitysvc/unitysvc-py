@@ -3,7 +3,7 @@
 Mirrors :class:`unitysvc.arooms.AsyncRooms`. ``ROOM`` is a room id or one of
 the account's handles (``me``, ``helpdesk``, or a room's own handle):
 
-- ``usvc rooms list [--kind K] [--enrollment ID] [--service ID]``
+- ``usvc rooms list [--kind K] [--enrollment ID] [--service ID] [--name PREFIX] [--new]``
 - ``usvc rooms show ROOM [--after N] [--limit N]``   — the room and its messages
 - ``usvc rooms post ROOM TEXT [--title T] [--id KEY]``
 - ``usvc rooms members ROOM``
@@ -69,15 +69,22 @@ def list_rooms(
     kind: str | None = typer.Option(None, "--kind", help="Only rooms of this kind (chat, me, helpdesk)."),
     enrollment: str | None = typer.Option(None, "--enrollment", help="Only rooms of this enrollment."),
     service: str | None = typer.Option(None, "--service", help="Only rooms of this service (not its enrollments')."),
+    name: str | None = typer.Option(None, "--name", help="Only rooms whose name starts with this (any case)."),
+    new: bool = typer.Option(False, "--new", help="Only rooms with activity you haven't seen."),
     output_format: str = typer.Option("table", "--format", "-f", help="Output format: table | json."),
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),
 ) -> None:
     """List the rooms the account can reach, most recently active first."""
+    narrow: dict[str, Any] = {}
+    if name is not None:
+        narrow["q"] = name
+    if new:
+        narrow["new_activity"] = True
 
     async def _impl() -> list[dict[str, Any]]:
         async with async_client(api_key, base_url) as client:
-            listed = await client.rooms.list(kind=kind, enrollment=enrollment, service=service)
+            listed = await client.rooms.list(kind=kind, enrollment=enrollment, service=service, **narrow)
             return [model_to_dict(room) for room in listed.data]
 
     rooms = run_async(_impl(), error_prefix="Failed to list rooms")
@@ -339,7 +346,6 @@ def chat(
     enrollment: str | None = typer.Option(None, "--enrollment", help="Open this enrollment's room."),
     service: str | None = typer.Option(None, "--service", help="Open this service's room."),
     join_code: str | None = typer.Option(None, "--join", help="Redeem an invitation code, then open its room."),
-    interval: float = typer.Option(3.0, "--interval", help="Seconds between checks for new messages."),
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),
 ) -> None:
@@ -349,9 +355,7 @@ def chat(
     api:rooms read and write. Type /help inside the chat for commands.
     """
     filters = {key: value for key, value in (("enrollment", enrollment), ("service", service)) if value}
-    run_chat_command(
-        lambda: async_client(api_key, base_url), room, filters=filters, join_code=join_code, interval=interval
-    )
+    run_chat_command(lambda: async_client(api_key, base_url), room, filters=filters, join_code=join_code)
 
 
 def run_chat_command(open_client: Any, room: str | None, **options: Any) -> None:

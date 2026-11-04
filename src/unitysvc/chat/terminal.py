@@ -1,8 +1,8 @@
 """The interactive terminal around :class:`ChatSession` (prompt_toolkit line mode).
 
 Messages scroll above a single input line, so the terminal's own scrollback,
-search and copy keep working. A background task polls the open room and,
-less often, the room list for activity elsewhere.
+search and copy keep working. A background task long-polls the account's
+feed (every room over one request) and, now and then, refreshes the room list.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from rich.console import Console
 from rich.text import Text
 
 from ..exceptions import UnitysvcSDKError
-from .session import ChatError, ChatSession, RoomsClient, as_dict, clean
+from .session import FEED_WAIT_SECONDS, ChatError, ChatSession, RoomsClient, as_dict, clean
 
 HELP = """\
 Type a message and press Enter to post it to the open room (Esc then Enter adds a new line).
@@ -72,21 +72,23 @@ async def _command(session: ChatSession, line: str) -> bool:
     return True
 
 
-# A poll that fails for any of these is retried at the next interval: a
+# A feed request that fails for any of these is retried after a pause: a
 # timeout or a dropped connection must not stop the room from updating.
 TRANSIENT = (UnitysvcSDKError, httpx.TransportError, OSError)
+RETRY_SECONDS = 3.0
 
 
-async def _watch(session: ChatSession, interval: float, rooms_interval: float) -> None:
-    """Poll the open room, and less often the room list, until cancelled."""
-    elapsed = 0.0
+async def _watch(session: ChatSession, wait: float, rooms_interval: float) -> None:
+    """Follow the feed, and now and then refresh the room list, until cancelled."""
+    loop = asyncio.get_running_loop()
+    refreshed = loop.time()
     while True:
-        await asyncio.sleep(interval)
-        elapsed += interval
-        with contextlib.suppress(*TRANSIENT):
-            await session.poll()
-        if elapsed >= rooms_interval:
-            elapsed = 0.0
+        try:
+            await session.follow(wait)
+        except TRANSIENT:
+            await asyncio.sleep(RETRY_SECONDS)
+        if loop.time() - refreshed >= rooms_interval:
+            refreshed = loop.time()
             with contextlib.suppress(*TRANSIENT):
                 await session.refresh_rooms()
 
@@ -97,8 +99,8 @@ async def run_chat(
     *,
     filters: dict[str, Any] | None = None,
     join_code: str | None = None,
-    interval: float = 3.0,
-    rooms_interval: float = 30.0,
+    wait: float = FEED_WAIT_SECONDS,
+    rooms_interval: float = 60.0,
     console: Console | None = None,
 ) -> None:
     """Open ``target`` (or the most recently active room) and chat until /quit."""
@@ -120,6 +122,7 @@ async def run_chat(
         target = str(listed[0]["id"])
     if filters:
         await session.refresh_rooms()  # switching sees every room, not just the filtered ones
+    await session.start_feed()  # before opening: nothing stored after the open is missed
     await session.open(target)
     console.print(Text("Type /help for commands.", style="dim"))
 
@@ -146,7 +149,7 @@ async def run_chat(
         erase_when_done=True,
     )
     with patch_stdout(raw=True):
-        poller = asyncio.create_task(_watch(session, interval, rooms_interval))
+        poller = asyncio.create_task(_watch(session, wait, rooms_interval))
         try:
             while True:
                 try:
