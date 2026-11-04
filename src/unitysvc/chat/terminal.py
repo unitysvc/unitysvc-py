@@ -20,6 +20,9 @@ from .session import FEED_WAIT_SECONDS, ChatError, ChatSession, RoomsClient, as_
 
 HELP = """\
 Type a message and press Enter to post it to the open room (Esc then Enter adds a new line).
+  /attach PATH       attach a file to your next message (Ctrl-V attaches a copied image or file)
+  /drop              remove the attached files
+  /save N [DIR]      download attachment N (as numbered) into DIR, default the current one
   /rooms             list rooms (● new activity, ⚑ follow-up)
   /open ROOM         switch room: number from /rooms, @handle, id or name prefix
   /next  (Ctrl-N)    open the next room with new activity
@@ -51,6 +54,17 @@ async def _command(session: ChatSession, line: str) -> bool:
     elif name == "next":
         if not await session.next_with_activity():
             session.emit(Text("No other room has new activity", style="dim"))
+    elif name == "attach":
+        if not arg:
+            raise ChatError("Usage: /attach PATH")
+        session.attach_path(arg)
+    elif name == "drop":
+        session.drop()
+    elif name == "save":
+        number, _, directory = arg.partition(" ")
+        if not number.isdigit():
+            raise ChatError("Usage: /save N [DIR]")
+        await session.save(int(number), directory.strip() or ".")
     elif name in ("older", "more"):
         await session.older()
     elif name == "refresh":
@@ -93,6 +107,29 @@ async def _watch(session: ChatSession, wait: float, rooms_interval: float) -> No
                 await session.refresh_rooms()
 
 
+def paste_into(session: ChatSession) -> None:
+    """Ctrl-V: attach the clipboard's image, or the files copied in a file
+    manager, to the next message. Text is pasted with the terminal's own paste."""
+    from .. import attachments
+    from . import clipboard
+
+    try:
+        content = clipboard.read()
+    except clipboard.ClipboardUnavailable as exc:
+        session.emit(Text(str(exc), style="yellow"))
+        return
+    try:
+        if content is None:
+            session.emit(Text("No image or file in the clipboard (paste text with your terminal's paste)", style="dim"))
+        elif isinstance(content, list):
+            for path in content:
+                session.attach_path(path)
+        else:
+            session.attach(attachments.from_bytes(content, "pasted-image.png"))
+    except (ChatError, ValueError) as exc:
+        session.emit(Text(str(exc), style="yellow"))
+
+
 async def run_chat(
     rooms: RoomsClient,
     target: str | None = None,
@@ -131,6 +168,10 @@ async def run_chat(
     @bindings.add("c-n")
     def _(event: Any) -> None:
         event.app.exit(result="/next")
+
+    @bindings.add("c-v")
+    def _(event: Any) -> None:
+        paste_into(session)
 
     @bindings.add("escape", "enter")
     def _(event: Any) -> None:

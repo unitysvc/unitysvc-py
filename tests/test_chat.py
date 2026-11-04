@@ -48,6 +48,8 @@ class FakeRooms:
         self.log: list[dict[str, Any]] = []  # what the feed has seen stored, in order
         self.feed_hold: asyncio.Event | None = None  # a feed request waits for it
         self.can_post: dict[str, bool] = {"a": True, "b": True}
+        self.posted_files: list[Any] = []
+        self.refuse_files = False
 
     def deliver(self, room_id: str, message: dict[str, Any]) -> None:
         """A message stored in a room: history and the feed both see it."""
@@ -106,6 +108,9 @@ class FakeRooms:
 
     async def post(self, target: str, *, body: str, fallback: bool = True, **message: Any) -> dict[str, Any]:
         self.calls.append(("post", target, body, message["client_message_id"], fallback))
+        self.posted_files.append(message.get("attachments"))
+        if self.refuse_files and message.get("attachments"):
+            raise ValidationError("This file type isn't accepted", status_code=422)
         if self.fail_posts:
             self.fail_posts -= 1
             raise httpx.ConnectError("dropped")
@@ -465,3 +470,138 @@ async def test_the_header_says_when_you_cannot_post() -> None:
     await session.refresh_rooms()
     await session.open("a")
     assert "You can't post in this room." in out
+
+
+@pytest.mark.asyncio
+async def test_attached_files_go_with_the_next_post_then_clear(tmp_path: Any) -> None:
+    (tmp_path / "shot.png").write_bytes(b"\x89PNG")
+    rooms = FakeRooms({"a": [], "b": []}, {"a": None, "b": None})
+    session, out = _session(rooms)
+    await session.open("a")
+    session.attach_path(str(tmp_path / "shot.png"))
+    assert any("[attached] shot.png" in line for line in out)
+
+    await session.send("")  # files alone are a message
+    [files] = rooms.posted_files
+    assert [f["filename"] for f in files] == ["shot.png"]
+    assert session.pending == []
+    assert any("you  " in line and "[attachment] shot.png" in line for line in out)
+
+    await session.send("")  # nothing left: nothing posted
+    assert len(rooms.posted_files) == 1
+
+
+@pytest.mark.asyncio
+async def test_a_refused_file_stays_attached_until_dropped(tmp_path: Any) -> None:
+    (tmp_path / "x.exe").write_bytes(b"MZ")
+    rooms = FakeRooms({"a": [], "b": []}, {"a": None, "b": None})
+    rooms.refuse_files = True
+    session, out = _session(rooms)
+    await session.open("a")
+    session.attach_path(str(tmp_path / "x.exe"))
+    with pytest.raises(ChatError, match="isn't accepted.*/drop"):
+        await session.send("here")
+    assert len(session.pending) == 1
+    session.drop()
+    assert session.pending == [] and "Removed 1 attached file(s)" in out
+
+
+@pytest.mark.asyncio
+async def test_attaching_past_the_limits_is_refused_before_upload(monkeypatch: pytest.MonkeyPatch) -> None:
+    from unitysvc import attachments
+
+    monkeypatch.setattr(attachments, "MAX_MESSAGE_BYTES", 5)
+    rooms = FakeRooms({"a": [], "b": []}, {"a": None, "b": None})
+    session, _ = _session(rooms)
+    session.attach(attachments.from_bytes(b"1234", "a"))
+    with pytest.raises(ChatError, match="total"):
+        session.attach(attachments.from_bytes(b"1234", "b"))
+    assert [entry["filename"] for entry in session.pending] == ["a"]
+
+
+@pytest.mark.asyncio
+async def test_save_numbers_attachments_and_refreshes_an_expired_link(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Any
+) -> None:
+    from unitysvc import attachments
+
+    file = {"filename": "shot.png", "mime_type": "image/png", "size": 3, "url": "https://s3.example/old"}
+    message = {**_msg(5, "see this"), "attachments": [file]}
+    rooms = FakeRooms({"a": [message], "b": []}, {"a": 5, "b": None})
+    session, out = _session(rooms)
+    await session.open("a")
+    assert any("[attachment 1] shot.png" in line for line in out)
+
+    fetched: list[str] = []
+
+    async def fake_save(entry: dict[str, Any], directory: Any) -> Any:
+        fetched.append(entry["url"])
+        if entry["url"].endswith("/old"):  # signed for minutes: this one lapsed
+            raise httpx.HTTPStatusError(
+                "expired", request=httpx.Request("GET", entry["url"]), response=httpx.Response(403)
+            )
+        return tmp_path / "shot.png"
+
+    monkeypatch.setattr(attachments, "save", fake_save)
+    rooms.messages["a"][0] = {**message, "attachments": [{**file, "url": "https://s3.example/new"}]}
+    await session.save(1, str(tmp_path))
+    assert fetched == ["https://s3.example/old", "https://s3.example/new"]
+    assert ("get", "a", 4, None) in rooms.calls  # reread just that message
+    assert out[-1] == f"Saved {tmp_path / 'shot.png'}"
+    with pytest.raises(ChatError, match="No attachment 2"):
+        await session.save(2)
+
+
+def test_ctrl_v_attaches_an_image_or_copied_files(monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> None:
+    from unitysvc.chat import clipboard
+    from unitysvc.chat.terminal import paste_into
+
+    rooms = FakeRooms({"a": [], "b": []}, {"a": None, "b": None})
+    session, out = _session(rooms)
+
+    monkeypatch.setattr(clipboard, "read", lambda: clipboard.PNG_SIGNATURE + b"img")
+    paste_into(session)
+    assert [entry["filename"] for entry in session.pending] == ["pasted-image.png"]
+
+    (tmp_path / "report.pdf").write_bytes(b"%PDF")
+    monkeypatch.setattr(clipboard, "read", lambda: [str(tmp_path / "report.pdf")])
+    paste_into(session)
+    assert [entry["filename"] for entry in session.pending] == ["pasted-image.png", "report.pdf"]
+
+    monkeypatch.setattr(clipboard, "read", lambda: None)
+    paste_into(session)
+    assert "No image or file in the clipboard" in out[-1]
+
+    def unavailable() -> None:
+        raise clipboard.ClipboardUnavailable("Pasting images needs wl-paste (Wayland) or xclip (X11)")
+
+    monkeypatch.setattr(clipboard, "read", unavailable)
+    paste_into(session)
+    assert "xclip" in out[-1] and len(session.pending) == 2
+
+
+@pytest.mark.asyncio
+async def test_attached_files_stay_with_their_room() -> None:
+    """The review's probe: a file attached in A must not go out with a message
+    in B (/open or /next); it waits in A and is announced when A is back."""
+    from unitysvc import attachments
+
+    rooms = FakeRooms({"a": [], "b": [_msg(4, "help!")]}, {"a": None, "b": 2})
+    session, out = _session(rooms)
+    await session.refresh_rooms()
+    await session.open("a")
+    session.attach(attachments.from_bytes(b"private", "contract.pdf"))
+
+    await session.open("b")
+    assert any("1 attached file(s) stay with Acme support" in line for line in out)
+    assert session.pending == []
+    await session.send("on it")
+    assert rooms.posted_files[-1] is None  # B's post carries no files
+
+    rooms.activity = {"a"}
+    out.clear()
+    assert await session.next_with_activity() is True  # back to A through /next
+    assert any("Attached here from before: contract.pdf" in line for line in out)
+    await session.send("as promised")
+    assert [f["filename"] for f in rooms.posted_files[-1]] == ["contract.pdf"]
+    assert session.pending == []

@@ -117,6 +117,10 @@ changed.
     options:
       show_root_heading: true
 
+::: unitysvc.attachments
+    options:
+      show_root_heading: true
+
 ### Secrets
 
 ::: unitysvc.secrets.Secrets

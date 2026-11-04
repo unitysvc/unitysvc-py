@@ -141,6 +141,36 @@ usvc rooms post helpdesk "My invoice shows two charges."
 usvc rooms post book-club "Chapter 3 tonight" --title Reminder --id reminder-2026-10-31
 ```
 
+### Files and pictures
+
+Attach files by path (stored for 7 days, then shown as expired) or `http(s)`
+URLs (kept as links). A message can be files alone; a URL alone needs some
+text, since it is kept as a link and would leave nothing to show:
+
+```python
+client.rooms.post("helpdesk", body="The export fails like this:", attachments=["~/Desktop/error.png"])
+client.rooms.post("helpdesk", attachments=["report.pdf", "https://example.com/spec.pdf"])
+
+from unitysvc import attachments
+client.rooms.post("helpdesk", attachments=[attachments.from_bytes(png_bytes, "chart.png")])
+```
+
+```bash
+usvc rooms post helpdesk "The export fails like this:" --attach ~/Desktop/error.png
+usvc rooms post helpdesk --attach report.pdf --attach notes.txt
+```
+
+A message carries at most 10 files, 10 MiB each and 25 MiB in all; these are
+checked before anything is uploaded. The platform checks each file's type from
+its bytes and accepts images, PDF, text, CSV and office documents (an HTML or
+SVG file is kept as plain text, never displayed as a page).
+
+A received attachment has `filename`, `mime_type`, `size`, a short-lived signed
+`url`, and `expired` once the 7 days are over. `attachments.save(attachment,
+directory)` downloads one under a cleaned name, without sending your
+credentials, never overwriting a file and never opening it: another member
+chose its name and bytes.
+
 A post to a room you can't post in goes to your `me` room instead (the
 response's `routed` says `me`). Pass `fallback=False` to get an error instead,
 as an interactive client should.
@@ -153,7 +183,10 @@ the same message twice.
 
 `usvc rooms chat` opens a room and keeps it live: new messages appear as they
 are stored, and what you type is posted to that room. It needs prompt_toolkit
-(`pip install "unitysvc-py[chat]"`) and a key with `api:rooms` read and write.
+(`pip install "unitysvc-py[chat]"`, which also brings Pillow for pasting images)
+and a key with `api:rooms` read and write. On Linux, pasting images uses
+`wl-paste` or `xclip`; over SSH, use `/attach` instead (the clipboard is the
+remote machine's).
 
 ```bash
 usvc rooms chat                       # the most recently active room
@@ -172,6 +205,9 @@ Inside the chat, Enter posts (Esc then Enter adds a line) and these commands wor
 | `/members` | who is in the room |
 | `/follow [off]` | flag the room to revisit, or clear the flag |
 | `/older`, `/more` | show the messages before the earliest one shown |
+| `/attach PATH`, Ctrl-V | attach a file to your next message; Ctrl-V attaches a copied image, or files copied in Finder or Explorer |
+| `/drop` | remove the attached files |
+| `/save N [DIR]` | download attachment N (they are numbered as shown) into DIR, the current directory by default |
 | `/refresh`, `/help`, `/quit` (Ctrl-D) | |
 
 New messages arrive through one long-polled feed for all your rooms
