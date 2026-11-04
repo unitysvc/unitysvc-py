@@ -76,6 +76,14 @@ def prepare(items: Iterable[Any]) -> list[dict[str, Any]]:
     return [{key: value for key, value in entry.items() if key != "size"} for entry in entries]
 
 
+def check_content(body: str, entries: Iterable[dict[str, Any]]) -> None:
+    """A message needs text or a file. A URL is kept as a link, not a file,
+    so with blank text it alone would leave nothing to show (the platform
+    refuses it too)."""
+    if not body.strip() and not any(entry.get("base64") is not None for entry in entries):
+        raise ValueError("A message needs text or a file (a URL alone needs text)")
+
+
 def safe_filename(name: Any, default: str = "attachment") -> str:
     """A received file's name, made safe to write: no directories, control
     characters or leading dots."""

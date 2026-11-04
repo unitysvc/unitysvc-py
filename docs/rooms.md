@@ -144,7 +144,8 @@ usvc rooms post book-club "Chapter 3 tonight" --title Reminder --id reminder-202
 ### Files and pictures
 
 Attach files by path (stored for 7 days, then shown as expired) or `http(s)`
-URLs (kept as links). A message can be files alone:
+URLs (kept as links). A message can be files alone; a URL alone needs some
+text, since it is kept as a link and would leave nothing to show:
 
 ```python
 client.rooms.post("helpdesk", body="The export fails like this:", attachments=["~/Desktop/error.png"])

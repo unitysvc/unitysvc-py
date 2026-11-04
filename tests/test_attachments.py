@@ -126,3 +126,13 @@ async def test_a_failed_save_removes_only_its_own_file(tmp_path: Path) -> None:
         await attachments.save({"filename": "shot.png", "url": "https://s3.example/gone"}, tmp_path)
     [survivor] = list(tmp_path.iterdir())
     assert survivor.read_bytes() == b"someone else's"
+
+
+def test_a_message_needs_text_or_a_file() -> None:
+    """A URL is kept as a link: with blank text it alone is refused, as the
+    platform refuses it (unitysvc#2893)."""
+    url = attachments.from_url("https://example.com/spec.pdf")
+    with pytest.raises(ValueError, match="URL alone needs text"):
+        attachments.check_content("  ", [url])
+    attachments.check_content("the spec", [url])
+    attachments.check_content("", [attachments.from_bytes(b"hi", "a.txt"), url])
