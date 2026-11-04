@@ -29,6 +29,7 @@ from typing import Any, Protocol
 import httpx
 from rich.text import Text
 
+from .. import attachments
 from ..exceptions import NotFoundError, UnitysvcSDKError, ValidationError
 from ..exceptions import PermissionError as ForbiddenError
 
@@ -97,8 +98,9 @@ def _clock(sent_at: Any, today: datetime | None = None) -> str:
     return sent.strftime("%H:%M" if sent.date() == today.date() else "%b %d %H:%M")
 
 
-def format_message(message: dict[str, Any], my_member_id: Any = None) -> Text:
-    """One message as a literal line: ``[10:02] alice  body``."""
+def format_message(message: dict[str, Any], my_member_id: Any = None, first_number: int | None = None) -> Text:
+    """One message as a literal line: ``[10:02] alice  body``. With
+    ``first_number``, its attachments are numbered from it (for ``/save N``)."""
     mine = my_member_id is not None and str(message.get("sender_member_id")) == str(my_member_id)
     line = Text()
     line.append(f"[{_clock(message.get('sent_at'))}] ", style="dim")
@@ -110,18 +112,20 @@ def format_message(message: dict[str, Any], my_member_id: Any = None) -> Text:
         line.append(clean(message["title"]), style="bold")
         line.append("\n")
     line.append(clean(message.get("body")))
-    for attachment in message.get("attachments") or []:
-        line.append("\n")
-        line.append(attachment_line(attachment))
+    for index, attachment in enumerate(message.get("attachments") or []):
+        if line.plain and not line.plain.endswith("  "):
+            line.append("\n")
+        line.append(attachment_line(attachment, None if first_number is None else first_number + index))
     return line
 
 
-def attachment_line(attachment: dict[str, Any]) -> Text:
-    """``[attachment] name (type, size) link``. Another member chose every
+def attachment_line(attachment: dict[str, Any], number: int | None = None) -> Text:
+    """``[attachment N] name (type, size) link``. Another member chose every
     field, so only an ``http(s)`` URL is shown as a link: never ``data:`` or
     inline base64 bytes."""
     line = Text("  ")
-    line.append(f"[attachment] {clean(attachment.get('filename')) or 'file'}", style="magenta")
+    label = "attachment" if number is None else f"attachment {number}"
+    line.append(f"[{label}] {clean(attachment.get('filename')) or 'file'}", style="magenta")
     details = [clean(attachment.get("mime_type") or attachment.get("mimeType"))]
     size = attachment.get("size")
     if isinstance(size, int) and size > 0:
@@ -177,6 +181,10 @@ class ChatSession:
         self.seen: int | None = None  # highest offset shown in this room
         self.marked: int | None = None  # last offset the server accepted as seen
         self.shown_ids: set[str] = set()
+        # Files waiting to go with the next post, and attachments shown so far
+        # (``/save N`` numbers them from 1 across the session).
+        self.pending: list[dict[str, Any]] = []
+        self.received: list[dict[str, Any]] = []
         self.feed_cursor: str | None = None  # resume the cross-room feed with since=
         self._retry: asyncio.Task[None] | None = None
         # Bumped whenever the open room changes: a read that was in flight
@@ -275,7 +283,13 @@ class ChatSession:
         if message_id in self.shown_ids:
             return
         self.shown_ids.add(message_id)
-        self.emit(format_message(message, (self.room or {}).get("member_id")))
+        first = len(self.received) + 1
+        room_id = (self.room or {}).get("id")
+        self.received.extend(
+            {**as_dict(attachment), "_room": room_id, "_message": message_id, "_offset": offset, "_index": index}
+            for index, attachment in enumerate(message.get("attachments") or [])
+        )
+        self.emit(format_message(message, (self.room or {}).get("member_id"), first))
 
     # ---- live --------------------------------------------------------------
 
@@ -365,13 +379,73 @@ class ChatSession:
             return
         self.marked = marked.get("last_active_offset")
 
+    # ---- files --------------------------------------------------------------
+
+    def attach(self, entry: dict[str, Any]) -> None:
+        """Queue a file (from :mod:`unitysvc.attachments`) for the next post."""
+        try:
+            attachments.prepare([*self.pending, entry])
+        except ValueError as exc:
+            raise ChatError(str(exc)) from exc
+        self.pending.append(entry)
+        size = entry.get("size") or 0
+        self.emit(
+            Text(
+                f"  [attached] {clean(entry.get('filename'))} ({size // 1024 or 1} KB): "
+                "Enter sends it (with any text), /drop removes it",
+                style="magenta",
+            )
+        )
+
+    def attach_path(self, path: str) -> None:
+        try:
+            entry = attachments.from_path(path)
+        except ValueError as exc:
+            raise ChatError(str(exc)) from exc
+        self.attach(entry)
+
+    def drop(self) -> None:
+        count, self.pending = len(self.pending), []
+        self.emit(Text(f"Removed {count} attached file(s)" if count else "Nothing attached", style="dim"))
+
+    async def save(self, number: int, directory: str = ".") -> None:
+        """Download attachment ``number`` (as shown) into ``directory``; never opens it."""
+        if not 1 <= number <= len(self.received):
+            raise ChatError(f"No attachment {number}; attachments are numbered as shown")
+        entry = self.received[number - 1]
+        try:
+            try:
+                path = await attachments.save(entry, directory)
+            except httpx.HTTPStatusError:
+                # Links are signed for minutes: reread the message for a fresh one.
+                entry = await self._fresh(entry)
+                path = await attachments.save(entry, directory)
+        except (ValueError, httpx.HTTPError) as exc:
+            raise ChatError(f"Couldn't save it: {clean(exc)}") from exc
+        self.received[number - 1] = entry
+        self.emit(Text(f"Saved {path}", style="dim"))
+
+    async def _fresh(self, entry: dict[str, Any]) -> dict[str, Any]:
+        """``entry`` re-signed: its message read again from history."""
+        offset = entry.get("_offset")
+        if entry.get("_room") is None or not isinstance(offset, int):
+            raise ValueError("This attachment is no longer available")
+        view = as_dict(await self.rooms.get(str(entry["_room"]), after=offset - 1, limit=1))
+        for message in (view.get("messages") or {}).get("data") or []:
+            if str(message.get("id")) == entry.get("_message"):
+                files = message.get("attachments") or []
+                if entry["_index"] < len(files):
+                    return {**entry, **as_dict(files[entry["_index"]])}
+        raise ValueError("This attachment is no longer available")
+
     async def send(self, text: str) -> None:
-        """Post to the open room, never anywhere else."""
+        """Post to the open room, never anywhere else, with any attached files."""
         if self.room is None:
             raise ChatError("No room is open; use /rooms and /open")
         body = text.strip()
-        if not body:
+        if not body and not self.pending:
             return
+        files = list(self.pending)
         client_message_id = str(uuid.uuid4())
         # ``fallback=False``: a room that can't take the post is an error, never
         # a post to the account's ``me`` room.
@@ -379,7 +453,13 @@ class ChatSession:
 
         async def post() -> dict[str, Any]:
             return as_dict(
-                await self.rooms.post(room_id, body=body, client_message_id=client_message_id, fallback=False)
+                await self.rooms.post(
+                    room_id,
+                    body=body,
+                    attachments=files or None,
+                    client_message_id=client_message_id,
+                    fallback=False,
+                )
             )
 
         try:
@@ -391,11 +471,19 @@ class ChatSession:
             raise ChatError("Not posted: you can't post in this room") from exc
         except NotFoundError as exc:
             raise ChatError("Not posted: this room is no longer reachable") from exc
+        except ValidationError as exc:  # e.g. a file type the platform doesn't accept
+            raise ChatError(f"Not posted: {clean(exc)} (/drop removes the attached files)") from exc
+        self.pending = []
         message_id = str(posted.get("message_id"))
         self.shown_ids.add(message_id)
         now = datetime.now().astimezone().isoformat()
         member_id = self.room.get("member_id")
-        self.emit(format_message({"sender_member_id": member_id, "sent_at": now, "body": body}, member_id))
+        sent = [{"filename": file.get("filename"), "size": file.get("size")} for file in files]
+        self.emit(
+            format_message(
+                {"sender_member_id": member_id, "sent_at": now, "body": body, "attachments": sent}, member_id
+            )
+        )
 
     async def next_with_activity(self) -> bool:
         """Open the next room with unseen activity (a helpdesk queue); False if none."""

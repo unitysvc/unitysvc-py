@@ -32,6 +32,8 @@ requires-python = ">= 3.11"
 # Interactive `usvc rooms chat`; kept optional so the SDK stays light.
 chat = [
   "prompt_toolkit>=3.0",
+  # Ctrl-V image paste on macOS and Windows (ImageGrab).
+  "pillow>=10",
 ]
 test = [
   "prompt_toolkit>=3.0",

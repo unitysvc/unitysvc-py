@@ -195,3 +195,16 @@ def test_list_narrows_by_name_and_new_activity(rooms: _Rooms) -> None:
         "list",
         {"kind": None, "enrollment": None, "service": None, "q": "Book", "new_activity": True},
     )
+
+
+def test_post_attaches_files_and_needs_text_or_a_file(rooms: _Rooms, tmp_path: Any) -> None:
+    (tmp_path / "log.txt").write_text("boom")
+    result = runner.invoke(app, ["post", "helpdesk", "--attach", str(tmp_path / "log.txt")])
+    assert result.exit_code == 0, result.output
+    _, target, sent = rooms.calls[-1]
+    assert target == "helpdesk" and sent["body"] == ""
+    assert sent["attachments"] == [{"base64": "Ym9vbQ==", "filename": "log.txt"}]
+
+    assert runner.invoke(app, ["post", "helpdesk"]).exit_code == 1
+    missing = runner.invoke(app, ["post", "helpdesk", "--attach", str(tmp_path / "nope.png")])
+    assert missing.exit_code == 1 and "not a file" in missing.output
