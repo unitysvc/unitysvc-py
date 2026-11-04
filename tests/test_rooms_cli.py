@@ -207,4 +207,5 @@ def test_post_attaches_files_and_needs_text_or_a_file(rooms: _Rooms, tmp_path: A
 
     assert runner.invoke(app, ["post", "helpdesk"]).exit_code == 1
     missing = runner.invoke(app, ["post", "helpdesk", "--attach", str(tmp_path / "nope.png")])
-    assert missing.exit_code == 1 and "not a file" in missing.output
+    # Rich wraps at the terminal width, so compare without line breaks.
+    assert missing.exit_code == 1 and "not a file" in " ".join(missing.output.split())
