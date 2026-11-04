@@ -183,7 +183,9 @@ class ChatSession:
         self.shown_ids: set[str] = set()
         # Files waiting to go with the next post, and attachments shown so far
         # (``/save N`` numbers them from 1 across the session).
-        self.pending: list[dict[str, Any]] = []
+        # Each room keeps its own queued files, so a file attached in one
+        # conversation never goes out with a message in another.
+        self._drafts: dict[str | None, list[dict[str, Any]]] = {}
         self.received: list[dict[str, Any]] = []
         self.feed_cursor: str | None = None  # resume the cross-room feed with since=
         self._retry: asyncio.Task[None] | None = None
@@ -237,6 +239,7 @@ class ChatSession:
     async def open(self, query: str) -> None:
         """Leave the current room (recording what was seen) and show the end of another."""
         target = self.resolve(query)
+        leaving, left_files = self.room, len(self.pending)
         await self.mark_seen()
         self._settled.clear()
         try:
@@ -260,6 +263,22 @@ class ChatSession:
                 self._show(message)
             if not messages:
                 self.emit(Text("No messages yet", style="dim"))
+            if left_files and leaving is not None and str(leaving["id"]) != str(self.room["id"]):
+                self.emit(
+                    Text(
+                        f"{left_files} attached file(s) stay with {clean(leaving.get('name'))}; "
+                        "they go with your next message there",
+                        style="dim",
+                    )
+                )
+            if self.pending:
+                names = ", ".join(clean(file.get("filename")) for file in self.pending)
+                self.emit(
+                    Text(
+                        f"Attached here from before: {names}. Enter sends them, /drop removes them",
+                        style="magenta",
+                    )
+                )
         finally:
             self._settled.set()
         await self.mark_seen(retry=True)
@@ -381,13 +400,28 @@ class ChatSession:
 
     # ---- files --------------------------------------------------------------
 
+    @property
+    def pending(self) -> list[dict[str, Any]]:
+        """Files queued for the next message in the open room."""
+        return self._drafts.get(self._draft_key(), [])
+
+    @pending.setter
+    def pending(self, files: list[dict[str, Any]]) -> None:
+        if files:
+            self._drafts[self._draft_key()] = files
+        else:
+            self._drafts.pop(self._draft_key(), None)
+
+    def _draft_key(self) -> str | None:
+        return None if self.room is None else str(self.room["id"])
+
     def attach(self, entry: dict[str, Any]) -> None:
         """Queue a file (from :mod:`unitysvc.attachments`) for the next post."""
         try:
             attachments.prepare([*self.pending, entry])
         except ValueError as exc:
             raise ChatError(str(exc)) from exc
-        self.pending.append(entry)
+        self.pending = [*self.pending, entry]
         size = entry.get("size") or 0
         self.emit(
             Text(
@@ -445,7 +479,7 @@ class ChatSession:
         body = text.strip()
         if not body and not self.pending:
             return
-        files = list(self.pending)
+        draft, files = self._draft_key(), list(self.pending)
         client_message_id = str(uuid.uuid4())
         # ``fallback=False``: a room that can't take the post is an error, never
         # a post to the account's ``me`` room.
@@ -473,7 +507,7 @@ class ChatSession:
             raise ChatError("Not posted: this room is no longer reachable") from exc
         except ValidationError as exc:  # e.g. a file type the platform doesn't accept
             raise ChatError(f"Not posted: {clean(exc)} (/drop removes the attached files)") from exc
-        self.pending = []
+        self._drafts.pop(draft, None)  # the queue these files came from
         message_id = str(posted.get("message_id"))
         self.shown_ids.add(message_id)
         now = datetime.now().astimezone().isoformat()

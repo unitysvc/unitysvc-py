@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import base64
 from pathlib import Path
+from typing import Any
 
 import httpx
 import pytest
@@ -75,3 +76,53 @@ async def test_save_refuses_expired_files_and_leaves_no_partial_download(
     with pytest.raises(ValueError, match="larger"):
         await attachments.save({"filename": "big", "url": "https://s3.example/big"}, tmp_path)
     assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_concurrent_saves_of_one_name_both_keep_their_files(tmp_path: Path) -> None:
+    """The review's probe: two saves of the same name at once, interleaved
+    (each response arrives after the other request has started). The name is
+    reserved before the download, so each gets its own file and neither's
+    cleanup can remove the other's."""
+    import asyncio
+
+    def slow(content: bytes) -> Any:
+        async def respond(request: httpx.Request) -> httpx.Response:
+            await asyncio.sleep(0.01)  # both requests are now in flight
+            return httpx.Response(200, content=content)
+
+        return respond
+
+    respx.get("https://s3.example/a").mock(side_effect=slow(b"A"))
+    respx.get("https://s3.example/b").mock(side_effect=slow(b"B"))
+    first, second = await asyncio.gather(
+        attachments.save({"filename": "shot.png", "url": "https://s3.example/a"}, tmp_path),
+        attachments.save({"filename": "shot.png", "url": "https://s3.example/b"}, tmp_path),
+    )
+    assert first != second
+    assert sorted(p.read_bytes() for p in tmp_path.iterdir()) == [b"A", b"B"]
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_a_failed_save_removes_only_its_own_file(tmp_path: Path) -> None:
+    """A file another writer creates while this request is in flight survives
+    this call failing: only the file this call created is removed."""
+
+    def other_writer_then_refuse(request: httpx.Request) -> httpx.Response:
+        # Another save takes the first free name, as save() itself does.
+        for name in ("shot.png", "shot (1).png"):
+            try:
+                with (tmp_path / name).open("xb") as out:
+                    out.write(b"someone else's")
+                break
+            except FileExistsError:
+                continue
+        return httpx.Response(403)
+
+    respx.get("https://s3.example/gone").mock(side_effect=other_writer_then_refuse)
+    with pytest.raises(httpx.HTTPStatusError):
+        await attachments.save({"filename": "shot.png", "url": "https://s3.example/gone"}, tmp_path)
+    [survivor] = list(tmp_path.iterdir())
+    assert survivor.read_bytes() == b"someone else's"

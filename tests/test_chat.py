@@ -578,3 +578,30 @@ def test_ctrl_v_attaches_an_image_or_copied_files(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr(clipboard, "read", unavailable)
     paste_into(session)
     assert "xclip" in out[-1] and len(session.pending) == 2
+
+
+@pytest.mark.asyncio
+async def test_attached_files_stay_with_their_room() -> None:
+    """The review's probe: a file attached in A must not go out with a message
+    in B (/open or /next); it waits in A and is announced when A is back."""
+    from unitysvc import attachments
+
+    rooms = FakeRooms({"a": [], "b": [_msg(4, "help!")]}, {"a": None, "b": 2})
+    session, out = _session(rooms)
+    await session.refresh_rooms()
+    await session.open("a")
+    session.attach(attachments.from_bytes(b"private", "contract.pdf"))
+
+    await session.open("b")
+    assert any("1 attached file(s) stay with Acme support" in line for line in out)
+    assert session.pending == []
+    await session.send("on it")
+    assert rooms.posted_files[-1] is None  # B's post carries no files
+
+    rooms.activity = {"a"}
+    out.clear()
+    assert await session.next_with_activity() is True  # back to A through /next
+    assert any("Attached here from before: contract.pdf" in line for line in out)
+    await session.send("as promised")
+    assert [f["filename"] for f in rooms.posted_files[-1]] == ["contract.pdf"]
+    assert session.pending == []

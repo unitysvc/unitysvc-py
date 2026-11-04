@@ -19,7 +19,7 @@ import base64
 import re
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import Any, BinaryIO
 
 import httpx
 
@@ -92,30 +92,36 @@ async def save(attachment: dict[str, Any], directory: str | Path = ".") -> Path:
         raise ValueError("This attachment is no longer available")
     folder = Path(directory).expanduser()
     folder.mkdir(parents=True, exist_ok=True)
-    target = _unused(folder / safe_filename(attachment.get("filename")))
+    # Reserve the name before downloading: the exclusive create claims it, so
+    # a concurrent save picks the next number, and on failure only the file
+    # this call created is removed.
+    target, out = _reserve(folder / safe_filename(attachment.get("filename")))
     try:
-        async with httpx.AsyncClient(timeout=60, follow_redirects=False) as http:
-            async with http.stream("GET", url) as response:
-                response.raise_for_status()
-                written = 0
-                with target.open("xb") as out:
+        with out:
+            async with httpx.AsyncClient(timeout=60, follow_redirects=False) as http:
+                async with http.stream("GET", url) as response:
+                    response.raise_for_status()
+                    written = 0
                     async for chunk in response.aiter_bytes():
                         written += len(chunk)
                         if written > MAX_FILE_BYTES:
                             raise ValueError("The download is larger than an attachment can be")
                         out.write(chunk)
     except BaseException:
-        target.unlink(missing_ok=True)  # never leave a partial file behind
+        target.unlink(missing_ok=True)  # ours, created above: no partial file left
         raise
     return target
 
 
-def _unused(path: Path) -> Path:
+def _reserve(path: Path) -> tuple[Path, BinaryIO]:
+    """Create ``path``, or the first free ``name (N).ext``, exclusively."""
     candidate, n = path, 1
-    while candidate.exists():
-        candidate = path.with_name(f"{path.stem} ({n}){path.suffix}")
-        n += 1
-    return candidate
+    while True:
+        try:
+            return candidate, candidate.open("xb")
+        except FileExistsError:
+            candidate = path.with_name(f"{path.stem} ({n}){path.suffix}")
+            n += 1
 
 
 def _mib(size: int) -> str:
