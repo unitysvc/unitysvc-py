@@ -182,6 +182,11 @@ class ChatSession:
         # Bumped whenever the open room changes: a read that was in flight
         # across a switch belongs to the room before it and is discarded.
         self._generation = 0
+        # Clear while a room is opening: a feed answer waits for the switch to
+        # finish and is then applied to the room now open, so none of the new
+        # room's messages are dropped while its history loads.
+        self._settled = asyncio.Event()
+        self._settled.set()
 
     # ---- rooms -------------------------------------------------------------
 
@@ -225,26 +230,30 @@ class ChatSession:
         """Leave the current room (recording what was seen) and show the end of another."""
         target = self.resolve(query)
         await self.mark_seen()
-        self._generation += 1  # a poll of the room being left is now stale
-        # One request: the latest messages, whose ``next`` resumes with newer ones.
-        view = as_dict(await self.rooms.get(target, tail=min(self.history, PAGE)))
-        page = view.get("messages") or {}
-        messages = page.get("data") or []
+        self._settled.clear()
+        try:
+            self._generation += 1  # an /older read of the room being left is now stale
+            # One request: the latest messages, whose ``next`` resumes with newer ones.
+            view = as_dict(await self.rooms.get(target, tail=min(self.history, PAGE)))
+            page = view.get("messages") or {}
+            messages = page.get("data") or []
 
-        self._generation += 1  # and so is one that started while this was loading
-        self.room = {key: value for key, value in view.items() if key != "messages"}
-        self.previous = page.get("previous")
-        self.seen, self.marked, self.shown_ids = None, view.get("last_active_offset"), set()
-        self._header()
-        last_seen = self.marked
-        divided = last_seen is None
-        for message in messages:
-            if not divided and message.get("offset", -1) > last_seen:
-                self.emit(Text("─ new since your last visit ─", style="yellow"))
-                divided = True
-            self._show(message)
-        if not messages:
-            self.emit(Text("No messages yet", style="dim"))
+            self._generation += 1  # and so is one that started while this was loading
+            self.room = {key: value for key, value in view.items() if key != "messages"}
+            self.previous = page.get("previous")
+            self.seen, self.marked, self.shown_ids = None, view.get("last_active_offset"), set()
+            self._header()
+            last_seen = self.marked
+            divided = last_seen is None
+            for message in messages:
+                if not divided and message.get("offset", -1) > last_seen:
+                    self.emit(Text("─ new since your last visit ─", style="yellow"))
+                    divided = True
+                self._show(message)
+            if not messages:
+                self.emit(Text("No messages yet", style="dim"))
+        finally:
+            self._settled.set()
         await self.mark_seen(retry=True)
 
     def _header(self) -> None:
@@ -280,16 +289,15 @@ class ChatSession:
         and refresh the room list when another room has some. Returns how many
         were shown. Records nothing as seen (that happens on open, switch and
         quit). An expired or invalid position starts again at the current end."""
-        generation = self._generation
         try:
             feed = as_dict(await self.rooms.feed(since=self.feed_cursor, wait=wait))
         except ValidationError:
             await self.start_feed()
             return 0
-        if generation != self._generation:
-            # The room changed while waiting: reread from the same position,
-            # so none of the new room's messages are dropped.
-            return 0
+        # If a room is opening, apply this answer to it once it is open (its
+        # history shown, so messages in both are shown once), never to the
+        # room being left: the cursor moves past these messages either way.
+        await self._settled.wait()
         self.feed_cursor = feed.get("cursor", self.feed_cursor)
         current = str((self.room or {}).get("id"))
         shown, elsewhere = 0, False

@@ -277,9 +277,9 @@ async def test_terminal_loop_posts_switches_and_quits() -> None:
 
 
 @pytest.mark.asyncio
-async def test_a_feed_answer_across_a_switch_is_reread_not_lost() -> None:
-    """A feed request answered after /open B is discarded without moving the
-    cursor, so the next request returns B's new message again and it shows."""
+async def test_a_feed_answer_that_spans_a_switch_shows_the_new_rooms_message_once() -> None:
+    """A feed request started in A and answered after /open B is applied to B:
+    a B message that came with B's history and again in the feed shows once."""
     rooms = FakeRooms({"a": [_msg(1, "a1")], "b": [_msg(10, "b10")]}, {"a": 1, "b": None})
     session, out = _session(rooms)
     await session.start_feed()
@@ -288,16 +288,49 @@ async def test_a_feed_answer_across_a_switch_is_reread_not_lost() -> None:
     waiting = asyncio.create_task(session.follow(wait=5))
     await asyncio.sleep(0)  # the request is now waiting
 
-    rooms.deliver("b", _msg(11, "b11"))  # stored after B's history was read below
+    rooms.deliver("b", _msg(11, "b11"))  # stored before B's history is read
     await session.open("b")
-    cursor = session.feed_cursor
     rooms.feed_hold.set()
-    assert await waiting == 0
-    assert session.feed_cursor == cursor  # not advanced past the discarded answer
-
-    rooms.feed_hold = None
-    assert await session.follow(wait=0) == 0  # b11 came with B's history: shown once
+    assert await waiting == 0  # b11 already came with B's history
     assert sum("b11" in line for line in out) == 1
+    rooms.feed_hold = None
+    assert await session.follow(wait=0) == 0  # the cursor moved past it
+
+
+@pytest.mark.asyncio
+async def test_a_feed_answer_during_the_history_load_is_kept_for_the_new_room() -> None:
+    """The review's probe: B's history is slow; a B message stored after B's
+    history snapshot arrives in a feed answer that completes while B is still
+    loading. It must show in B once B is open, not be dropped."""
+    rooms = FakeRooms({"a": [_msg(1, "a1")], "b": [_msg(10, "b10")]}, {"a": 1, "b": None})
+    session, out = _session(rooms)
+    await session.start_feed()
+    await session.open("a")
+
+    history_read = asyncio.Event()
+    release_history = asyncio.Event()
+    original_get = rooms.get
+
+    async def slow_get(target: str, **kwargs: Any) -> dict[str, Any]:
+        view = await original_get(target, **kwargs)  # B's snapshot: b10 only
+        if target == "b":
+            history_read.set()
+            await release_history.wait()
+        return view
+
+    rooms.get = slow_get  # type: ignore[method-assign]
+    opening = asyncio.create_task(session.open("b"))
+    await history_read.wait()
+    rooms.deliver("b", _msg(11, "b11"))  # stored after the snapshot
+    following = asyncio.create_task(session.follow(wait=0))  # answered while B loads
+    await asyncio.sleep(0.01)
+    assert not following.done()  # held until the switch finishes
+
+    release_history.set()
+    await opening
+    assert await following == 1
+    assert sum("b11" in line for line in out) == 1
+    assert await session.follow(wait=0) == 0
 
 
 @pytest.mark.asyncio
