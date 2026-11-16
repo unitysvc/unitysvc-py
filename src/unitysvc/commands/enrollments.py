@@ -7,7 +7,8 @@ Mirrors :class:`unitysvc.enrollments.Enrollments` operations
 - ``usvc enrollments show ENROLLMENT_ID``    — show one enrollment
 - ``usvc enrollments cancel ENROLLMENT_ID``  — cancel (reversible — preserves params)
 
-To create a new enrollment, use ``usvc services enroll SERVICE_ID``.
+To create a new enrollment, use ``usvc services enroll SERVICE_ID``. A container service's
+instance is run with ``usvc instances ...``.
 """
 
 from __future__ import annotations
@@ -108,9 +109,7 @@ def show_enrollment(
 
     async def _impl() -> dict[str, Any]:
         async with async_client(api_key, base_url) as client:
-            enr = await client.enrollments.get(
-                enrollment_id, include_service_details=not no_service_details
-            )
+            enr = await client.enrollments.get(enrollment_id, include_service_details=not no_service_details)
             return model_to_dict(enr._raw)
 
     enrollment = run_async(_impl(), error_prefix="Failed to show enrollment")
@@ -137,6 +136,4 @@ def cancel_enrollment(
             return model_to_dict(await client.enrollments.cancel(enrollment_id))
 
     result = run_async(_impl(), error_prefix="Failed to cancel enrollment")
-    console.print(
-        f"[green]✓[/green] {result.get('message', f'cancelled enrollment {enrollment_id}')}"
-    )
+    console.print(f"[green]✓[/green] {result.get('message', f'cancelled enrollment {enrollment_id}')}")

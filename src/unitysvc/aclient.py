@@ -40,6 +40,8 @@ from .client import (
 from .exceptions import AuthenticationError
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from ._generated.models.resolve_response import ResolveResponse
     from .aaliases import AsyncAliases
     from .abroadcasts import AsyncBroadcasts
@@ -47,6 +49,7 @@ if TYPE_CHECKING:
     from .aenrollments import AsyncEnrollments
     from .afiles import AsyncFiles
     from .agroups import AsyncGroups
+    from .ainstances import AsyncInstance
     from .apreferences import AsyncPreferences
     from .arecurrent_requests import AsyncRecurrentRequests
     from .arequest_logs import AsyncRequestLogs
@@ -203,6 +206,12 @@ class AsyncClient:
 
             self._enrollments = AsyncEnrollments(self._client, parent=self)
         return self._enrollments
+
+    def instance(self, enrollment_id: str | UUID) -> AsyncInstance:
+        """The container instance of an enrollment (see :class:`AsyncInstance`); a cheap handle."""
+        from .ainstances import AsyncInstance
+
+        return AsyncInstance(self._client, enrollment_id, parent=self)
 
     @property
     def files(self) -> AsyncFiles:

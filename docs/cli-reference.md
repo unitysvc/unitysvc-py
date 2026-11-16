@@ -34,6 +34,7 @@ $ usvc [OPTIONS] COMMAND [ARGS]...
 * `rooms`: Rooms: list, read, post, settings,...
 * `services`: Per-service operations (show, usage,...
 * `enrollments`: Enrollment management (list, show, cancel).
+* `instances`: A container service&#x27;s instance: start,...
 * `preferences`: Preferences of the account your key acts...
 
 ## `usvc env`
@@ -1204,6 +1205,144 @@ $ usvc enrollments cancel [OPTIONS] {enrollment_id}
 **Options**:
 
 * `-y, --yes`: Skip confirmation prompt.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+## `usvc instances`
+
+A container service&#x27;s instance: start, stop, status, check, key.
+
+**Usage**:
+
+```console
+$ usvc instances [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `status`: Show the instance&#x27;s request, status and pods.
+* `start`: Start the instance (idempotent).
+* `stop`: Stop the instance (idempotent).
+* `check`: Start the instance, wait for it to come...
+* `key`: Print the instance&#x27;s application key (a...
+
+### `usvc instances status`
+
+Show the instance&#x27;s request, status and pods. Exit 0 when succeeded, else 1 (75 on a platform fault);
+a request still in progress also exits 1.
+
+**Usage**:
+
+```console
+$ usvc instances status [OPTIONS] {enrollment_id}
+```
+
+**Arguments**:
+
+* `enrollment_id`: Enrollment UUID.  [required]
+
+**Options**:
+
+* `--wait <int range>`: Hold up to N seconds for the request to finish.  [default: 0; 0&lt;=x&lt;=60]
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc instances start`
+
+Start the instance (idempotent). With --wait, exit like ``instance check``.
+
+**Usage**:
+
+```console
+$ usvc instances start [OPTIONS] {enrollment_id}
+```
+
+**Arguments**:
+
+* `enrollment_id`: Enrollment UUID.  [required]
+
+**Options**:
+
+* `--wait`: Wait until the instance is up or has failed.
+* `--timeout <float>`: Seconds to wait with --wait.  [default: 300.0]
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc instances stop`
+
+Stop the instance (idempotent).
+
+**Usage**:
+
+```console
+$ usvc instances stop [OPTIONS] {enrollment_id}
+```
+
+**Arguments**:
+
+* `enrollment_id`: Enrollment UUID.  [required]
+
+**Options**:
+
+* `--wait`: Wait until the instance is stopped.
+* `--timeout <float>`: Seconds to wait with --wait.  [default: 120.0]
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc instances check`
+
+Start the instance, wait for it to come up, then stop it (unless --keep).
+
+Exit codes: 0 up; 1 failed on the service&#x27;s side (bad manifest, image, never ready);
+75 failed on the platform&#x27;s side (API 5xx or unreachable, no agent picked it up in time,
+another request replaced this one; retry later).
+
+**Usage**:
+
+```console
+$ usvc instances check [OPTIONS] {enrollment_id}
+```
+
+**Arguments**:
+
+* `enrollment_id`: Enrollment UUID.  [required]
+
+**Options**:
+
+* `--timeout <float>`: Seconds to wait for the instance to come up.  [default: 300.0]
+* `--keep`: Leave the instance running afterwards.
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc instances key`
+
+Print the instance&#x27;s application key (a secret) on its own line.
+
+**Usage**:
+
+```console
+$ usvc instances key [OPTIONS] {enrollment_id}
+```
+
+**Arguments**:
+
+* `enrollment_id`: Enrollment UUID.  [required]
+
+**Options**:
+
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.

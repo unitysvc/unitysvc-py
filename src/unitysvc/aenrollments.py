@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     )
     from ._generated.models.room_list import RoomList
     from .aclient import AsyncClient
+    from .ainstances import AsyncInstance
 
 
 class AsyncEnrollment:
@@ -51,6 +52,11 @@ class AsyncEnrollment:
 
     async def refresh(self, *, include_service_details: bool = True) -> AsyncEnrollment:
         return await self._parent.enrollments.get(self._raw.id, include_service_details=include_service_details)
+
+    @property
+    def instance(self) -> AsyncInstance:
+        """This enrollment's container instance handle (``client.instance(id)``)."""
+        return self._parent.instance(self._raw.id)
 
 
 @dataclass

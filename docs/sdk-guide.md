@@ -311,6 +311,35 @@ print(enr.code)                                 # e.g. "CEFF"  →  /e/CEFF
 If you only have an enrollment id (e.g. from a webhook),
 `client.enrollments.get(id)` returns the same `Enrollment` wrapper.
 
+### Container instances
+
+A container service has no gateway route: its instance is run through the
+customer API. Start it, wait for the request to finish, read the pods and
+entry URLs, and stop it. (Today this is available to the ops customer; other
+accounts get `403 not_enabled` until it is turned on.)
+
+```python
+instance = client.instance(enr.id)              # a cheap handle; also enr.instance
+instance.start()                                # 202: status "pending"
+state = instance.wait(timeout=300)              # returns on "succeeded" or "failed"
+if state.status == "failed":
+    print(state.reason, state.fault)            # fault: "platform" or "seller"
+else:
+    key = instance.credentials().key
+    print([e.url for e in state.entries])
+instance.stop()
+```
+
+`instance.get(wait=30)` reads the state, holding up to `wait` seconds for the
+current request to finish. The key is never part of the state. A management
+API key needs the `api:*` scope. `AsyncClient.instance(id)` has the same
+methods as coroutines.
+
+On the command line, `usvc instances check ENROLLMENT_ID` does start, wait and
+stop in one go and exits `0` (up), `1` (the service failed) or `75` (the
+platform failed; retry later). `start`, `stop`, `status` and `key` are the
+single steps.
+
 Secret-shaped parameter keys (`api_key`, `password`, `token`, ...)
 are returned masked (`***masked***`) on reads; only the server has
 the raw values.

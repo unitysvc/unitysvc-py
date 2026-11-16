@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     )
     from ._generated.models.room_list import RoomList
     from .client import Client
+    from .instances import Instance
 
 
 class Enrollment:
@@ -101,6 +102,11 @@ class Enrollment:
                 enr = enr.refresh()
         """
         return self._parent.enrollments.get(self._raw.id, include_service_details=include_service_details)
+
+    @property
+    def instance(self) -> Instance:
+        """This enrollment's container instance handle (``client.instance(id)``)."""
+        return self._parent.instance(self._raw.id)
 
 
 @dataclass
