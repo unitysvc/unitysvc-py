@@ -11,6 +11,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.access_interface_plan import AccessInterfacePlan
+    from ..models.access_plan_exports_type_0 import AccessPlanExportsType0
     from ..models.access_plan_links_type_0 import AccessPlanLinksType0
     from ..models.channel_plan import ChannelPlan
     from ..models.parameter_requirement import ParameterRequirement
@@ -24,6 +25,11 @@ T = TypeVar("T", bound="AccessPlan")
 class AccessPlan:
     """The generic, context-free access plan served to every consumer (#1638)."""
 
+    exports: AccessPlanExportsType0 | None | Unset = UNSET
+    """ What the service exports for API-key grants, or null when it declares nothing (every route is then reachable
+    with invoke, which service:* grants). When declared, permissions maps each permission to the relative METHOD
+    /path routes it covers (core's implicit invoke on every route when the offering lists only options), options is
+    the JSON Schema of the grant's options and options_ui_schema its display hints. """
     enrollment_mode: AccessPlanEnrollmentMode | Unset = "disallowed"
     parameters: list[ParameterRequirement] | Unset = UNSET
     interfaces: list[AccessInterfacePlan] | Unset = UNSET
@@ -37,7 +43,16 @@ class AccessPlan:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.access_plan_exports_type_0 import AccessPlanExportsType0
         from ..models.access_plan_links_type_0 import AccessPlanLinksType0
+
+        exports: dict[str, Any] | None | Unset
+        if isinstance(self.exports, Unset):
+            exports = UNSET
+        elif isinstance(self.exports, AccessPlanExportsType0):
+            exports = self.exports.to_dict()
+        else:
+            exports = self.exports
 
         enrollment_mode: str | Unset = UNSET
         if not isinstance(self.enrollment_mode, Unset):
@@ -97,6 +112,8 @@ class AccessPlan:
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
+        if exports is not UNSET:
+            field_dict["exports"] = exports
         if enrollment_mode is not UNSET:
             field_dict["enrollment_mode"] = enrollment_mode
         if parameters is not UNSET:
@@ -123,12 +140,31 @@ class AccessPlan:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.access_interface_plan import AccessInterfacePlan
+        from ..models.access_plan_exports_type_0 import AccessPlanExportsType0
         from ..models.access_plan_links_type_0 import AccessPlanLinksType0
         from ..models.channel_plan import ChannelPlan
         from ..models.parameter_requirement import ParameterRequirement
         from ..models.routing_endpoint_plan import RoutingEndpointPlan
 
         d = dict(src_dict)
+
+        def _parse_exports(data: object) -> AccessPlanExportsType0 | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                exports_type_0 = AccessPlanExportsType0.from_dict(data)
+
+                return exports_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(AccessPlanExportsType0 | None | Unset, data)
+
+        exports = _parse_exports(d.pop("exports", UNSET))
+
         _enrollment_mode = d.pop("enrollment_mode", UNSET)
         enrollment_mode: AccessPlanEnrollmentMode | Unset
         if isinstance(_enrollment_mode, Unset):
@@ -213,6 +249,7 @@ class AccessPlan:
         has_gateway_interface = d.pop("has_gateway_interface", UNSET)
 
         access_plan = cls(
+            exports=exports,
             enrollment_mode=enrollment_mode,
             parameters=parameters,
             interfaces=interfaces,

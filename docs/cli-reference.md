@@ -1777,7 +1777,7 @@ $ usvc preferences get [OPTIONS] {name}
 
 **Arguments**:
 
-* `name`: Preference name: &#x27;notification&#x27;, &#x27;ai&#x27; or &#x27;request-log&#x27;.  [required]
+* `name`: Preference name: &#x27;notification&#x27;, &#x27;ai&#x27;, &#x27;request-log&#x27;, &#x27;email&#x27;, &#x27;post&#x27; or a &#x27;room-*&#x27; default.  [required]
 
 **Options**:
 
@@ -1791,7 +1791,9 @@ Set (or clear) one named preference. Maps to PUT /v1/preferences/{name}.
 
 ``--value`` is taken as a literal string by default; pass ``--json`` to
 parse it as JSON instead. Omitting ``--value`` clears the preference
-(DELETE /v1/preferences/{name}).
+(DELETE /v1/preferences/{name}). ``--off`` turns a ``room-*`` preference
+off instead (PUT with a null value): no delivery on that channel, rather
+than the platform default.
 
 **Usage**:
 
@@ -1801,12 +1803,13 @@ $ usvc preferences set [OPTIONS] {name}
 
 **Arguments**:
 
-* `name`: Preference name: &#x27;notification&#x27;, &#x27;ai&#x27; or &#x27;request-log&#x27;.  [required]
+* `name`: Preference name: &#x27;notification&#x27;, &#x27;ai&#x27;, &#x27;request-log&#x27;, &#x27;email&#x27;, &#x27;post&#x27; or a &#x27;room-*&#x27; default.  [required]
 
 **Options**:
 
 * `--value <str>`: New value. Omit to clear the preference.
 * `--json`: Parse --value as JSON instead of a literal string (e.g. &#x27;{&quot;service&quot;: &quot;labs/llm-balanced&quot;}&#x27;).
+* `--off`: Turn a room-* preference off (store null) instead of clearing it back to the default.
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
@@ -1823,7 +1826,7 @@ $ usvc preferences clear [OPTIONS] {name}
 
 **Arguments**:
 
-* `name`: Preference name: &#x27;notification&#x27;, &#x27;ai&#x27; or &#x27;request-log&#x27;.  [required]
+* `name`: Preference name: &#x27;notification&#x27;, &#x27;ai&#x27;, &#x27;request-log&#x27;, &#x27;email&#x27;, &#x27;post&#x27; or a &#x27;room-*&#x27; default.  [required]
 
 **Options**:
 

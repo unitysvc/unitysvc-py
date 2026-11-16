@@ -52,6 +52,16 @@ class AsyncPreferences:
 
         return unwrap(await preferences_clear_named_preference.asyncio_detailed(name, client=self._client))
 
+    async def turn_off(self, name: str) -> PreferencePublic:
+        """See :meth:`unitysvc.preferences.Preferences.turn_off`."""
+        from ._generated.api.preferences import preferences_set_named_preference
+
+        return unwrap(
+            await preferences_set_named_preference.asyncio_detailed(
+                name, client=self._client, body=preference_update(None)
+            )
+        )
+
     async def set_notification(self, service: str | None) -> PreferencePublic:
         """See :meth:`unitysvc.preferences.Preferences.set_notification`."""
         return await self.set("notification", service)

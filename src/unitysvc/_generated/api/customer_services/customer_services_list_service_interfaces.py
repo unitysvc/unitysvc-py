@@ -86,13 +86,16 @@ def sync_detailed(
     them as a single ``service.interfaces()`` list:
 
     1. **Shared** interfaces (``enrollment_id IS NULL``) — usable by
-       any customer, matches the public playground behaviour.
+       any customer, matches the public playground behaviour. On the API
+       gateway they serve the service's open channels only.
     2. **Enrollment-bound** interfaces whose ``enrollment_id`` belongs
        to an enrollment the caller can use: one of the customer's
        shared enrollments (``owner_id IS NULL``) or the caller's own
-       personal one. BYOK / BYOE services create these on enrollment
-       activation so the gateway can substitute customer-supplied
-       secrets at runtime.
+       personal one. For an API-gateway service that is the enrollment's
+       ``/e/<code>`` address, one per active enrollment: the canonical URL
+       never resolves an enrollment (#2857), so this is how the SDK's
+       ``dispatch()`` reaches it. Older per-enrollment rows linked through
+       the bridge are returned too, with their ``enrollment_id``.
 
     Interfaces bound to *other* customers' enrollments, and to
     teammates' personal enrollments, are filtered out — existence is
@@ -141,13 +144,16 @@ def sync(
     them as a single ``service.interfaces()`` list:
 
     1. **Shared** interfaces (``enrollment_id IS NULL``) — usable by
-       any customer, matches the public playground behaviour.
+       any customer, matches the public playground behaviour. On the API
+       gateway they serve the service's open channels only.
     2. **Enrollment-bound** interfaces whose ``enrollment_id`` belongs
        to an enrollment the caller can use: one of the customer's
        shared enrollments (``owner_id IS NULL``) or the caller's own
-       personal one. BYOK / BYOE services create these on enrollment
-       activation so the gateway can substitute customer-supplied
-       secrets at runtime.
+       personal one. For an API-gateway service that is the enrollment's
+       ``/e/<code>`` address, one per active enrollment: the canonical URL
+       never resolves an enrollment (#2857), so this is how the SDK's
+       ``dispatch()`` reaches it. Older per-enrollment rows linked through
+       the bridge are returned too, with their ``enrollment_id``.
 
     Interfaces bound to *other* customers' enrollments, and to
     teammates' personal enrollments, are filtered out — existence is
@@ -191,13 +197,16 @@ async def asyncio_detailed(
     them as a single ``service.interfaces()`` list:
 
     1. **Shared** interfaces (``enrollment_id IS NULL``) — usable by
-       any customer, matches the public playground behaviour.
+       any customer, matches the public playground behaviour. On the API
+       gateway they serve the service's open channels only.
     2. **Enrollment-bound** interfaces whose ``enrollment_id`` belongs
        to an enrollment the caller can use: one of the customer's
        shared enrollments (``owner_id IS NULL``) or the caller's own
-       personal one. BYOK / BYOE services create these on enrollment
-       activation so the gateway can substitute customer-supplied
-       secrets at runtime.
+       personal one. For an API-gateway service that is the enrollment's
+       ``/e/<code>`` address, one per active enrollment: the canonical URL
+       never resolves an enrollment (#2857), so this is how the SDK's
+       ``dispatch()`` reaches it. Older per-enrollment rows linked through
+       the bridge are returned too, with their ``enrollment_id``.
 
     Interfaces bound to *other* customers' enrollments, and to
     teammates' personal enrollments, are filtered out — existence is
@@ -244,13 +253,16 @@ async def asyncio(
     them as a single ``service.interfaces()`` list:
 
     1. **Shared** interfaces (``enrollment_id IS NULL``) — usable by
-       any customer, matches the public playground behaviour.
+       any customer, matches the public playground behaviour. On the API
+       gateway they serve the service's open channels only.
     2. **Enrollment-bound** interfaces whose ``enrollment_id`` belongs
        to an enrollment the caller can use: one of the customer's
        shared enrollments (``owner_id IS NULL``) or the caller's own
-       personal one. BYOK / BYOE services create these on enrollment
-       activation so the gateway can substitute customer-supplied
-       secrets at runtime.
+       personal one. For an API-gateway service that is the enrollment's
+       ``/e/<code>`` address, one per active enrollment: the canonical URL
+       never resolves an enrollment (#2857), so this is how the SDK's
+       ``dispatch()`` reaches it. Older per-enrollment rows linked through
+       the bridge are returned too, with their ``enrollment_id``.
 
     Interfaces bound to *other* customers' enrollments, and to
     teammates' personal enrollments, are filtered out — existence is

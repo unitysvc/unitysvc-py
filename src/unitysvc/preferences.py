@@ -19,8 +19,16 @@ Today's preferences:
   ``labs/llm-balanced``) or ``a/<name>`` alias. Services that require
   enrollment are refused.
 * ``request-log`` — request-logging mode, ``truncated`` or ``complete``.
+* ``email`` / ``post`` — the services behind the account's Me email and
+  post channels.
+* ``room-notify-as-host``, ``room-email-as-host``, ``room-notify-as-guest``,
+  ``room-email-as-guest`` — the room defaults copied into a room's ``main``
+  connector when the account creates or joins it: a service (the channel's
+  own name, ``notify`` / ``email``, is the account's Me service) or off.
 
 :meth:`Preferences.set` / :meth:`Preferences.clear` work for any name;
+:meth:`Preferences.turn_off` turns a ``room-*`` preference off (``null``)
+rather than clearing it back to the platform default.
 :meth:`Preferences.set_notification`, :meth:`Preferences.set_ai` and
 :meth:`Preferences.set_request_log_mode` are typed conveniences.
 """
@@ -39,8 +47,9 @@ if TYPE_CHECKING:
 RequestLogMode = Literal["truncated", "complete"]
 
 
-def preference_update(value: str | dict[str, Any]) -> PreferenceUpdate:
-    """Build the ``PUT`` body: a string (service or mode) or a ``{"service": ...}`` dict."""
+def preference_update(value: str | dict[str, Any] | None) -> PreferenceUpdate:
+    """Build the ``PUT`` body: a string (service or mode), a ``{"service": ...}``
+    dict, or ``None`` (off, accepted for ``room-*`` preferences only)."""
     from ._generated.models.preference_update import PreferenceUpdate
     from ._generated.models.preference_value import PreferenceValue
 
@@ -73,7 +82,8 @@ class Preferences:
         ``value`` is a service (``"labs/llm-balanced"`` or
         ``{"service": "labs/llm-balanced"}``) for ``notification`` / ``ai``,
         or a mode string for ``request-log``. The backend validates it on
-        write.
+        write. To turn a ``room-*`` preference off rather than clear it,
+        use :meth:`turn_off`.
         """
         if value is None:
             return self.clear(name)
@@ -88,6 +98,20 @@ class Preferences:
         from ._generated.api.preferences import preferences_clear_named_preference
 
         return unwrap(preferences_clear_named_preference.sync_detailed(name, client=self._client))
+
+    def turn_off(self, name: str) -> PreferencePublic:
+        """Turn a ``room-*`` preference off: ``PUT`` a ``null`` value.
+
+        Unlike :meth:`clear`, which removes the account's own setting so
+        the platform default applies again, this stores "off" (no delivery
+        on that channel). The backend refuses it for preferences that take
+        a value, such as ``ai`` or ``request-log``.
+        """
+        from ._generated.api.preferences import preferences_set_named_preference
+
+        return unwrap(
+            preferences_set_named_preference.sync_detailed(name, client=self._client, body=preference_update(None))
+        )
 
     def set_notification(self, service: str | None) -> PreferencePublic:
         """Where notices are forwarded.

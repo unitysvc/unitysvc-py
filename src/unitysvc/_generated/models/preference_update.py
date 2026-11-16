@@ -16,18 +16,19 @@ T = TypeVar("T", bound="PreferenceUpdate")
 @_attrs_define
 class PreferenceUpdate:
     """``value``: ``{"service": ...}`` (or the service as a string), a mode
-    for ``request-log``, or ``auto`` / ``off`` / a path for a ``room-*``
-    preference. Use ``DELETE`` to clear.
+    for ``request-log``, or for a ``room-*`` preference a service (the
+    channel's own name, ``notify`` / ``email``, is the account's Me service)
+    or null for off. Use ``DELETE`` to clear, back to the default.
 
     """
 
-    value: PreferenceValue | str
+    value: None | PreferenceValue | str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.preference_value import PreferenceValue
 
-        value: dict[str, Any] | str
+        value: dict[str, Any] | None | str
         if isinstance(self.value, PreferenceValue):
             value = self.value.to_dict()
         else:
@@ -49,7 +50,9 @@ class PreferenceUpdate:
 
         d = dict(src_dict)
 
-        def _parse_value(data: object) -> PreferenceValue | str:
+        def _parse_value(data: object) -> None | PreferenceValue | str:
+            if data is None:
+                return data
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
@@ -58,7 +61,7 @@ class PreferenceUpdate:
                 return value_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(PreferenceValue | str, data)
+            return cast(None | PreferenceValue | str, data)
 
         value = _parse_value(d.pop("value"))
 

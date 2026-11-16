@@ -13,11 +13,11 @@ T = TypeVar("T", bound="PreferenceValue")
 
 @_attrs_define
 class PreferenceValue:
-    """A service preference (``notification``, ``ai``, ``email``).
+    """A service preference (``notification``, ``ai``, ``email``, ``post``).
 
     ``service`` is a service path for ``notification``, a service name
     (``labs/llm-balanced``) or ``a/<name>`` for ``ai``, and an SMTP service
-    name or ``e/<code>`` for ``email``.
+    name or ``e/<code>`` for ``email``; for ``post`` it is a converter service name or ``e/<code>``.
     ``gateway`` is the door a notification destination is delivered through,
     resolved on write (read-only).
 

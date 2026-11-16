@@ -52,7 +52,11 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
 
 After an enrollment activates, its `resources` list identifies provisioned
 rooms by `object` (the Python attribute is `object_`), `kind` and `room_id`.
-Read the enrollment again after the
+An enrollment may have several: the customer's own room, the seller's room
+it admits the customer to, or a room the service's customers share. Each
+also carries the room's `name`, your `role` in it, its `scope`
+(`enrollment` for your own room), whether it is `open` (the Python
+attribute is `open_`) and its `url`. Read the enrollment again after the
 initial create acknowledgement to discover these resources:
 
 ```python
@@ -60,6 +64,7 @@ enrollment = client.enrollments.get(enrollment_id)
 if isinstance(enrollment.resources, list):
     for resource in enrollment.resources:
         if resource.object_ == "resource:room":
+            print(resource.name, resource.role, resource.scope)
             room = client.rooms.get(str(resource.room_id))
 ```
 

@@ -2,8 +2,9 @@
 
 - ``usvc preferences list`` — every preference, as the current account sees it.
 - ``usvc preferences get NAME`` — one preference.
-- ``usvc preferences set NAME [--value VALUE] [--json]`` — set (or, with no
-  ``--value``, clear) any preference by name. The generic escape hatch.
+- ``usvc preferences set NAME [--value VALUE] [--json] [--off]`` — set (or,
+  with no ``--value``, clear) any preference by name; ``--off`` turns a
+  ``room-*`` preference off instead. The generic escape hatch.
 - ``usvc preferences clear NAME`` — clear one preference, back to its fallback.
 - ``usvc preferences notification [SERVICE]`` — typed convenience: where
   notices are forwarded. Omit ``SERVICE`` to clear it.
@@ -15,6 +16,11 @@
 
 Preferences belong to the account the key acts for: a personal key changes
 your own, a team key the team's, a seller key the seller's.
+
+Besides the typed ones, the backend knows ``email``, ``post`` and the room
+defaults ``room-notify-as-host``, ``room-email-as-host``,
+``room-notify-as-guest`` and ``room-email-as-guest`` (a service, or off);
+``set`` / ``get`` / ``clear`` reach them by name.
 """
 
 from __future__ import annotations
@@ -34,6 +40,7 @@ app = typer.Typer(
 )
 
 _LOG_MODES = ("truncated", "complete")
+_NAME_HELP = "Preference name: 'notification', 'ai', 'request-log', 'email', 'post' or a 'room-*' default."
 
 
 def _describe(value: Any) -> str:
@@ -79,7 +86,7 @@ def list_preferences(
 
 @app.command("get")
 def get_preference(
-    name: str = typer.Argument(..., help="Preference name: 'notification', 'ai' or 'request-log'."),
+    name: str = typer.Argument(..., help=_NAME_HELP),
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),
 ) -> None:
@@ -89,7 +96,7 @@ def get_preference(
 
 @app.command("set")
 def set_preference(
-    name: str = typer.Argument(..., help="Preference name: 'notification', 'ai' or 'request-log'."),
+    name: str = typer.Argument(..., help=_NAME_HELP),
     value: str | None = typer.Option(
         None,
         "--value",
@@ -100,6 +107,11 @@ def set_preference(
         "--json",
         help='Parse --value as JSON instead of a literal string (e.g. \'{"service": "labs/llm-balanced"}\').',
     ),
+    off: bool = typer.Option(
+        False,
+        "--off",
+        help="Turn a room-* preference off (store null) instead of clearing it back to the default.",
+    ),
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),
 ) -> None:
@@ -107,15 +119,22 @@ def set_preference(
 
     ``--value`` is taken as a literal string by default; pass ``--json`` to
     parse it as JSON instead. Omitting ``--value`` clears the preference
-    (DELETE /v1/preferences/{name}).
+    (DELETE /v1/preferences/{name}). ``--off`` turns a ``room-*`` preference
+    off instead (PUT with a null value): no delivery on that channel, rather
+    than the platform default.
     """
+    if off:
+        if value is not None:
+            raise typer.BadParameter("--off and --value are mutually exclusive")
+        _run(api_key, base_url, lambda p: p.turn_off(name), f"Failed to turn off preference '{name}'")
+        return
     parsed_value: Any = parse_json_option(value, flag="--value") if json_value else value
     _run(api_key, base_url, lambda p: p.set(name, parsed_value), f"Failed to set preference '{name}'")
 
 
 @app.command("clear")
 def clear_preference(
-    name: str = typer.Argument(..., help="Preference name: 'notification', 'ai' or 'request-log'."),
+    name: str = typer.Argument(..., help=_NAME_HELP),
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),
 ) -> None:

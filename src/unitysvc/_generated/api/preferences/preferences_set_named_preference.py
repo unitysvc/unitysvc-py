@@ -83,7 +83,8 @@ def sync_detailed(
 
      Set one preference on the current account. Validated on write: a
     destination or AI must be routable for the account (a team's ``e/``,
-    ``b/`` and ``a/`` targets must be its shared ones).
+    ``b/`` and ``a/`` targets must be its shared ones), and a ``post``
+    converter must be a service that delivers into a room.
 
     Args:
         name (str):
@@ -91,8 +92,9 @@ def sync_detailed(
         x_role_id (None | str | Unset):
         body (PreferenceUpdate): ``value``: ``{"service": ...}`` (or the service as a string), a
             mode
-            for ``request-log``, or ``auto`` / ``off`` / a path for a ``room-*``
-            preference. Use ``DELETE`` to clear.
+            for ``request-log``, or for a ``room-*`` preference a service (the
+            channel's own name, ``notify`` / ``email``, is the account's Me service)
+            or null for off. Use ``DELETE`` to clear, back to the default.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -128,7 +130,8 @@ def sync(
 
      Set one preference on the current account. Validated on write: a
     destination or AI must be routable for the account (a team's ``e/``,
-    ``b/`` and ``a/`` targets must be its shared ones).
+    ``b/`` and ``a/`` targets must be its shared ones), and a ``post``
+    converter must be a service that delivers into a room.
 
     Args:
         name (str):
@@ -136,8 +139,9 @@ def sync(
         x_role_id (None | str | Unset):
         body (PreferenceUpdate): ``value``: ``{"service": ...}`` (or the service as a string), a
             mode
-            for ``request-log``, or ``auto`` / ``off`` / a path for a ``room-*``
-            preference. Use ``DELETE`` to clear.
+            for ``request-log``, or for a ``room-*`` preference a service (the
+            channel's own name, ``notify`` / ``email``, is the account's Me service)
+            or null for off. Use ``DELETE`` to clear, back to the default.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -168,7 +172,8 @@ async def asyncio_detailed(
 
      Set one preference on the current account. Validated on write: a
     destination or AI must be routable for the account (a team's ``e/``,
-    ``b/`` and ``a/`` targets must be its shared ones).
+    ``b/`` and ``a/`` targets must be its shared ones), and a ``post``
+    converter must be a service that delivers into a room.
 
     Args:
         name (str):
@@ -176,8 +181,9 @@ async def asyncio_detailed(
         x_role_id (None | str | Unset):
         body (PreferenceUpdate): ``value``: ``{"service": ...}`` (or the service as a string), a
             mode
-            for ``request-log``, or ``auto`` / ``off`` / a path for a ``room-*``
-            preference. Use ``DELETE`` to clear.
+            for ``request-log``, or for a ``room-*`` preference a service (the
+            channel's own name, ``notify`` / ``email``, is the account's Me service)
+            or null for off. Use ``DELETE`` to clear, back to the default.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -211,7 +217,8 @@ async def asyncio(
 
      Set one preference on the current account. Validated on write: a
     destination or AI must be routable for the account (a team's ``e/``,
-    ``b/`` and ``a/`` targets must be its shared ones).
+    ``b/`` and ``a/`` targets must be its shared ones), and a ``post``
+    converter must be a service that delivers into a room.
 
     Args:
         name (str):
@@ -219,8 +226,9 @@ async def asyncio(
         x_role_id (None | str | Unset):
         body (PreferenceUpdate): ``value``: ``{"service": ...}`` (or the service as a string), a
             mode
-            for ``request-log``, or ``auto`` / ``off`` / a path for a ``room-*``
-            preference. Use ``DELETE`` to clear.
+            for ``request-log``, or for a ``room-*`` preference a service (the
+            channel's own name, ``notify`` / ``email``, is the account's Me service)
+            or null for off. Use ``DELETE`` to clear, back to the default.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

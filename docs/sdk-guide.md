@@ -497,7 +497,11 @@ own `value`, the `effective` value calls and notices use, and the
 `source` of that effective value (`account`, `user` or `default`).
 
 Today's preferences are `notification` (where notices are forwarded),
-`ai` (the AI behind `/ai`) and `request-log` (request-logging mode).
+`ai` (the AI behind `/ai`), `request-log` (request-logging mode), `email`
+and `post` (the services behind the account's Me channels), and the room
+defaults `room-notify-as-host`, `room-email-as-host`,
+`room-notify-as-guest` and `room-email-as-guest` (the connector a room
+starts with when the account creates or joins it; see [Rooms](rooms.md)).
 
 ```python
 # Read
@@ -507,7 +511,12 @@ client.preferences.get("ai")          # one
 # Generic set / clear, for any preference
 client.preferences.set("request-log", "truncated")
 client.preferences.set("ai", {"service": "labs/llm-balanced"})
-client.preferences.clear("request-log")   # same as set(name, None)
+client.preferences.clear("request-log")   # same as set(name, None): back to the default
+
+# Room defaults: a service, or off. Off is not the same as cleared.
+client.preferences.set("room-email-as-guest", "email")   # your Me email service
+client.preferences.turn_off("room-email-as-guest")       # PUT null: no email as a guest
+client.preferences.clear("room-email-as-guest")          # back to the platform default
 
 # Typed conveniences; None clears
 client.preferences.set_notification("labs/discord-relay")  # or "b/<name>" / "e/<CODE>"

@@ -10,6 +10,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.service_detail_exports_type_0 import ServiceDetailExportsType0
     from ..models.service_detail_list_price_type_0 import ServiceDetailListPriceType0
 
 
@@ -39,6 +40,11 @@ class ServiceDetail:
     service_type: None | str | Unset = UNSET
     gateway_type: None | str | Unset = UNSET
     description: None | str | Unset = UNSET
+    exports: None | ServiceDetailExportsType0 | Unset = UNSET
+    """ What the service exports for API-key grants, or null when it declares nothing (every route is then reachable
+    with invoke, which service:* grants). When declared, permissions maps each permission to the relative METHOD
+    /path routes it covers (core's implicit invoke on every route when the offering lists only options), options is
+    the JSON Schema of the grant's options and options_ui_schema its display hints. """
     audience: list[str] | None | Unset = UNSET
     provider_name: None | str | Unset = UNSET
     seller_name: None | str | Unset = UNSET
@@ -50,6 +56,7 @@ class ServiceDetail:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.service_detail_exports_type_0 import ServiceDetailExportsType0
         from ..models.service_detail_list_price_type_0 import ServiceDetailListPriceType0
 
         id = str(self.id)
@@ -79,6 +86,14 @@ class ServiceDetail:
             description = UNSET
         else:
             description = self.description
+
+        exports: dict[str, Any] | None | Unset
+        if isinstance(self.exports, Unset):
+            exports = UNSET
+        elif isinstance(self.exports, ServiceDetailExportsType0):
+            exports = self.exports.to_dict()
+        else:
+            exports = self.exports
 
         audience: list[str] | None | Unset
         if isinstance(self.audience, Unset):
@@ -156,6 +171,8 @@ class ServiceDetail:
             field_dict["gateway_type"] = gateway_type
         if description is not UNSET:
             field_dict["description"] = description
+        if exports is not UNSET:
+            field_dict["exports"] = exports
         if audience is not UNSET:
             field_dict["audience"] = audience
         if provider_name is not UNSET:
@@ -177,6 +194,7 @@ class ServiceDetail:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.service_detail_exports_type_0 import ServiceDetailExportsType0
         from ..models.service_detail_list_price_type_0 import ServiceDetailListPriceType0
 
         d = dict(src_dict)
@@ -219,6 +237,23 @@ class ServiceDetail:
             return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
+
+        def _parse_exports(data: object) -> None | ServiceDetailExportsType0 | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                exports_type_0 = ServiceDetailExportsType0.from_dict(data)
+
+                return exports_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | ServiceDetailExportsType0 | Unset, data)
+
+        exports = _parse_exports(d.pop("exports", UNSET))
 
         def _parse_audience(data: object) -> list[str] | None | Unset:
             if data is None:
@@ -332,6 +367,7 @@ class ServiceDetail:
             service_type=service_type,
             gateway_type=gateway_type,
             description=description,
+            exports=exports,
             audience=audience,
             provider_name=provider_name,
             seller_name=seller_name,
