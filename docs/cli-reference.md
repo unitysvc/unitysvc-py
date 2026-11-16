@@ -33,7 +33,8 @@ $ usvc [OPTIONS] COMMAND [ARGS]...
 * `files`: Account files (ls, get, put, url).
 * `rooms`: Rooms: list, read, post, settings,...
 * `services`: Per-service operations (show, usage,...
-* `enrollments`: Enrollment management (list, show, cancel,...
+* `enrollments`: Enrollment management (list, show, cancel).
+* `instances`: A container service&#x27;s instance: start,...
 * `preferences`: Preferences of the account your key acts...
 
 ## `usvc env`
@@ -1127,7 +1128,7 @@ $ usvc services enroll [OPTIONS] {service_id}
 
 ## `usvc enrollments`
 
-Enrollment management (list, show, cancel, instance).
+Enrollment management (list, show, cancel).
 
 **Usage**:
 
@@ -1144,7 +1145,6 @@ $ usvc enrollments [OPTIONS] COMMAND [ARGS]...
 * `list`: List enrollments owned by the...
 * `show`: Show one enrollment as JSON.
 * `cancel`: Cancel an enrollment (sets...
-* `instance`: A container service&#x27;s instance: start,...
 
 ### `usvc enrollments list`
 
@@ -1209,14 +1209,14 @@ $ usvc enrollments cancel [OPTIONS] {enrollment_id}
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
-### `usvc enrollments instance`
+## `usvc instances`
 
 A container service&#x27;s instance: start, stop, status, check, key.
 
 **Usage**:
 
 ```console
-$ usvc enrollments instance [OPTIONS] COMMAND [ARGS]...
+$ usvc instances [OPTIONS] COMMAND [ARGS]...
 ```
 
 **Options**:
@@ -1231,7 +1231,7 @@ $ usvc enrollments instance [OPTIONS] COMMAND [ARGS]...
 * `check`: Start the instance, wait for it to come...
 * `key`: Print the instance&#x27;s application key (a...
 
-#### `usvc enrollments instance status`
+### `usvc instances status`
 
 Show the instance&#x27;s request, status and pods. Exit 0 when succeeded, else 1 (75 on a platform fault);
 a request still in progress also exits 1.
@@ -1239,7 +1239,7 @@ a request still in progress also exits 1.
 **Usage**:
 
 ```console
-$ usvc enrollments instance status [OPTIONS] {enrollment_id}
+$ usvc instances status [OPTIONS] {enrollment_id}
 ```
 
 **Arguments**:
@@ -1254,14 +1254,14 @@ $ usvc enrollments instance status [OPTIONS] {enrollment_id}
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
-#### `usvc enrollments instance start`
+### `usvc instances start`
 
 Start the instance (idempotent). With --wait, exit like ``instance check``.
 
 **Usage**:
 
 ```console
-$ usvc enrollments instance start [OPTIONS] {enrollment_id}
+$ usvc instances start [OPTIONS] {enrollment_id}
 ```
 
 **Arguments**:
@@ -1277,14 +1277,14 @@ $ usvc enrollments instance start [OPTIONS] {enrollment_id}
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
-#### `usvc enrollments instance stop`
+### `usvc instances stop`
 
 Stop the instance (idempotent).
 
 **Usage**:
 
 ```console
-$ usvc enrollments instance stop [OPTIONS] {enrollment_id}
+$ usvc instances stop [OPTIONS] {enrollment_id}
 ```
 
 **Arguments**:
@@ -1300,7 +1300,7 @@ $ usvc enrollments instance stop [OPTIONS] {enrollment_id}
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
-#### `usvc enrollments instance check`
+### `usvc instances check`
 
 Start the instance, wait for it to come up, then stop it (unless --keep).
 
@@ -1310,7 +1310,7 @@ Exit codes: 0 up; 1 failed on the service&#x27;s side (bad manifest, image, neve
 **Usage**:
 
 ```console
-$ usvc enrollments instance check [OPTIONS] {enrollment_id}
+$ usvc instances check [OPTIONS] {enrollment_id}
 ```
 
 **Arguments**:
@@ -1326,14 +1326,14 @@ $ usvc enrollments instance check [OPTIONS] {enrollment_id}
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
-#### `usvc enrollments instance key`
+### `usvc instances key`
 
 Print the instance&#x27;s application key (a secret) on its own line.
 
 **Usage**:
 
 ```console
-$ usvc enrollments instance key [OPTIONS] {enrollment_id}
+$ usvc instances key [OPTIONS] {enrollment_id}
 ```
 
 **Arguments**:

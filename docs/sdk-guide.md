@@ -319,24 +319,26 @@ entry URLs, and stop it. (Today this is available to the ops customer; other
 accounts get `403 not_enabled` until it is turned on.)
 
 ```python
-state = enr.start_instance()                    # 202: status "pending"
-state = enr.wait_for_instance(timeout=300)      # returns on "succeeded" or "failed"
+instance = client.instance(enr.id)              # a cheap handle; also enr.instance
+instance.start()                                # 202: status "pending"
+state = instance.wait(timeout=300)              # returns on "succeeded" or "failed"
 if state.status == "failed":
     print(state.reason, state.fault)            # fault: "platform" or "seller"
 else:
-    key = client.enrollments.instance_credentials(enr.id).key
+    key = instance.credentials().key
     print([e.url for e in state.entries])
-enr.stop_instance()
+instance.stop()
 ```
 
-`client.enrollments.instance(id, wait=30)` reads the state, holding up to
-`wait` seconds for the current request to finish. The key is never part of
-the state. A management API key needs the `api:*` scope.
+`instance.get(wait=30)` reads the state, holding up to `wait` seconds for the
+current request to finish. The key is never part of the state. A management
+API key needs the `api:*` scope. `AsyncClient.instance(id)` has the same
+methods as coroutines.
 
-On the command line, `usvc enrollments instance check ENROLLMENT_ID` does
-start, wait and stop in one go and exits `0` (up), `1` (the service failed)
-or `75` (the platform failed; retry later). `start`, `stop`, `status` and
-`key` are the single steps.
+On the command line, `usvc instances check ENROLLMENT_ID` does start, wait and
+stop in one go and exits `0` (up), `1` (the service failed) or `75` (the
+platform failed; retry later). `start`, `stop`, `status` and `key` are the
+single steps.
 
 Secret-shaped parameter keys (`api_key`, `password`, `token`, ...)
 are returned masked (`***masked***`) on reads; only the server has

@@ -53,6 +53,8 @@ from ._http import LowLevelClient
 from .exceptions import AuthenticationError
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from ._generated.models.resolve_response import ResolveResponse
     from .aliases import Aliases
     from .broadcasts import Broadcasts
@@ -60,6 +62,7 @@ if TYPE_CHECKING:
     from .enrollments import Enrollments
     from .files import Files
     from .groups import Groups
+    from .instances import Instance
     from .preferences import Preferences
     from .recurrent_requests import RecurrentRequests
     from .request_logs import RequestLogs
@@ -236,6 +239,12 @@ class Client:
 
             self._enrollments = Enrollments(self._client, parent=self)
         return self._enrollments
+
+    def instance(self, enrollment_id: str | UUID) -> Instance:
+        """The container instance of an enrollment (see :class:`Instance`); a cheap handle."""
+        from .instances import Instance
+
+        return Instance(self._client, enrollment_id, parent=self)
 
     @property
     def files(self) -> Files:

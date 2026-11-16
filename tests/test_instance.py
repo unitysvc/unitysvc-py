@@ -1,5 +1,5 @@
-"""``enrollments.instance`` / ``start_instance`` / ``stop_instance`` / ``wait_for_instance`` and
-``usvc enrollments instance`` (unitysvc#3016): a container service's instance is run through the
+"""``client.instance(id)`` (``Instance``: start / stop / get / wait / credentials) and
+``usvc instances`` (unitysvc#3016): a container service's instance is run through the
 customer API, since it has no gateway route."""
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ import pytest
 from typer.testing import CliRunner
 
 from unitysvc import AsyncClient, Client
-from unitysvc.commands.enrollments import app
+from unitysvc.commands.instances import app
 
 ENROLLMENT = "22222222-2222-4222-8222-222222222222"
 BASE = "https://test.example/v1/customer"
@@ -61,9 +61,9 @@ def _client(server: _Server, *, asynchronous: bool = False):
     return client
 
 
-def test_start_instance_posts_and_returns_the_pending_request() -> None:
+def test_start_posts_and_returns_the_pending_request() -> None:
     server = _Server([_state()])
-    state = _client(server).enrollments.start_instance(ENROLLMENT)
+    state = _client(server).instance(ENROLLMENT).start()
     assert (server.requests[0].method, server.requests[0].url.path) == (
         "POST",
         f"/v1/customer/enrollments/{ENROLLMENT}/instance/start",
@@ -71,37 +71,37 @@ def test_start_instance_posts_and_returns_the_pending_request() -> None:
     assert state.status == "pending"
 
 
-def test_stop_instance_posts() -> None:
+def test_stop_posts() -> None:
     server = _Server([_state()])
-    _client(server).enrollments.stop_instance(ENROLLMENT)
+    _client(server).instance(ENROLLMENT).stop()
     assert server.requests[0].url.path.endswith("/instance/stop")
 
 
-def test_instance_sends_wait_and_parses_fault_and_entries() -> None:
+def test_get_sends_wait_and_parses_fault_and_entries() -> None:
     server = _Server([_state("failed", fault="platform", reason="apply_error")])
-    state = _client(server).enrollments.instance(ENROLLMENT, wait=30)
+    state = _client(server).instance(ENROLLMENT).get(wait=30)
     assert server.requests[0].url.params["wait"] == "30"
     assert state.status == "failed" and state.fault == "platform" and state.reason == "apply_error"
     assert state.entries[0].url == "https://abcd.x"
 
 
-def test_instance_credentials_returns_the_key() -> None:
-    assert _client(_Server([_state()])).enrollments.instance_credentials(ENROLLMENT).key == "k-123"
+def test_credentials_returns_the_key() -> None:
+    assert _client(_Server([_state()])).instance(ENROLLMENT).credentials().key == "k-123"
 
 
-def test_wait_for_instance_polls_until_finished() -> None:
+def test_wait_polls_until_finished() -> None:
     server = _Server([_state("pending"), _state("in_progress"), _state("succeeded")])
-    state = _client(server).enrollments.wait_for_instance(ENROLLMENT, timeout=30)
+    state = _client(server).instance(ENROLLMENT).wait(timeout=30)
     assert state.status == "succeeded"
     assert len(server.requests) == 3
 
 
-def test_wait_for_instance_times_out() -> None:
+def test_wait_times_out() -> None:
     with pytest.raises(TimeoutError):
-        _client(_Server([_state("pending")])).enrollments.wait_for_instance(ENROLLMENT, timeout=0.01)
+        _client(_Server([_state("pending")])).instance(ENROLLMENT).wait(timeout=0.01)
 
 
-def test_enrollment_wrapper_delegates() -> None:
+def test_enrollment_exposes_its_instance() -> None:
     server = _Server([_state()])
     client = _client(server)
     enrollment = client.enrollments.get  # noqa: F841 — the wrapper is built from a record
@@ -110,7 +110,7 @@ def test_enrollment_wrapper_delegates() -> None:
     class _Raw:
         id = ENROLLMENT
 
-    Enrollment(_Raw(), parent=client).start_instance()  # type: ignore[arg-type]
+    Enrollment(_Raw(), parent=client).instance.start()  # type: ignore[arg-type]
     assert server.requests[0].url.path.endswith("/instance/start")
 
 
@@ -118,11 +118,11 @@ def test_enrollment_wrapper_delegates() -> None:
 async def test_async_facade() -> None:
     server = _Server([_state("pending"), _state("succeeded")])
     client = _client(server, asynchronous=True)
-    started = await client.enrollments.start_instance(ENROLLMENT)
+    started = await client.instance(ENROLLMENT).start()
     assert started.status == "pending"
-    state = await client.enrollments.wait_for_instance(ENROLLMENT, timeout=30)
+    state = await client.instance(ENROLLMENT).wait(timeout=30)
     assert state.status == "succeeded"
-    assert (await client.enrollments.instance_credentials(ENROLLMENT)).key == "k-123"
+    assert (await client.instance(ENROLLMENT).credentials()).key == "k-123"
 
 
 # --- CLI -----------------------------------------------------------------
@@ -142,12 +142,12 @@ def cli(monkeypatch: pytest.MonkeyPatch):
     async def fake(api_key=None, base_url=None):
         yield _client(holder["server"], asynchronous=True)
 
-    monkeypatch.setattr("unitysvc.commands.enrollments.async_client", fake)
+    monkeypatch.setattr("unitysvc.commands.instances.async_client", fake)
     return use
 
 
 def _run(*args: str):
-    return runner.invoke(app, ["instance", *args])
+    return runner.invoke(app, list(args))
 
 
 @pytest.mark.parametrize(
