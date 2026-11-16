@@ -373,7 +373,7 @@ class ChatSession:
     async def mark_seen(self, *, retry: bool = False) -> None:
         """Record that the open room has been seen through the newest message
         shown. Called on open (``retry``: once more after a ``capped`` answer)
-        and when the room stops being shown; best effort."""
+        after a locally displayed reply, and when the room stops being shown; best effort."""
         if self._retry is not None:
             self._retry.cancel()
             self._retry = None
@@ -518,6 +518,12 @@ class ChatSession:
                 {"sender_member_id": member_id, "sent_at": now, "body": body, "attachments": sent}, member_id
             )
         )
+        # A locally displayed human reply is an explicit personal read-through
+        # action (#2927). Raw SDK posts do not acknowledge anyone's reading.
+        offset = posted.get("offset")
+        if self.room is not None and str(self.room["id"]) == room_id and isinstance(offset, int):
+            self.seen = offset if self.seen is None else max(self.seen, offset)
+            await self.mark_seen(retry=True)
 
     async def next_with_activity(self) -> bool:
         """Open the next room with unseen activity (a helpdesk queue); False if none."""

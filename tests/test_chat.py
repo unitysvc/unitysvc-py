@@ -605,3 +605,33 @@ async def test_attached_files_stay_with_their_room() -> None:
     await session.send("as promised")
     assert [f["filename"] for f in rooms.posted_files[-1]] == ["contract.pdf"]
     assert session.pending == []
+
+
+@pytest.mark.asyncio
+async def test_displayed_reply_acknowledges_personal_reading_and_retries_marker_lag(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(chat_session, "MARK_RETRY_SECONDS", 0)
+    rooms = FakeRooms({"a": [], "b": []}, {"a": None, "b": None})
+    session, out = _session(rooms)
+    await session.open("a")
+    rooms.capped = 1
+    await session.send("on it")
+    assert any("on it" in line for line in out)
+    await asyncio.sleep(0.01)
+    assert [call for call in rooms.calls if call[0] == "active"] == [
+        ("active", "a", 99), ("active", "a", 99),
+    ]
+    assert session.marked == 99
+    await session.close()
+
+
+@pytest.mark.asyncio
+async def test_failed_reply_does_not_acknowledge_reading() -> None:
+    rooms = FakeRooms({"a": [], "b": []}, {"a": None, "b": None})
+    rooms.readonly.add("a")
+    session, _ = _session(rooms)
+    await session.open("a")
+    with pytest.raises(ChatError):
+        await session.send("on it")
+    assert not [call for call in rooms.calls if call[0] == "active"]

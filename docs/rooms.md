@@ -217,7 +217,7 @@ A room opens at its latest messages (`rooms.get(room, tail=50)`), so a long
 history isn't read from the start; `/older` reads the page before them
 (`rooms.get(room, tail=50, before=messages.previous)`) until `previous` is
 null. The chat records what you have seen the way
-the web inbox does: when a room opens and when you switch away or quit, never
+the web inbox does: when a room opens, after your successful locally displayed reply, and when you switch away or quit, never
 just because a new message arrived while it was open. It only ever posts to
 the open room (`rooms.post(room, ..., fallback=False)`): if the room can't take
 the post, the chat says so and nothing is posted anywhere else. Sellers use the same chat
@@ -231,6 +231,19 @@ client.rooms.unread()                     # rooms with activity you haven't seen
 client.rooms.mark_active("helpdesk", 42)  # you've seen it through offset 42
 client.rooms.set_follow_up("helpdesk")    # flag it; set_follow_up(..., False) clears
 ```
+
+With the personal-read-state backend (unitysvc/unitysvc#2927),
+`last_active_offset`, `last_active_at`, `has_new_activity` and unread counts
+refer to the authenticated person's reading through the selected account.
+Other users representing that account keep independent positions. A null
+position means no personal acknowledgement; existing history can appear unread.
+`sent_latest_message` and `follow_up` remain account-level.
+
+A read-through acknowledgement dismisses earlier activity without claiming
+every message was individually examined. Posts from scripts or connectors do
+not mark anyone as having read. The interactive chat explicitly acknowledges
+its displayed reply and retries once if the backend's conversation marker is
+still catching up (`capped`). No new API paths or arguments are needed.
 
 ## Follow new messages in every room
 
