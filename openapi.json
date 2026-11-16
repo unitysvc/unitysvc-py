@@ -8156,6 +8156,336 @@
           }
         }
       }
+    },
+    "/enrollments/{enrollment_id}/instance": {
+      "get": {
+        "tags": [
+          "customer",
+          "instances"
+        ],
+        "summary": "Get Enrollment Instance",
+        "description": "The enrollment's instance.\n\nWith ``wait``, the answer is held until the current start or stop has finished or the time is up,\nso a client can wait for ready without a polling loop.",
+        "operationId": "get_enrollment_instance",
+        "parameters": [
+          {
+            "name": "enrollment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Enrollment Id"
+            }
+          },
+          {
+            "name": "wait",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 60,
+              "minimum": 0,
+              "description": "Seconds to hold the answer until the current request has finished (succeeded or failed); 0 answers at once. Ask again after a timeout.",
+              "default": 0,
+              "title": "Wait"
+            },
+            "description": "Seconds to hold the answer until the current request has finished (succeeded or failed); 0 answers at once. Ask again after a timeout."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentInstance"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The enrollment, or its instance, does not exist"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enrollments/{enrollment_id}/instance/start": {
+      "post": {
+        "tags": [
+          "customer",
+          "instances"
+        ],
+        "summary": "Start Enrollment Instance",
+        "description": "Ask for the enrollment's instance to run. Idempotent; the agent does the work.\n\nAnswers 202 with the instance: ``status`` is ``pending`` until the agent has started it and reports\nevery service ready (``succeeded``) or that it could not (``failed``, with ``reason`` and ``fault``).\nA start already requested for the same configuration keeps its progress.",
+        "operationId": "start_enrollment_instance",
+        "parameters": [
+          {
+            "name": "enrollment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Enrollment Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentInstance"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The enrollment is not active"
+          },
+          "422": {
+            "description": "The service's instance spec is missing or invalid"
+          },
+          "503": {
+            "description": "No compute cluster is configured (a platform fault)"
+          }
+        }
+      }
+    },
+    "/enrollments/{enrollment_id}/instance/stop": {
+      "post": {
+        "tags": [
+          "customer",
+          "instances"
+        ],
+        "summary": "Stop Enrollment Instance",
+        "description": "Ask for the enrollment's instance to be removed. Idempotent; the agent does the work.\n\nAnswers 202 with the instance: ``status`` is ``succeeded`` once it is gone.",
+        "operationId": "stop_enrollment_instance",
+        "parameters": [
+          {
+            "name": "enrollment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Enrollment Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentInstance"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The enrollment, or its instance, does not exist"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enrollments/{enrollment_id}/instance/credentials": {
+      "get": {
+        "tags": [
+          "customer",
+          "instances"
+        ],
+        "summary": "Get Enrollment Instance Credentials",
+        "description": "The instance's application key, for the enrollment's owner.\n\nKept apart from the state read so the state can be logged and shown freely. Never cached; never logged.",
+        "operationId": "get_enrollment_instance_credentials",
+        "parameters": [
+          {
+            "name": "enrollment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Enrollment Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentInstanceCredentials"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The enrollment, or its instance, does not exist"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -14591,6 +14921,213 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "EnrollmentInstanceCredentials": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key"
+        ],
+        "title": "EnrollmentInstanceCredentials",
+        "description": "The instance's application key (the value of ``UNITYSVC_INSTANCE_API_KEY`` inside it)."
+      },
+      "EnrollmentInstance": {
+        "properties": {
+          "enrollment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Enrollment Id"
+          },
+          "requested_action": {
+            "type": "string",
+            "enum": [
+              "start",
+              "stop"
+            ],
+            "title": "Requested Action",
+            "description": "What was last asked of the instance"
+          },
+          "generation": {
+            "type": "integer",
+            "title": "Generation",
+            "description": "Identifies this request; a new start or stop raises it"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "in_progress",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status",
+            "description": "Progress of the request. A start is succeeded when every service is ready; a stop when the instance is gone."
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Machine reason when the request failed"
+          },
+          "fault": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "platform",
+                  "seller"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fault",
+            "description": "When the request failed, whose problem it is: the platform's (the cluster could not apply it) or the service's (a bad image or manifest, never ready). Null when it did not fail."
+          },
+          "components": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ComputeComponent"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Components",
+            "description": "Latest view of the pods, when the agent has reported them"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentInstanceEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enrollment_id",
+          "requested_action",
+          "generation",
+          "status",
+          "entries"
+        ],
+        "title": "EnrollmentInstance",
+        "description": "The instance of an enrollment: the request, how far it has got, and the pods."
+      },
+      "ComputeComponent": {
+        "properties": {
+          "service": {
+            "type": "string",
+            "title": "Service"
+          },
+          "pod": {
+            "type": "string",
+            "title": "Pod"
+          },
+          "phase": {
+            "type": "string",
+            "title": "Phase"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "restart_count": {
+            "type": "integer",
+            "title": "Restart Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "service",
+          "pod",
+          "phase",
+          "ready"
+        ],
+        "title": "ComputeComponent"
+      },
+      "EnrollmentInstanceEntry": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "hostname": {
+            "type": "string",
+            "title": "Hostname"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "https URL of the entry (hostname and path)"
+          },
+          "auth": {
+            "type": "string",
+            "title": "Auth",
+            "description": "Who may reach it: login, key or app"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "hostname",
+          "url",
+          "auth"
+        ],
+        "title": "EnrollmentInstanceEntry",
+        "description": "A URL the instance is reached at."
       }
     }
   },

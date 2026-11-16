@@ -35,6 +35,7 @@ from .chain_update import ChainUpdate
 from .chains_public import ChainsPublic
 from .channel_plan import ChannelPlan
 from .channel_plan_customer_access_requests_type_0_item import ChannelPlanCustomerAccessRequestsType0Item
+from .compute_component import ComputeComponent
 from .cursor_page_service_summary import CursorPageServiceSummary
 from .customer_content_attachment import CustomerContentAttachment
 from .customer_content_edit_public import CustomerContentEditPublic
@@ -59,6 +60,12 @@ from .customer_group_view import CustomerGroupView
 from .customer_group_view_details_type_0 import CustomerGroupViewDetailsType0
 from .cycle_usage_response import CycleUsageResponse
 from .document_category_enum import DocumentCategoryEnum
+from .enrollment_instance import EnrollmentInstance
+from .enrollment_instance_credentials import EnrollmentInstanceCredentials
+from .enrollment_instance_entry import EnrollmentInstanceEntry
+from .enrollment_instance_fault_type_0 import EnrollmentInstanceFaultType0
+from .enrollment_instance_requested_action import EnrollmentInstanceRequestedAction
+from .enrollment_instance_status import EnrollmentInstanceStatus
 from .enrollment_resource import EnrollmentResource
 from .fields import Fields
 from .gateway_kind import GatewayKind
@@ -231,6 +238,7 @@ __all__ = (
     "ChainUpdate",
     "ChannelPlan",
     "ChannelPlanCustomerAccessRequestsType0Item",
+    "ComputeComponent",
     "CursorPageServiceSummary",
     "CustomerContentAttachment",
     "CustomerContentEditPublic",
@@ -255,6 +263,12 @@ __all__ = (
     "CustomerGroupViewDetailsType0",
     "CycleUsageResponse",
     "DocumentCategoryEnum",
+    "EnrollmentInstance",
+    "EnrollmentInstanceCredentials",
+    "EnrollmentInstanceEntry",
+    "EnrollmentInstanceFaultType0",
+    "EnrollmentInstanceRequestedAction",
+    "EnrollmentInstanceStatus",
     "EnrollmentResource",
     "Fields",
     "GatewayKind",

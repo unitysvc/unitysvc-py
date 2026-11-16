@@ -20,6 +20,7 @@ the generated record (forwarded via ``__getattr__``) and adds
 
 from __future__ import annotations
 
+import time
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
@@ -35,8 +36,14 @@ if TYPE_CHECKING:
     from ._generated.models.customer_enrollment_create_response import (
         CustomerEnrollmentCreateResponse,
     )
+    from ._generated.models.enrollment_instance import EnrollmentInstance
+    from ._generated.models.enrollment_instance_credentials import EnrollmentInstanceCredentials
     from ._generated.models.room_list import RoomList
     from .client import Client
+
+
+# Statuses at which a start or stop request has finished.
+INSTANCE_FINISHED = ("succeeded", "failed")
 
 
 class Enrollment:
@@ -101,6 +108,22 @@ class Enrollment:
                 enr = enr.refresh()
         """
         return self._parent.enrollments.get(self._raw.id, include_service_details=include_service_details)
+
+    def instance(self, *, wait: int = 0) -> EnrollmentInstance:
+        """This enrollment's container instance. See :meth:`Enrollments.instance`."""
+        return self._parent.enrollments.instance(self._raw.id, wait=wait)
+
+    def start_instance(self) -> EnrollmentInstance:
+        """Start the instance. See :meth:`Enrollments.start_instance`."""
+        return self._parent.enrollments.start_instance(self._raw.id)
+
+    def stop_instance(self) -> EnrollmentInstance:
+        """Stop the instance. See :meth:`Enrollments.stop_instance`."""
+        return self._parent.enrollments.stop_instance(self._raw.id)
+
+    def wait_for_instance(self, *, timeout: float = 300.0) -> EnrollmentInstance:
+        """Wait for the current request to finish. See :meth:`Enrollments.wait_for_instance`."""
+        return self._parent.enrollments.wait_for_instance(self._raw.id, timeout=timeout)
 
 
 @dataclass
@@ -255,3 +278,81 @@ class Enrollments:
                 client=self._client,
             )
         )
+
+    # ------------------------------------------------------------------
+    # Container instance (start / stop / status / key)
+    # ------------------------------------------------------------------
+    def instance(self, enrollment_id: str | UUID, *, wait: int = 0) -> EnrollmentInstance:
+        """The enrollment's container instance: the request, its status and the pods.
+
+        ``wait`` (0-60 seconds) holds the answer until the current request has
+        finished (``succeeded`` or ``failed``) or the time is up. Raises
+        :class:`~unitysvc.exceptions.NotFoundError` while nothing has been
+        started. A ``failed`` instance names whose problem it is in ``fault``
+        (``"platform"`` or ``"seller"``).
+        """
+        from ._generated.api.customer import get_enrollment_instance
+
+        return unwrap(
+            get_enrollment_instance.sync_detailed(
+                UUID(str(enrollment_id)) if not isinstance(enrollment_id, UUID) else enrollment_id,
+                client=self._client,
+                wait=wait,
+            )
+        )
+
+    def start_instance(self, enrollment_id: str | UUID) -> EnrollmentInstance:
+        """Ask for the instance to be started (idempotent); the platform does the work.
+
+        Returns at once with the request (status ``pending``); follow it with
+        :meth:`instance` or :meth:`wait_for_instance`.
+        """
+        from ._generated.api.customer import start_enrollment_instance
+
+        return unwrap(
+            start_enrollment_instance.sync_detailed(
+                UUID(str(enrollment_id)) if not isinstance(enrollment_id, UUID) else enrollment_id,
+                client=self._client,
+            )
+        )
+
+    def stop_instance(self, enrollment_id: str | UUID) -> EnrollmentInstance:
+        """Ask for the instance to be stopped (idempotent)."""
+        from ._generated.api.customer import stop_enrollment_instance
+
+        return unwrap(
+            stop_enrollment_instance.sync_detailed(
+                UUID(str(enrollment_id)) if not isinstance(enrollment_id, UUID) else enrollment_id,
+                client=self._client,
+            )
+        )
+
+    def instance_credentials(self, enrollment_id: str | UUID) -> EnrollmentInstanceCredentials:
+        """The instance's application key (``.key``), for calling its entries.
+
+        Never part of :meth:`instance`; treat it as a secret.
+        """
+        from ._generated.api.customer import get_enrollment_instance_credentials
+
+        return unwrap(
+            get_enrollment_instance_credentials.sync_detailed(
+                UUID(str(enrollment_id)) if not isinstance(enrollment_id, UUID) else enrollment_id,
+                client=self._client,
+            )
+        )
+
+    def wait_for_instance(self, enrollment_id: str | UUID, *, timeout: float = 300.0) -> EnrollmentInstance:
+        """Wait until the current request has finished and return the instance.
+
+        Returns on ``succeeded`` or ``failed`` (inspect ``status``, ``reason``
+        and ``fault``). Raises :class:`TimeoutError` after ``timeout`` seconds.
+        """
+        deadline = time.monotonic() + timeout
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError(f"instance of enrollment {enrollment_id} did not finish in {timeout:g}s")
+            state = self.instance(enrollment_id, wait=int(min(60, max(1, remaining))))
+            if state.status in INSTANCE_FINISHED:
+                return state
+            time.sleep(1)
