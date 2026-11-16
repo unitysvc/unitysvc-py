@@ -70,6 +70,7 @@ class RoomsClient(Protocol):
     async def members(self, target: str) -> Any: ...
     async def set_follow_up(self, target: str, follow_up: bool = ...) -> Any: ...
     async def join(self, token: str) -> Any: ...
+    async def available_commands(self, target: str) -> Any: ...
 
 
 class ChatError(Exception):
@@ -108,6 +109,9 @@ def format_message(message: dict[str, Any], my_member_id: Any = None, first_numb
         line.append(clean(message.get("body")), style="dim italic")
         return line
     line.append(f"{'you' if mine else clean(message.get('sender_name')) or '?'}  ", style="cyan" if mine else "bold")
+    if message.get("recipient_member_id"):
+        # A ``!`` command line and its answer: stored for the sender alone (#2904).
+        line.append("(private) ", style="dim")
     if message.get("title"):
         line.append(clean(message["title"]), style="bold")
         line.append("\n")
@@ -144,12 +148,14 @@ def attachment_line(attachment: dict[str, Any], number: int | None = None) -> Te
 
 
 def room_line(index: int, room: dict[str, Any], current: bool = False) -> Text:
-    """A row of ``/rooms``: number, activity dot, follow-up flag, kind, name,
-    handle, who sent the latest message, and whether you can post there."""
+    """A row of ``/rooms``: number, activity dot, follow-up flag, attention
+    mark (the room waits for your account, #2929), kind, name, handle, who
+    sent the latest message, and whether you can post there."""
     line = Text()
     line.append(f"{index:>3} ", style="dim")
     line.append("● " if room.get("has_new_activity") else "  ", style="yellow")
     line.append("⚑ " if room.get("follow_up") else "  ", style="red")
+    line.append("! " if room.get("attention_pending") else "  ", style="bold red")
     line.append(f"{clean(room.get('kind')):<9}", style="dim")
     line.append(clean(room.get("name")), style="bold reverse" if current else "bold")
     line.append(f"  @{clean(room.get('handle'))}", style="dim")
@@ -513,17 +519,58 @@ class ChatSession:
         now = datetime.now().astimezone().isoformat()
         member_id = self.room.get("member_id")
         sent = [{"filename": file.get("filename"), "size": file.get("size")} for file in files]
+        command = posted.get("command")
         self.emit(
             format_message(
-                {"sender_member_id": member_id, "sent_at": now, "body": body, "attachments": sent}, member_id
+                {
+                    "sender_member_id": member_id,
+                    "sent_at": now,
+                    "body": body,
+                    "attachments": sent,
+                    "recipient_member_id": member_id if command else None,
+                },
+                member_id,
             )
         )
+        if command:
+            self._show_command_outcome(as_dict(command))
         # A locally displayed human reply is an explicit personal read-through
         # action (#2927). Raw SDK posts do not acknowledge anyone's reading.
         offset = posted.get("offset")
         if self.room is not None and str(self.room["id"]) == room_id and isinstance(offset, int):
             self.seen = offset if self.seen is None else max(self.seen, offset)
             await self.mark_seen(retry=True)
+
+    def _show_command_outcome(self, outcome: dict[str, Any]) -> None:
+        """What a ``!`` first line did (#2904): the platform's private answer,
+        shown now rather than when the feed delivers it."""
+        status = outcome.get("status")
+        answer = outcome.get("answer_message_id")
+        if answer:
+            self.shown_ids.add(str(answer))
+        self.emit(
+            Text(
+                f"  {clean(outcome.get('message'))}",
+                style="dim" if status == "executed" else "yellow",
+            )
+        )
+
+    async def show_commands(self) -> None:
+        """The ``!`` commands you may send in the open room, and why not for the others."""
+        if self.room is None:
+            raise ChatError("No room is open; use /rooms and /open")
+        listed = as_dict(await self.rooms.available_commands(str(self.room["id"]))).get("data") or []
+        if not listed:
+            self.emit(Text("No commands in this room", style="dim"))
+        for command in (as_dict(row) for row in listed):
+            line = Text("  ")
+            if command.get("available"):
+                line.append(f"{clean(command.get('syntax')):<28}", style="bold")
+                line.append(clean(command.get("summary")))
+            else:
+                line.append(f"{clean(command.get('syntax')):<28}", style="dim")
+                line.append(f"{clean(command.get('summary'))} (not now: {clean(command.get('reason'))})", style="dim")
+            self.emit(line)
 
     async def next_with_activity(self) -> bool:
         """Open the next room with unseen activity (a helpdesk queue); False if none."""

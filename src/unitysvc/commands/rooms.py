@@ -3,12 +3,18 @@
 Mirrors :class:`unitysvc.arooms.AsyncRooms`. ``ROOM`` is a room id or one of
 the account's handles (``me``, ``helpdesk``, or a room's own handle):
 
-- ``usvc rooms list [--kind K] [--enrollment ID] [--service ID] [--name PREFIX] [--new]``
+- ``usvc rooms list [--kind K] [--enrollment ID] [--service ID] [--name PREFIX] [--new] [--closed]``
 - ``usvc rooms show ROOM [--after N] [--limit N]``   — the room and its messages
-- ``usvc rooms post ROOM [TEXT] [--attach PATH ...] [--title T] [--id KEY]``
+- ``usvc rooms post ROOM [TEXT] [--attach PATH ...] [--mention MEMBER ...] [--title T] [--id KEY]``
 - ``usvc rooms members ROOM``
+- ``usvc rooms commands [ROOM]`` — the ``!`` commands, or which you may send in ROOM now
 - ``usvc rooms set ROOM [--name] [--description] [--retention S] [--status S]``
-- ``usvc rooms delivery ROOM [--notify PATH] [--email PATH]``
+- ``usvc rooms delivery ROOM`` — the room's connectors for your account
+- ``usvc rooms connector add|set|remove ROOM NAME [--notify S] [--email S] [--post S]``
+- ``usvc rooms live status ROOM`` / ``waiting`` / ``accept`` / ``stop`` / ``request ROOM MEMBER`` /
+  ``cancel ROOM MEMBER`` / ``resolve ROOM`` — live help (traffic light)
+- ``usvc rooms work next`` / ``claim ROOM TOKEN`` / ``return-later ROOM`` / ``done ROOM OFFSET`` — the
+  rooms waiting for your account, one at a time
 - ``usvc rooms invite ROOM [--role R] [--max-uses N] [--expires-in-days N] [--note T]``
 - ``usvc rooms invitations ROOM [--all]`` / ``revoke ROOM CODE_ID``
 - ``usvc rooms join CODE`` / ``leave ROOM``
@@ -42,7 +48,15 @@ from ._helpers import (
 
 console = Console()
 
-app = typer.Typer(help="Rooms: list, read, post, settings, delivery and invitations.")
+app = typer.Typer(help="Rooms: list, read, post, settings, delivery, live help and invitations.")
+connector_app = typer.Typer(help="How a room reaches you: its named connectors (notify, email and post services).")
+live_app = typer.Typer(help="Live help: accept requests, ask a room's member for help, see who is accepting.")
+work_app = typer.Typer(help="The rooms waiting for your account, one at a time: next, claim, return-later, done.")
+app.add_typer(connector_app, name="connector")
+app.add_typer(live_app, name="live")
+app.add_typer(work_app, name="work")
+
+OFF = "off"
 
 
 def _print_json(value: Any) -> None:
@@ -70,7 +84,10 @@ def list_rooms(
     enrollment: str | None = typer.Option(None, "--enrollment", help="Only rooms of this enrollment."),
     service: str | None = typer.Option(None, "--service", help="Only rooms of this service (not its enrollments')."),
     name: str | None = typer.Option(None, "--name", help="Only rooms whose name starts with this (any case)."),
-    new: bool = typer.Option(False, "--new", help="Only rooms with activity you haven't seen."),
+    new: bool = typer.Option(False, "--new", help="Only rooms with activity you haven't acknowledged."),
+    closed: bool = typer.Option(
+        False, "--closed", help="Also rooms you can't reach now (a paused enrollment), with their closed_reason."
+    ),
     output_format: str = typer.Option("table", "--format", "-f", help="Output format: table | json."),
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),
@@ -81,6 +98,8 @@ def list_rooms(
         narrow["q"] = name
     if new:
         narrow["new_activity"] = True
+    if closed:
+        narrow["include_closed"] = True
 
     async def _impl() -> list[dict[str, Any]]:
         async with async_client(api_key, base_url) as client:
@@ -142,6 +161,9 @@ def post_message(
     attach: list[str] | None = typer.Option(
         None, "--attach", "-a", help="A file to attach (stored 7 days) or an http(s) URL. Repeatable."
     ),
+    mention: list[str] | None = typer.Option(
+        None, "--mention", "-m", help="A member id the message calls for (the room then waits for them). Repeatable."
+    ),
     title: str | None = typer.Option(None, "--title", help="Optional title."),
     client_message_id: str | None = typer.Option(
         None, "--id", help="Idempotency key: retrying with the same key posts once."
@@ -149,7 +171,7 @@ def post_message(
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),
 ) -> None:
-    """Post a message to a room, with files if you like."""
+    """Post a message to a room, with files if you like. A first line starting with ! runs a command."""
     if not text.strip() and not attach:
         console.print("[red]✗[/red] Give a message, --attach a file, or both")
         raise typer.Exit(code=1)
@@ -163,6 +185,8 @@ def post_message(
         except ValueError as exc:
             console.print(f"[red]✗[/red] {escape(str(exc))}")
             raise typer.Exit(code=1) from exc
+    if mention:
+        message["mentions"] = mention
     if title is not None:
         message["title"] = title
     if client_message_id is not None:
@@ -176,6 +200,10 @@ def post_message(
     console.print(
         f"[green]✓[/green] Posted to {escape(str(posted.get('room_id', room)))} at offset {posted.get('offset', '')}"
     )
+    command = posted.get("command")
+    if command:
+        mark = "[green]✓[/green]" if command.get("status") == "executed" else "[yellow]![/yellow]"
+        console.print(f"{mark} {escape(str(command.get('message', '')))}")
 
 
 @app.command("members")
@@ -236,23 +264,297 @@ def set_room(
     console.print(f"[green]✓[/green] Updated {escape(str(updated.get('name', room)))}")
 
 
-@app.command("delivery")
-def delivery(
-    room: str = typer.Argument(..., help="Room id or handle."),
-    notify: str | None = typer.Option(None, "--notify", help="auto | off | a notify service path."),
-    email: str | None = typer.Option(None, "--email", help="auto | off | an email service path."),
+@app.command("commands")
+def list_commands(
+    room: str | None = typer.Argument(None, help="Room id or handle; without it, every command the platform knows."),
+    output_format: str = typer.Option("table", "--format", "-f", help="Output format: table | json."),
     api_key: str | None = api_key_option(),
     base_url: str = base_url_option(),
 ) -> None:
-    """Show, or with --notify / --email change, how this room reaches you."""
+    """The ! commands: all of them, or which you may send in ROOM right now and why not."""
+
+    async def _impl() -> list[dict[str, Any]]:
+        async with async_client(api_key, base_url) as client:
+            listed = await (client.rooms.commands() if room is None else client.rooms.available_commands(room))
+            return [model_to_dict(c) for c in listed.data]
+
+    commands = run_async(_impl(), error_prefix="Failed to list commands")
+    if output_format == "json":
+        _print_json(commands)
+        return
+    table = Table(title="Commands")
+    columns = ["Syntax", "Summary", "Sender", "Effect"] + ([] if room is None else ["Available", "Why not"])
+    for column in columns:
+        table.add_column(column)
+    for c in commands:
+        row = [c.get("syntax"), c.get("summary"), c.get("sender"), c.get("effect")]
+        if room is not None:
+            row += ["yes" if c.get("available") else "no", c.get("reason")]
+        table.add_row(*(_literal(cell) for cell in row))
+    console.print(table)
+
+
+@app.command("delivery")
+def delivery(
+    room: str = typer.Argument(..., help="Room id or handle."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Show how this room reaches you: its connectors, and whether you may change them."""
 
     async def _impl() -> dict[str, Any]:
         async with async_client(api_key, base_url) as client:
-            if notify is None and email is None:
-                return model_to_dict(await client.rooms.delivery(room))
-            return model_to_dict(await client.rooms.set_delivery(room, notify=notify, email=email))
+            return model_to_dict(await client.rooms.delivery(room))
 
-    _print_json(run_async(_impl(), error_prefix="Failed to read or change delivery"))
+    _print_json(run_async(_impl(), error_prefix="Failed to read delivery"))
+
+
+def _channels(notify: str | None, email: str | None, post: str | None) -> dict[str, str | None]:
+    """The channels given on the command line; ``off`` turns one off (null)."""
+    return {
+        key: (None if value == OFF else value)
+        for key, value in (("notify", notify), ("email", email), ("post", post))
+        if value is not None
+    }
+
+
+@connector_app.command("add")
+def connector_add(
+    room: str = typer.Argument(..., help="Room id or handle."),
+    name: str = typer.Argument(..., help="Connector name: lowercase letters, digits and hyphens."),
+    notify: str | None = typer.Option(None, "--notify", help="A notify service (notify = your Me service) | off."),
+    email: str | None = typer.Option(None, "--email", help="An email service (email = your Me service) | off."),
+    post: str | None = typer.Option(None, "--post", help="The service keyless senders post through | off."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Add a named connector to the room (at most five); channels left out are off."""
+
+    async def _impl() -> dict[str, Any]:
+        async with async_client(api_key, base_url) as client:
+            return model_to_dict(await client.rooms.add_connector(room, name, **_channels(notify, email, post)))
+
+    _print_json(run_async(_impl(), error_prefix="Failed to add the connector"))
+
+
+@connector_app.command("set")
+def connector_set(
+    room: str = typer.Argument(..., help="Room id or handle."),
+    name: str = typer.Argument(..., help="Connector name."),
+    notify: str | None = typer.Option(None, "--notify", help="A notify service | off."),
+    email: str | None = typer.Option(None, "--email", help="An email service | off."),
+    post: str | None = typer.Option(None, "--post", help="The service keyless senders post through | off."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Change a connector's channels; those left out keep their value."""
+    channels = _channels(notify, email, post)
+    if not channels:
+        console.print("[yellow]Nothing to change[/yellow]")
+        raise typer.Exit(code=1)
+
+    async def _impl() -> dict[str, Any]:
+        async with async_client(api_key, base_url) as client:
+            return model_to_dict(await client.rooms.update_connector(room, name, **channels))
+
+    _print_json(run_async(_impl(), error_prefix="Failed to change the connector"))
+
+
+@connector_app.command("remove")
+def connector_remove(
+    room: str = typer.Argument(..., help="Room id or handle."),
+    name: str = typer.Argument(..., help="Connector name."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Remove a connector; its reply address and inbound URL stop routing."""
+
+    async def _impl() -> dict[str, Any]:
+        async with async_client(api_key, base_url) as client:
+            return model_to_dict(await client.rooms.remove_connector(room, name))
+
+    _print_json(run_async(_impl(), error_prefix="Failed to remove the connector"))
+
+
+@live_app.command("status")
+def live_status(
+    room: str = typer.Argument(..., help="Room id or handle."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """For each other member: whether their party accepts live requests, and the room's request to them."""
+
+    async def _impl() -> list[dict[str, Any]]:
+        async with async_client(api_key, base_url) as client:
+            return [model_to_dict(row) for row in (await client.rooms.live_status(room)).data]
+
+    _print_json(run_async(_impl(), error_prefix="Failed to read the live status"))
+
+
+@live_app.command("waiting")
+def live_waiting(
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """The rooms whose live request waits for your account, oldest first."""
+
+    async def _impl() -> list[dict[str, Any]]:
+        async with async_client(api_key, base_url) as client:
+            return [model_to_dict(row) for row in (await client.rooms.live_waiting()).data]
+
+    _print_json(run_async(_impl(), error_prefix="Failed to list waiting rooms"))
+
+
+@live_app.command("accept")
+def live_accept(
+    client_id: str | None = typer.Option(None, "--client-id", help="Renew this client's lease; omit to start one."),
+    draining: bool = typer.Option(False, "--draining", help="Finish the queue: serve waiting requests, take none."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Accept live requests for your account until the lease lapses; renew it with --client-id."""
+
+    async def _impl() -> dict[str, Any]:
+        async with async_client(api_key, base_url) as client:
+            mode = "draining" if draining else "accepting"
+            return model_to_dict(await client.rooms.accept_live_requests(client_id=client_id, mode=mode))
+
+    _print_json(run_async(_impl(), error_prefix="Failed to accept live requests"))
+
+
+@live_app.command("stop")
+def live_stop(
+    client_id: str | None = typer.Option(None, "--client-id", help="Only this client's lease; omit for every client."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Stop accepting live requests."""
+
+    async def _impl() -> None:
+        async with async_client(api_key, base_url) as client:
+            await client.rooms.stop_accepting_live_requests(client_id=client_id)
+
+    run_async(_impl(), error_prefix="Failed to stop accepting")
+    console.print("[green]✓[/green] Stopped accepting live requests")
+
+
+@live_app.command("request")
+def live_request(
+    room: str = typer.Argument(..., help="Room id or handle."),
+    member: str = typer.Argument(..., help="The member id to ask (from `live status`)."),
+    client_id: str | None = typer.Option(None, "--client-id", help="Renew this client's request; omit to start."),
+    generation: str | None = typer.Option(None, "--generation", help="The request being renewed."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Ask a member of the room for live help, or renew the ask with --client-id and --generation."""
+
+    async def _impl() -> dict[str, Any]:
+        async with async_client(api_key, base_url) as client:
+            lease = await client.rooms.request_live_help(room, member, client_id=client_id, generation=generation)
+            return model_to_dict(lease)
+
+    _print_json(run_async(_impl(), error_prefix="Failed to request live help"))
+
+
+@live_app.command("cancel")
+def live_cancel(
+    room: str = typer.Argument(..., help="Room id or handle."),
+    member: str = typer.Argument(..., help="The member id the request was to."),
+    client_id: str = typer.Option(..., "--client-id", help="The client id the request was made with."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """End your own part of a live request; other requesters keep theirs."""
+
+    async def _impl() -> None:
+        async with async_client(api_key, base_url) as client:
+            await client.rooms.cancel_live_help(room, member, client_id=client_id)
+
+    run_async(_impl(), error_prefix="Failed to cancel the request")
+    console.print("[green]✓[/green] Cancelled your live request")
+
+
+@live_app.command("resolve")
+def live_resolve(
+    room: str = typer.Argument(..., help="Room id or handle."),
+    generation: str | None = typer.Option(None, "--generation", help="Only this request, never a newer one."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Resolve the room's live request to your account, for every requester."""
+
+    async def _impl() -> None:
+        async with async_client(api_key, base_url) as client:
+            await client.rooms.resolve_live_help(room, generation=generation)
+
+    run_async(_impl(), error_prefix="Failed to resolve the request")
+    console.print("[green]✓[/green] Resolved the live request")
+
+
+@work_app.command("next")
+def work_next(
+    current: str | None = typer.Option(None, "--current", help="The room id to complete first."),
+    claim: str | None = typer.Option(None, "--claim", help="Your claim on --current, from a previous next or claim."),
+    offset: int | None = typer.Option(None, "--offset", help="The highest message offset shown in --current."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Claim the room that has waited longest for your account (room_id null when none), completing --current."""
+
+    async def _impl() -> dict[str, Any]:
+        async with async_client(api_key, base_url) as client:
+            return model_to_dict(await client.rooms.next_room(current, claim_token=claim, offset=offset))
+
+    _print_json(run_async(_impl(), error_prefix="Failed to claim the next room"))
+
+
+@work_app.command("claim")
+def work_claim(
+    room: str = typer.Argument(..., help="Room id or handle."),
+    token: str = typer.Argument(..., help="The claim token next returned."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Keep holding a claimed room; fails once the claim has lapsed."""
+
+    async def _impl() -> dict[str, Any]:
+        async with async_client(api_key, base_url) as client:
+            return model_to_dict(await client.rooms.renew_claim(room, token))
+
+    _print_json(run_async(_impl(), error_prefix="Failed to renew the claim"))
+
+
+@work_app.command("return-later")
+def work_return_later(
+    room: str = typer.Argument(..., help="Room id or handle."),
+    claim: str | None = typer.Option(None, "--claim", help="Your claim on the room, released."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Step away without completing the room; your next `work next` skips it for a few minutes."""
+
+    async def _impl() -> dict[str, Any]:
+        async with async_client(api_key, base_url) as client:
+            return model_to_dict(await client.rooms.return_later(room, claim_token=claim))
+
+    _print_json(run_async(_impl(), error_prefix="Failed to return the room"))
+
+
+@work_app.command("done")
+def work_done(
+    room: str = typer.Argument(..., help="Room id or handle."),
+    offset: int = typer.Argument(..., help="The highest message offset you displayed."),
+    api_key: str | None = api_key_option(),
+    base_url: str = base_url_option(),
+) -> None:
+    """Complete the room for your account through OFFSET; a newer mention keeps it waiting."""
+
+    async def _impl() -> dict[str, Any]:
+        async with async_client(api_key, base_url) as client:
+            return model_to_dict(await client.rooms.mark_done(room, offset))
+
+    _print_json(run_async(_impl(), error_prefix="Failed to complete the room"))
 
 
 @app.command("invite")

@@ -23,10 +23,11 @@ Type a message and press Enter to post it to the open room (Esc then Enter adds 
   /attach PATH       attach a file to your next message (Ctrl-V attaches a copied image or file)
   /drop              remove the attached files
   /save N [DIR]      download attachment N (as numbered) into DIR, default the current one
-  /rooms             list rooms (● new activity, ⚑ follow-up)
+  /rooms             list rooms (● new activity, ⚑ follow-up, ! waits for you)
   /open ROOM         switch room: number from /rooms, @handle, id or name prefix
   /next  (Ctrl-N)    open the next room with new activity
   /members           who is in this room
+  /commands          the !commands you can send here (a message starting with ! runs one)
   /follow [off]      flag this room to revisit, or clear the flag
   /older  (/more)    show the messages before the earliest one shown
   /refresh           reload this room
@@ -70,6 +71,8 @@ async def _command(session: ChatSession, line: str) -> bool:
     elif name == "refresh":
         if session.room:
             await session.open(str(session.room["id"]))
+    elif name == "commands":
+        await session.show_commands()
     elif name == "members":
         if session.room:
             for member in (await session.rooms.members(session.room["id"])).data:

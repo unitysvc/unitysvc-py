@@ -56,11 +56,70 @@ class _Rooms:
 
     async def delivery(self, target: str) -> dict[str, Any]:
         self.calls.append(("delivery", target))
-        return {"notify": "auto", "email": "off", "can_edit": True}
+        return {"connectors": [{"name": "main", "notify": "notify", "email": None, "post": None}], "can_edit": True}
 
-    async def set_delivery(self, target: str, **kwargs: Any) -> dict[str, Any]:
-        self.calls.append(("set_delivery", target, kwargs))
-        return {"notify": kwargs["notify"] or "auto", "email": kwargs["email"] or "off", "can_edit": True}
+    async def add_connector(self, target: str, name: str, **channels: Any) -> dict[str, Any]:
+        self.calls.append(("add_connector", target, name, channels))
+        return {"connectors": [{"name": name, **channels}], "can_edit": True}
+
+    async def update_connector(self, target: str, name: str, **channels: Any) -> dict[str, Any]:
+        self.calls.append(("update_connector", target, name, channels))
+        return {"connectors": [{"name": name, **channels}], "can_edit": True}
+
+    async def remove_connector(self, target: str, name: str) -> dict[str, Any]:
+        self.calls.append(("remove_connector", target, name))
+        return {"connectors": [], "can_edit": True}
+
+    async def commands(self) -> Any:
+        self.calls.append(("commands",))
+        return SimpleNamespace(data=[{"syntax": "!allow $<amount>", "summary": "Allow", "sender": "customer"}])
+
+    async def available_commands(self, target: str) -> Any:
+        self.calls.append(("available_commands", target))
+        return SimpleNamespace(
+            data=[{"syntax": "!allow $<amount>", "summary": "Allow", "available": False, "reason": "Sellers only"}]
+        )
+
+    async def accept_live_requests(self, **kwargs: Any) -> dict[str, Any]:
+        self.calls.append(("accept_live_requests", kwargs))
+        return {"client_id": kwargs["client_id"] or "c-new", "expires_in": 60}
+
+    async def stop_accepting_live_requests(self, **kwargs: Any) -> None:
+        self.calls.append(("stop_accepting_live_requests", kwargs))
+
+    async def live_waiting(self) -> Any:
+        self.calls.append(("live_waiting",))
+        return SimpleNamespace(data=[{"room_id": ROOM["id"], "handle": "book-club", "requesters": 1}])
+
+    async def live_status(self, target: str) -> Any:
+        self.calls.append(("live_status", target))
+        return SimpleNamespace(data=[{"member_id": "m1", "name": "Ann", "state": "accepting", "available": True}])
+
+    async def request_live_help(self, target: str, member: str, **kwargs: Any) -> dict[str, Any]:
+        self.calls.append(("request_live_help", target, member, kwargs))
+        return {"target_member_id": member, "generation": "g1", "client_id": "c-new", "state": "accepting"}
+
+    async def cancel_live_help(self, target: str, member: str, **kwargs: Any) -> None:
+        self.calls.append(("cancel_live_help", target, member, kwargs))
+
+    async def resolve_live_help(self, target: str, **kwargs: Any) -> None:
+        self.calls.append(("resolve_live_help", target, kwargs))
+
+    async def next_room(self, current: Any = None, **kwargs: Any) -> dict[str, Any]:
+        self.calls.append(("next_room", current, kwargs))
+        return {"room_id": ROOM["id"], "handle": "book-club", "claim_token": "t1", "expires_in": 60}
+
+    async def renew_claim(self, target: str, claim_token: str) -> dict[str, Any]:
+        self.calls.append(("renew_claim", target, claim_token))
+        return {"room_id": ROOM["id"], "handle": "book-club", "claim_token": claim_token, "expires_in": 60}
+
+    async def return_later(self, target: str, **kwargs: Any) -> dict[str, Any]:
+        self.calls.append(("return_later", target, kwargs))
+        return {"attention_pending": True, "attention_since": "2026-11-16T00:00:00Z"}
+
+    async def mark_done(self, target: str, offset: int) -> dict[str, Any]:
+        self.calls.append(("mark_done", target, offset))
+        return {"attention_pending": False, "attention_since": None}
 
     async def create_invitation(self, target: str, **kwargs: Any) -> dict[str, Any]:
         self.calls.append(("create_invitation", target, kwargs))
@@ -121,11 +180,83 @@ def test_post_members_and_settings(rooms: _Rooms) -> None:
     assert runner.invoke(app, ["set", "book-club"]).exit_code == 1
 
 
-def test_delivery_reads_or_changes(rooms: _Rooms) -> None:
-    assert json.loads(runner.invoke(app, ["delivery", "me"]).output)["notify"] == "auto"
-    result = runner.invoke(app, ["delivery", "me", "--email", "auto"])
+def test_delivery_and_connectors(rooms: _Rooms) -> None:
+    shown = json.loads(runner.invoke(app, ["delivery", "me"]).output)
+    assert shown["connectors"][0]["name"] == "main" and shown["can_edit"] is True
+    result = runner.invoke(app, ["connector", "add", "me", "discord", "--notify", "labs/msg-to-discord"])
     assert result.exit_code == 0, result.output
-    assert rooms.calls[-1] == ("set_delivery", "me", {"notify": None, "email": "auto"})
+    assert rooms.calls[-1] == ("add_connector", "me", "discord", {"notify": "labs/msg-to-discord"})
+    assert json.loads(result.output)["connectors"][0]["name"] == "discord"
+    # ``off`` turns a channel off (null); channels left out are not sent.
+    result = runner.invoke(
+        app, ["connector", "set", "me", "discord", "--email", "off", "--post", "labs/discord-to-msg"]
+    )
+    assert result.exit_code == 0, result.output
+    assert rooms.calls[-1] == ("update_connector", "me", "discord", {"email": None, "post": "labs/discord-to-msg"})
+    assert runner.invoke(app, ["connector", "set", "me", "discord"]).exit_code == 1
+    assert runner.invoke(app, ["connector", "remove", "me", "discord"]).exit_code == 0
+    assert rooms.calls[-1] == ("remove_connector", "me", "discord")
+
+
+def test_commands_everywhere_and_in_a_room(rooms: _Rooms) -> None:
+    result = runner.invoke(app, ["commands"])
+    assert result.exit_code == 0 and "!allow" in result.output
+    assert rooms.calls[-1] == ("commands",)
+    result = runner.invoke(app, ["commands", "book-club", "--format", "json"])
+    assert result.exit_code == 0, result.output
+    assert rooms.calls[-1] == ("available_commands", "book-club")
+    assert json.loads(result.output)[0]["reason"] == "Sellers only"
+    assert "Sellers only" in runner.invoke(app, ["commands", "book-club"]).output
+
+
+def test_post_mentions_and_reports_a_command_outcome(rooms: _Rooms, monkeypatch: pytest.MonkeyPatch) -> None:
+    result = runner.invoke(app, ["post", "book-club", "@staff look", "--mention", "m1", "-m", "m2"])
+    assert result.exit_code == 0, result.output
+    assert rooms.calls[-1] == ("post", "book-club", {"body": "@staff look", "mentions": ["m1", "m2"]})
+
+    async def post(target: str, **kwargs: Any) -> dict[str, Any]:
+        return {"room_id": ROOM["id"], "offset": 5, "command": {"status": "refused", "message": "Not [now]"}}
+
+    monkeypatch.setattr(rooms, "post", post)
+    result = runner.invoke(app, ["post", "book-club", "!allow $6"])
+    assert result.exit_code == 0, result.output
+    assert "Not [now]" in result.output
+
+
+def test_live_help_commands(rooms: _Rooms) -> None:
+    assert json.loads(runner.invoke(app, ["live", "status", "book-club"]).output)[0]["state"] == "accepting"
+    assert rooms.calls[-1] == ("live_status", "book-club")
+    assert json.loads(runner.invoke(app, ["live", "waiting"]).output)[0]["handle"] == "book-club"
+    result = runner.invoke(app, ["live", "accept"])
+    assert result.exit_code == 0 and json.loads(result.output)["client_id"] == "c-new"
+    assert rooms.calls[-1] == ("accept_live_requests", {"client_id": None, "mode": "accepting"})
+    assert runner.invoke(app, ["live", "accept", "--client-id", "c-new", "--draining"]).exit_code == 0
+    assert rooms.calls[-1] == ("accept_live_requests", {"client_id": "c-new", "mode": "draining"})
+    assert runner.invoke(app, ["live", "stop", "--client-id", "c-new"]).exit_code == 0
+    assert rooms.calls[-1] == ("stop_accepting_live_requests", {"client_id": "c-new"})
+    result = runner.invoke(app, ["live", "request", "book-club", "m1", "--client-id", "c1", "--generation", "g1"])
+    assert result.exit_code == 0, result.output
+    assert rooms.calls[-1] == ("request_live_help", "book-club", "m1", {"client_id": "c1", "generation": "g1"})
+    assert runner.invoke(app, ["live", "cancel", "book-club", "m1", "--client-id", "c1"]).exit_code == 0
+    assert rooms.calls[-1] == ("cancel_live_help", "book-club", "m1", {"client_id": "c1"})
+    assert runner.invoke(app, ["live", "resolve", "book-club"]).exit_code == 0
+    assert rooms.calls[-1] == ("resolve_live_help", "book-club", {"generation": None})
+
+
+def test_work_queue_commands(rooms: _Rooms) -> None:
+    result = runner.invoke(app, ["work", "next"])
+    assert result.exit_code == 0 and json.loads(result.output)["claim_token"] == "t1"
+    assert rooms.calls[-1] == ("next_room", None, {"claim_token": None, "offset": None})
+    result = runner.invoke(app, ["work", "next", "--current", ROOM["id"], "--claim", "t1", "--offset", "7"])
+    assert result.exit_code == 0, result.output
+    assert rooms.calls[-1] == ("next_room", ROOM["id"], {"claim_token": "t1", "offset": 7})
+    assert runner.invoke(app, ["work", "claim", "book-club", "t1"]).exit_code == 0
+    assert rooms.calls[-1] == ("renew_claim", "book-club", "t1")
+    assert runner.invoke(app, ["work", "return-later", "book-club", "--claim", "t1"]).exit_code == 0
+    assert rooms.calls[-1] == ("return_later", "book-club", {"claim_token": "t1"})
+    result = runner.invoke(app, ["work", "done", "book-club", "7"])
+    assert result.exit_code == 0 and json.loads(result.output)["attention_pending"] is False
+    assert rooms.calls[-1] == ("mark_done", "book-club", 7)
 
 
 def test_invitations_join_and_leave(rooms: _Rooms) -> None:
@@ -195,6 +326,8 @@ def test_list_narrows_by_name_and_new_activity(rooms: _Rooms) -> None:
         "list",
         {"kind": None, "enrollment": None, "service": None, "q": "Book", "new_activity": True},
     )
+    assert runner.invoke(app, ["list", "--closed"]).exit_code == 0
+    assert rooms.calls[-1] == ("list", {"kind": None, "enrollment": None, "service": None, "include_closed": True})
 
 
 def test_post_attaches_files_and_needs_text_or_a_file(rooms: _Rooms, tmp_path: Any) -> None:
