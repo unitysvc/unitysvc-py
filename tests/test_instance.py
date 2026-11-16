@@ -18,11 +18,18 @@ BASE = "https://test.example/v1/customer"
 runner = CliRunner()
 
 
-def _state(status: str = "succeeded", *, fault: str | None = None, action: str = "start", reason: str | None = None):
+def _state(
+    status: str = "succeeded",
+    *,
+    fault: str | None = None,
+    action: str = "start",
+    reason: str | None = None,
+    generation: int = 3,
+):
     return {
         "enrollment_id": ENROLLMENT,
         "requested_action": action,
-        "generation": 3,
+        "generation": generation,
         "status": status,
         "reason": reason,
         "fault": fault,
@@ -34,8 +41,8 @@ def _state(status: str = "succeeded", *, fault: str | None = None, action: str =
 class _Server:
     """Answers the instance routes; ``states`` is what successive reads return."""
 
-    def __init__(self, states: list[dict]) -> None:
-        self.states = list(states)
+    def __init__(self, states: list) -> None:
+        self.states = list(states)  # a dict answers 200; an int is an error status; an Exception is raised
         self.requests: list[httpx.Request] = []
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
@@ -47,6 +54,10 @@ class _Server:
             action = "stop" if path.endswith("/stop") else "start"
             return httpx.Response(202, json=_state("pending", action=action))
         state = self.states.pop(0) if len(self.states) > 1 else self.states[0]
+        if isinstance(state, Exception):
+            raise state  # a transport failure: no answer at all
+        if isinstance(state, int):
+            return httpx.Response(state, json={"detail": "upstream unavailable"})
         return httpx.Response(200, json=state)
 
 
@@ -94,6 +105,23 @@ def test_wait_polls_until_finished() -> None:
     state = _client(server).instance(ENROLLMENT).wait(timeout=30)
     assert state.status == "succeeded"
     assert len(server.requests) == 3
+
+
+def test_wait_polls_stay_inside_the_http_read_timeout() -> None:
+    # The default client reads for 30 s; a 60 s long poll would time out before the server answers.
+    server = _Server([_state("pending"), _state("succeeded")])
+    _client(server).instance(ENROLLMENT).wait(timeout=300)
+    assert all(int(r.url.params["wait"]) <= 25 for r in server.requests if r.method == "GET")
+
+
+def test_wait_for_a_request_raises_when_it_is_superseded() -> None:
+    from unitysvc.exceptions import InstanceSuperseded
+
+    server = _Server([_state("succeeded", action="stop", generation=4)])
+    instance = _client(server).instance(ENROLLMENT)
+    started = instance.start()  # generation 3
+    with pytest.raises(InstanceSuperseded):
+        instance.wait(timeout=30, request=started)
 
 
 def test_wait_times_out() -> None:
@@ -164,6 +192,27 @@ def test_check_exit_codes_and_stops_afterwards(cli, final: dict, code: int) -> N
     assert result.exit_code == code, result.output
     posts = [r.url.path.rsplit("/", 1)[-1] for r in server.requests if r.method == "POST"]
     assert posts == ["start", "stop"]
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [502, 503, 504, httpx.ReadTimeout("slow"), httpx.ConnectError("down")],
+)
+def test_check_exits_75_when_the_platform_does_not_answer(cli, answer) -> None:
+    cli(_Server([answer]))
+    assert _run("check", ENROLLMENT, "--timeout", "30").exit_code == 75
+
+
+def test_check_exits_75_when_a_stop_supersedes_the_start(cli) -> None:
+    cli(_Server([_state("succeeded", action="stop", generation=4)]))
+    assert _run("check", ENROLLMENT, "--timeout", "30").exit_code == 75
+    cli(_Server([_state("succeeded", action="stop", generation=4)]))
+    assert _run("start", ENROLLMENT, "--wait").exit_code == 75
+
+
+def test_a_client_error_is_still_the_callers_problem(cli) -> None:
+    cli(_Server([404]))
+    assert _run("status", ENROLLMENT).exit_code == 1
 
 
 def test_check_keep_does_not_stop(cli) -> None:

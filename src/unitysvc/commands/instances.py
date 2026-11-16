@@ -12,18 +12,20 @@ instance has the same id) and needs an API key with the ``api:*`` scope:
 
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any
 
+import httpx
 import typer
 from rich.console import Console
 
+from ..exceptions import InstanceSuperseded, ServerError, UnitysvcSDKError
 from ._helpers import (
     api_key_option,
     async_client,
     base_url_option,
     model_to_dict,
-    run_async,
 )
 
 console = Console()
@@ -36,6 +38,25 @@ app = typer.Typer(
 # went wrong), 75 (EX_TEMPFAIL) it failed on the platform's side, so retrying later may succeed.
 EXIT_SERVICE_FAULT = 1
 EXIT_PLATFORM_FAULT = 75
+
+# What a platform-side problem looks like from here: the API answering 5xx, not answering at all
+# (connection or read timeout), the platform never picking the request up in time, or another
+# request replacing ours. A test that sees one is retryable and is not the service's fault.
+_PLATFORM_ERRORS = (ServerError, httpx.TransportError, TimeoutError, InstanceSuperseded)
+
+
+def run_async(coro: Any, *, error_prefix: str) -> Any:
+    """Run a command's coroutine: platform-side errors exit 75, any other failure exits 1."""
+    try:
+        return asyncio.run(coro)
+    except _PLATFORM_ERRORS as exc:
+        console.print(f"[red]✗[/red] {error_prefix}: {exc or type(exc).__name__} (platform side; retry later)")
+        raise typer.Exit(code=EXIT_PLATFORM_FAULT) from exc
+    except typer.Exit:
+        raise
+    except (UnitysvcSDKError, Exception) as exc:  # noqa: BLE001 — surface to the user, not a traceback
+        console.print(f"[red]✗[/red] {error_prefix}: {exc}", style="bold red")
+        raise typer.Exit(code=EXIT_SERVICE_FAULT) from exc
 
 
 # ---------------------------------------------------------------------------
@@ -108,9 +129,10 @@ def instance_start(
 
     async def _impl() -> dict[str, Any]:
         async with async_client(api_key, base_url) as client:
-            state = await client.instance(enrollment_id).start()
+            instance = client.instance(enrollment_id)
+            state = await instance.start()
             if wait:
-                state = await client.instance(enrollment_id).wait(timeout=timeout)
+                state = await instance.wait(timeout=timeout, request=state)
             return _state(state)
 
     state = run_async(_impl(), error_prefix="Failed to start the instance")
@@ -132,9 +154,10 @@ def instance_stop(
 
     async def _impl() -> dict[str, Any]:
         async with async_client(api_key, base_url) as client:
-            state = await client.instance(enrollment_id).stop()
+            instance = client.instance(enrollment_id)
+            state = await instance.stop()
             if wait:
-                state = await client.instance(enrollment_id).wait(timeout=timeout)
+                state = await instance.wait(timeout=timeout, request=state)
             return _state(state)
 
     state = run_async(_impl(), error_prefix="Failed to stop the instance")
@@ -155,15 +178,16 @@ def instance_check(
     """Start the instance, wait for it to come up, then stop it (unless --keep).
 
     Exit codes: 0 up; 1 failed on the service's side (bad manifest, image, never ready);
-    75 failed on the platform's side (retry later).
+    75 failed on the platform's side (API 5xx or unreachable, no agent picked it up in time,
+    another request replaced this one; retry later).
     """
 
     async def _impl() -> dict[str, Any]:
         async with async_client(api_key, base_url) as client:
             instance = client.instance(enrollment_id)
-            await instance.start()
+            started = await instance.start()
             try:
-                state = _state(await instance.wait(timeout=timeout))
+                state = _state(await instance.wait(timeout=timeout, request=started))
             finally:
                 if not keep:
                     try:

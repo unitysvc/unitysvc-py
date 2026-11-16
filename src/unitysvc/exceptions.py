@@ -26,6 +26,7 @@ __all__ = [
     "ConflictError",
     "RateLimitError",
     "ServerError",
+    "InstanceSuperseded",
     "ExperimentalDisabledError",
 ]
 
@@ -95,6 +96,14 @@ class RateLimitError(APIError):
 
 class ServerError(APIError):
     """5xx. The server encountered an error. Safe to retry idempotent requests."""
+
+
+class InstanceSuperseded(UnitysvcSDKError):
+    """A newer start or stop replaced the request being waited for.
+
+    Someone else (or another test) acted on the same instance, so the outcome of *this* request
+    will never be reported. Retrying later is the usual remedy.
+    """
 
 
 def error_for_status(

@@ -1305,7 +1305,8 @@ $ usvc instances stop [OPTIONS] {enrollment_id}
 Start the instance, wait for it to come up, then stop it (unless --keep).
 
 Exit codes: 0 up; 1 failed on the service&#x27;s side (bad manifest, image, never ready);
-75 failed on the platform&#x27;s side (retry later).
+75 failed on the platform&#x27;s side (API 5xx or unreachable, no agent picked it up in time,
+another request replaced this one; retry later).
 
 **Usage**:
 
