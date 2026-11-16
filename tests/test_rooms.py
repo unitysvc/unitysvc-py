@@ -50,17 +50,128 @@ def invitation():
     }
 
 
+def connector(**overrides):
+    return {
+        "id": CODE,
+        "name": "main",
+        "notify": "notify",
+        "email": None,
+        "post": None,
+        "inbound_url": None,
+        **overrides,
+    }
+
+
+def command(**overrides):
+    return {
+        "name": "allow",
+        "syntax": "!allow $<amount>[/month]",
+        "example": "!allow $6",
+        "summary": "Allow charges up to an amount",
+        "sender": "customer",
+        "effect": "consent",
+        "pattern": r"^!allow \\$(?P<amount>\\d+)$",
+        **overrides,
+    }
+
+
+def body_of(request):
+    return json.loads(request.content) if request.content else None
+
+
 def transport(captured):
     def handler(request):
         captured.append(request)
         path = request.url.path
         if path.endswith("/missing"):
             return httpx.Response(404, json={"detail": "Room not found"})
+        if path.endswith("/rooms/commands"):
+            return httpx.Response(200, json={"data": [command()]})
+        if path.endswith("/commands"):
+            return httpx.Response(
+                200,
+                json={
+                    "data": [
+                        command(available=True, code=None, reason=None),
+                        command(name="charge", syntax="!charge $<amount>", available=False, reason="Sellers only"),
+                    ]
+                },
+            )
         if path.endswith("/delivery"):
-            settings = {"notify": "auto", "email": "off", "can_edit": True}
-            if request.method == "PATCH":
-                settings.update(json.loads(request.content))
-            return httpx.Response(200, json=settings)
+            return httpx.Response(200, json={"connectors": [connector()], "can_edit": True})
+        if path.endswith("/connectors"):
+            sent = body_of(request)
+            return httpx.Response(201, json={"connectors": [connector(), connector(**sent)], "can_edit": True})
+        if "/connectors/" in path:
+            changed = connector(**(body_of(request) or {}))
+            return httpx.Response(
+                200, json={"connectors": [] if request.method == "DELETE" else [changed], "can_edit": True}
+            )
+        if path.endswith("/live/accepting"):
+            lease = {"client_id": body_of(request).get("client_id") or "c-new", "expires_in": 60}
+            return httpx.Response(200, json=lease)
+        if (
+            path.endswith("/live/accepting/stop")
+            or path.endswith("/live/request/cancel")
+            or path.endswith("/live/resolve")
+        ):
+            return httpx.Response(204)
+        if path.endswith("/live/waiting"):
+            return httpx.Response(
+                200,
+                json={
+                    "data": [
+                        {
+                            "room_id": ROOM,
+                            "handle": "acme",
+                            "generation": "g1",
+                            "first_requested_at": AT,
+                            "requesters": 2,
+                        }
+                    ]
+                },
+            )
+        if path.endswith("/live/request"):
+            sent = body_of(request)
+            return httpx.Response(
+                200,
+                json={
+                    "target_member_id": sent["target_member_id"],
+                    "generation": sent.get("generation") or "g1",
+                    "client_id": sent.get("client_id") or "c-new",
+                    "first_requested_at": AT,
+                    "available": False,
+                    "state": "draining",
+                },
+            )
+        if path.endswith("/live"):
+            return httpx.Response(
+                200,
+                json={
+                    "data": [
+                        {
+                            "member_id": MEMBER,
+                            "account_type": "seller",
+                            "name": "Tailor",
+                            "available": True,
+                            "state": "accepting",
+                            "request": {
+                                "generation": "g1",
+                                "first_requested_at": AT,
+                                "requesters": 1,
+                                "mine": True,
+                                "position": 1,
+                            },
+                        }
+                    ]
+                },
+            )
+        if path.endswith("/work/next") or path.endswith("/work/claim"):
+            return httpx.Response(200, json={"room_id": ROOM, "handle": "acme", "claim_token": "t1", "expires_in": 60})
+        if path.endswith("/work/return-later") or path.endswith("/attention/done"):
+            return httpx.Response(
+                200, json={"attention_pending": path.endswith("/return-later"), "attention_since": AT}
+            )
         if path.endswith("/codes"):
             return httpx.Response(
                 201 if request.method == "POST" else 200,
@@ -129,7 +240,15 @@ def transport(captured):
         if path.endswith("/follow-up"):
             return httpx.Response(200, json=json.loads(request.content))
         if request.method == "POST":
-            return httpx.Response(202, json={"room_id": ROOM, "message_id": MESSAGE, "offset": 42, "routed": "handle"})
+            posted = {"room_id": ROOM, "message_id": MESSAGE, "offset": 42, "routed": "handle", "command": None}
+            if body_of(request).get("body", "").startswith("!"):
+                posted["command"] = {
+                    "status": "executed",
+                    "name": "allow",
+                    "message": "You allowed charges up to $6.00",
+                    "answer_message_id": CODE,
+                }
+            return httpx.Response(202, json=posted)
         if request.method == "PATCH":
             return httpx.Response(200, json=summary(**json.loads(request.content)))
         if path.endswith("/rooms"):
@@ -202,26 +321,180 @@ async def test_indefinite_room_retention_policy_is_typed(asynchronous, owner_set
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("asynchronous", [False, True])
-async def test_room_delivery_paths_and_partial_updates(asynchronous):
+async def test_room_delivery_is_a_list_of_connectors(asynchronous):
+    """Delivery is read as connectors (unitysvc#2896) and changed one
+    connector at a time; a channel left out of an update is kept, None
+    turns it off, and the deprecated ``default`` flag is never sent."""
     captured = []
     client = client_for(asynchronous, captured)
     try:
         delivery = await call(client.rooms, "delivery", ROOM)
-        assert delivery.notify == "auto"
-        assert delivery.email == "off"
         assert delivery.can_edit is True
+        assert [(c.name, c.notify, c.email) for c in delivery.connectors] == [("main", "notify", None)]
 
-        updated = await call(client.rooms, "set_delivery", ROOM, email="email")
-        assert updated.email == "email"
-        assert updated.notify == "auto"
+        added = await call(client.rooms, "add_connector", ROOM, "discord", notify="labs/msg-to-discord", email=None)
+        assert captured[-1].method == "POST"
+        assert captured[-1].url.path.endswith(f"/rooms/{ROOM}/connectors")
+        assert json.loads(captured[-1].content) == {"name": "discord", "notify": "labs/msg-to-discord"}
+        assert [c.name for c in added.connectors] == ["main", "discord"]
+
+        updated = await call(client.rooms, "update_connector", ROOM, "discord", email="email", post=None)
         assert captured[-1].method == "PATCH"
-        assert captured[-1].url.path.endswith(f"/rooms/{ROOM}/delivery")
-        assert json.loads(captured[-1].content) == {"email": "email"}
+        assert captured[-1].url.path.endswith(f"/rooms/{ROOM}/connectors/discord")
+        assert json.loads(captured[-1].content) == {"email": "email", "post": None}
+        assert updated.connectors[0].email == "email" and updated.connectors[0].post is None
 
-        await call(client.rooms, "set_delivery", ROOM, notify="off", email="auto")
-        assert json.loads(captured[-1].content) == {"notify": "off", "email": "auto"}
+        removed = await call(client.rooms, "remove_connector", ROOM, "discord")
+        assert captured[-1].method == "DELETE"
+        assert captured[-1].url.path.endswith(f"/rooms/{ROOM}/connectors/discord")
+        assert removed.connectors == []
     finally:
         await close(client, asynchronous)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+async def test_commands_are_listed_and_a_command_post_reports_its_outcome(asynchronous):
+    """The registry (unitysvc#2904) and its availability in a room; a post
+    whose first line is a command carries what it did."""
+    captured = []
+    client = client_for(asynchronous, captured)
+    try:
+        everything = await call(client.rooms, "commands")
+        assert [c.name for c in everything.data] == ["allow"]
+        assert everything.data[0].pattern.startswith("^!allow")
+        here = await call(client.rooms, "available_commands", "helpdesk")
+        assert [(c.name, c.available, c.reason) for c in here.data] == [
+            ("allow", True, None),
+            ("charge", False, "Sellers only"),
+        ]
+        posted = await call(client.rooms, "post", "helpdesk", body="!allow $6", fallback=False)
+        assert posted.command.status == "executed"
+        assert posted.command.message == "You allowed charges up to $6.00"
+        assert str(posted.command.answer_message_id) == CODE
+        plain = await call(client.rooms, "post", "helpdesk", body="hi")
+        assert plain.command is None
+    finally:
+        await close(client, asynchronous)
+    assert [r.url.path.rsplit("/rooms", 1)[1] for r in captured[:2]] == ["/commands", "/helpdesk/commands"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+async def test_live_help_reaches_the_wire(asynchronous):
+    """The traffic light (unitysvc#2926): accepting leases, the waiting list,
+    a room's status, and requesting, cancelling and resolving help."""
+    captured = []
+    client = client_for(asynchronous, captured)
+    try:
+        lease = await call(client.rooms, "accept_live_requests")
+        assert lease.client_id == "c-new" and lease.expires_in == 60
+        await call(client.rooms, "accept_live_requests", client_id="c-new", mode="draining")
+        assert await call(client.rooms, "stop_accepting_live_requests", client_id="c-new") is None
+        waiting = await call(client.rooms, "live_waiting")
+        assert (str(waiting.data[0].room_id), waiting.data[0].requesters) == (ROOM, 2)
+        status = await call(client.rooms, "live_status", "acme")
+        party = status.data[0]
+        assert (party.state, party.available, party.request.mine, party.request.position) == (
+            "accepting",
+            True,
+            True,
+            1,
+        )
+        asked = await call(client.rooms, "request_live_help", "acme", party)
+        assert (asked.generation, asked.client_id, asked.state, asked.available) == ("g1", "c-new", "draining", False)
+        await call(client.rooms, "request_live_help", "acme", MEMBER, client_id="c-new", generation="g1")
+        assert await call(client.rooms, "cancel_live_help", "acme", MEMBER, client_id="c-new") is None
+        assert await call(client.rooms, "resolve_live_help", "acme", generation="g1") is None
+        await call(client.rooms, "resolve_live_help", "acme")
+    finally:
+        await close(client, asynchronous)
+
+    assert [
+        (r.method, r.url.path.rsplit("/rooms", 1)[1], json.loads(r.content) if r.content else None) for r in captured
+    ] == [
+        ("POST", "/live/accepting", {"client_id": None, "mode": "accepting"}),
+        ("POST", "/live/accepting", {"client_id": "c-new", "mode": "draining"}),
+        ("POST", "/live/accepting/stop", {"client_id": "c-new"}),
+        ("GET", "/live/waiting", None),
+        ("GET", "/acme/live", None),
+        ("POST", "/acme/live/request", {"target_member_id": MEMBER, "client_id": None, "generation": None}),
+        ("POST", "/acme/live/request", {"target_member_id": MEMBER, "client_id": "c-new", "generation": "g1"}),
+        ("POST", "/acme/live/request/cancel", {"target_member_id": MEMBER, "client_id": "c-new"}),
+        ("POST", "/acme/live/resolve", {"generation": "g1"}),
+        ("POST", "/acme/live/resolve", {"generation": None}),
+    ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+async def test_work_queue_reaches_the_wire(asynchronous):
+    """Next, claims, Return later and Done (unitysvc#2929)."""
+    captured = []
+    client = client_for(asynchronous, captured)
+    try:
+        claim = await call(client.rooms, "next_room")
+        assert (str(claim.room_id), claim.handle, claim.claim_token) == (ROOM, "acme", "t1")
+        renewed = await call(client.rooms, "renew_claim", "acme", "t1")
+        assert renewed.claim_token == "t1"
+        # The previous claim completes the room it holds, through what was shown.
+        await call(client.rooms, "next_room", claim, offset=42)
+        await call(client.rooms, "next_room", ROOM, claim_token="t2")
+        later = await call(client.rooms, "return_later", "acme", claim_token="t1")
+        assert later.attention_pending is True
+        done = await call(client.rooms, "mark_done", "acme", 42)
+        assert done.attention_pending is False
+    finally:
+        await close(client, asynchronous)
+
+    assert [(r.method, r.url.path.rsplit("/rooms", 1)[1], json.loads(r.content)) for r in captured] == [
+        ("POST", "/work/next", {}),
+        ("POST", "/acme/work/claim", {"claim_token": "t1"}),
+        ("POST", "/work/next", {"current": {"room_id": ROOM, "claim_token": "t1", "offset": 42}}),
+        ("POST", "/work/next", {"current": {"room_id": ROOM, "claim_token": "t2"}}),
+        ("POST", "/acme/work/return-later", {"claim_token": "t1"}),
+        ("POST", "/acme/attention/done", {"offset": 42}),
+    ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+async def test_mentions_closed_rooms_and_origin(asynchronous):
+    """post() sends mentions as member ids (from ids or member rows), list()
+    sends include_closed, and a room's origin, attention and closed_reason
+    are typed."""
+    from types import SimpleNamespace
+
+    captured = []
+    client = client_for(asynchronous, captured)
+    listed = {
+        **summary(),
+        "closed_reason": "enrollment_paused",
+        "attention_pending": True,
+        "attention_since": AT,
+        "origin": {
+            "service": {"id": CODE, "name": "tailor/alterations", "display_name": "Alterations"},
+            "enrollments": [{"id": MEMBER, "code": "E-1", "status": "paused"}],
+        },
+    }
+    try:
+        await call(client.rooms, "post", "helpdesk", body="@staff please", mentions=[MEMBER, SimpleNamespace(id=CODE)])
+        assert json.loads(captured[-1].content)["mentions"] == [MEMBER, CODE]
+
+        client_transport = httpx.MockTransport(lambda request: httpx.Response(200, json={"data": [listed]}))
+        if asynchronous:
+            client._client.get_async_httpx_client()._transport = client_transport
+        else:
+            client._client.get_httpx_client()._transport = client_transport
+        rooms = await call(client.rooms, "list", include_closed=True)
+        room = rooms.data[0]
+        assert room.closed_reason == "enrollment_paused"
+        assert room.attention_pending is True
+        assert room.origin.service.name == "tailor/alterations"
+        assert room.origin.enrollments[0].code == "E-1"
+    finally:
+        await close(client, asynchronous)
+    assert captured[0].url.path.endswith("/rooms/helpdesk")
 
 
 @pytest.mark.asyncio

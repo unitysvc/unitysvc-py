@@ -117,7 +117,28 @@ class FakeRooms:
         if target in self.readonly:
             assert fallback is False, "a chat post must never fall back to me"
             raise ForbiddenError("You can't post in this room", status_code=403)
-        return {"room_id": target, "message_id": "new", "offset": 99, "routed": "room_id"}
+        posted: dict[str, Any] = {"room_id": target, "message_id": "new", "offset": 99, "routed": "room_id"}
+        if body.startswith("!"):
+            # A command (#2904): the line and the platform's answer are stored
+            # for the sender alone; the answer reaches the feed like any message.
+            answer = {**_msg(100, "You allowed charges up to $6.00", sender="m-platform", name="UnitySVC")}
+            self.deliver(target, {**answer, "id": "answer-1", "recipient_member_id": ME})
+            posted["command"] = {
+                "status": "executed" if body == "!allow $6" else "refused",
+                "name": "allow",
+                "message": "You allowed charges up to $6.00" if body == "!allow $6" else "Only $1 to $100",
+                "answer_message_id": "answer-1",
+            }
+        return posted
+
+    async def available_commands(self, target: str) -> dict[str, Any]:
+        self.calls.append(("available_commands", target))
+        return {
+            "data": [
+                {"syntax": "!allow $<amount>", "summary": "Allow charges", "available": True, "reason": None},
+                {"syntax": "!charge $<amount>", "summary": "Charge", "available": False, "reason": "Sellers only"},
+            ]
+        }
 
     async def mark_active(self, target: str, offset: int) -> dict[str, Any]:
         self.calls.append(("active", target, offset))
@@ -196,6 +217,47 @@ async def test_send_echoes_once_and_is_idempotent_on_retry() -> None:
     out.clear()
     await session.follow(wait=0)
     assert out == []
+
+
+@pytest.mark.asyncio
+async def test_a_command_post_shows_its_outcome_once_and_privately() -> None:
+    rooms = FakeRooms({"a": [], "b": []}, {"a": None, "b": None})
+    session, out = _session(rooms)
+    await session.start_feed()
+    await session.open("a")
+    await session.send("!allow $6")
+    assert any("you  (private) !allow $6" in line for line in out)
+    assert any(line == "  You allowed charges up to $6.00" for line in out)
+    # The platform's private answer arriving through the feed is not shown again.
+    out.clear()
+    assert await session.follow(wait=0) == 0
+    assert out == []
+    # A refused command is shown as a warning, not as the room's conversation.
+    await session.send("!allow $600")
+    assert any("Only $1 to $100" in line for line in out)
+
+
+@pytest.mark.asyncio
+async def test_commands_lists_what_is_available_here_and_why_not() -> None:
+    rooms = FakeRooms({"a": [], "b": []}, {"a": None, "b": None})
+    session, out = _session(rooms)
+    with pytest.raises(ChatError):
+        await session.show_commands()
+    await session.open("a")
+    await session.show_commands()
+    assert rooms.calls[-1] == ("available_commands", "a")
+    assert any("!allow $<amount>" in line and "Allow charges" in line for line in out)
+    assert any("!charge" in line and "not now: Sellers only" in line for line in out)
+
+
+def test_private_messages_and_waiting_rooms_are_marked() -> None:
+    from unitysvc.chat.session import room_line
+
+    line = format_message({**_msg(1, "!help"), "recipient_member_id": "m-alice"}).plain
+    assert "alice  (private) !help" in line
+    assert "(private)" not in format_message(_msg(2, "hello")).plain
+    assert "!" in room_line(1, {**A, "attention_pending": True}).plain.split("Acme")[0]
+    assert "!" not in room_line(1, {**A, "attention_pending": False}).plain.split("Acme")[0]
 
 
 @pytest.mark.asyncio

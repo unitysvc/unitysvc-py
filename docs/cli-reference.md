@@ -655,7 +655,7 @@ $ usvc files url [OPTIONS] {path}
 
 ## `usvc rooms`
 
-Rooms: list, read, post, settings, delivery and invitations.
+Rooms: list, read, post, settings, delivery, live help and invitations.
 
 **Usage**:
 
@@ -674,13 +674,17 @@ $ usvc rooms [OPTIONS] COMMAND [ARGS]...
 * `post`: Post a message to a room, with files if...
 * `members`: List the room&#x27;s members and their roles.
 * `set`: Change the room&#x27;s settings (owner only).
-* `delivery`: Show, or with --notify / --email change,...
+* `commands`: The ! commands: all of them, or which you...
+* `delivery`: Show how this room reaches you: its...
 * `invite`: Create an invitation code for the room.
 * `invitations`: List the room&#x27;s invitation codes.
 * `revoke`: Revoke an invitation code.
 * `join`: Join a room with an invitation code.
 * `leave`: Leave a room you joined (chat rooms; the...
 * `chat`: Chat in a room interactively: live...
+* `connector`: How a room reaches you: its named...
+* `live`: Live help: accept requests, ask a room&#x27;s...
+* `work`: The rooms waiting for your account, one at...
 
 ### `usvc rooms list`
 
@@ -698,7 +702,8 @@ $ usvc rooms list [OPTIONS]
 * `--enrollment <str>`: Only rooms of this enrollment.
 * `--service <str>`: Only rooms of this service (not its enrollments&#x27;).
 * `--name <str>`: Only rooms whose name starts with this (any case).
-* `--new`: Only rooms with activity you haven&#x27;t seen.
+* `--new`: Only rooms with activity you haven&#x27;t acknowledged.
+* `--closed`: Also rooms you can&#x27;t reach now (a paused enrollment), with their closed_reason.
 * `-f, --format <str>`: Output format: table | json.  [default: table]
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
@@ -729,7 +734,7 @@ $ usvc rooms show [OPTIONS] {room}
 
 ### `usvc rooms post`
 
-Post a message to a room, with files if you like.
+Post a message to a room, with files if you like. A first line starting with ! runs a command.
 
 **Usage**:
 
@@ -745,6 +750,7 @@ $ usvc rooms post [OPTIONS] {room} [text]
 **Options**:
 
 * `-a, --attach <str>`: A file to attach (stored 7 days) or an http(s) URL. Repeatable.
+* `-m, --mention <str>`: A member id the message calls for (the room then waits for them). Repeatable.
 * `--title <str>`: Optional title.
 * `--id <str>`: Idempotency key: retrying with the same key posts once.
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
@@ -796,9 +802,30 @@ $ usvc rooms set [OPTIONS] {room}
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
 
+### `usvc rooms commands`
+
+The ! commands: all of them, or which you may send in ROOM right now and why not.
+
+**Usage**:
+
+```console
+$ usvc rooms commands [OPTIONS] [room]
+```
+
+**Arguments**:
+
+* `room`: Room id or handle; without it, every command the platform knows.
+
+**Options**:
+
+* `-f, --format <str>`: Output format: table | json.  [default: table]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
 ### `usvc rooms delivery`
 
-Show, or with --notify / --email change, how this room reaches you.
+Show how this room reaches you: its connectors, and whether you may change them.
 
 **Usage**:
 
@@ -812,8 +839,6 @@ $ usvc rooms delivery [OPTIONS] {room}
 
 **Options**:
 
-* `--notify <str>`: auto | off | a notify service path.
-* `--email <str>`: auto | off | an email service path.
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
@@ -947,6 +972,359 @@ $ usvc rooms chat [OPTIONS] [room]
 * `--enrollment <str>`: Open this enrollment&#x27;s room.
 * `--service <str>`: Open this service&#x27;s room.
 * `--join <str>`: Redeem an invitation code, then open its room.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms connector`
+
+How a room reaches you: its named connectors (notify, email and post services).
+
+**Usage**:
+
+```console
+$ usvc rooms connector [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `add`: Add a named connector to the room (at most...
+* `set`: Change a connector&#x27;s channels; those left...
+* `remove`: Remove a connector; its reply address and...
+
+#### `usvc rooms connector add`
+
+Add a named connector to the room (at most five); channels left out are off.
+
+**Usage**:
+
+```console
+$ usvc rooms connector add [OPTIONS] {room} {name}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+* `name`: Connector name: lowercase letters, digits and hyphens.  [required]
+
+**Options**:
+
+* `--notify <str>`: A notify service (notify = your Me service) | off.
+* `--email <str>`: An email service (email = your Me service) | off.
+* `--post <str>`: The service keyless senders post through | off.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+#### `usvc rooms connector set`
+
+Change a connector&#x27;s channels; those left out keep their value.
+
+**Usage**:
+
+```console
+$ usvc rooms connector set [OPTIONS] {room} {name}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+* `name`: Connector name.  [required]
+
+**Options**:
+
+* `--notify <str>`: A notify service | off.
+* `--email <str>`: An email service | off.
+* `--post <str>`: The service keyless senders post through | off.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+#### `usvc rooms connector remove`
+
+Remove a connector; its reply address and inbound URL stop routing.
+
+**Usage**:
+
+```console
+$ usvc rooms connector remove [OPTIONS] {room} {name}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+* `name`: Connector name.  [required]
+
+**Options**:
+
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms live`
+
+Live help: accept requests, ask a room&#x27;s member for help, see who is accepting.
+
+**Usage**:
+
+```console
+$ usvc rooms live [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `status`: For each other member: whether their party...
+* `waiting`: The rooms whose live request waits for...
+* `accept`: Accept live requests for your account...
+* `stop`: Stop accepting live requests.
+* `request`: Ask a member of the room for live help, or...
+* `cancel`: End your own part of a live request; other...
+* `resolve`: Resolve the room&#x27;s live request to your...
+
+#### `usvc rooms live status`
+
+For each other member: whether their party accepts live requests, and the room&#x27;s request to them.
+
+**Usage**:
+
+```console
+$ usvc rooms live status [OPTIONS] {room}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+
+**Options**:
+
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+#### `usvc rooms live waiting`
+
+The rooms whose live request waits for your account, oldest first.
+
+**Usage**:
+
+```console
+$ usvc rooms live waiting [OPTIONS]
+```
+
+**Options**:
+
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+#### `usvc rooms live accept`
+
+Accept live requests for your account until the lease lapses; renew it with --client-id.
+
+**Usage**:
+
+```console
+$ usvc rooms live accept [OPTIONS]
+```
+
+**Options**:
+
+* `--client-id <str>`: Renew this client&#x27;s lease; omit to start one.
+* `--draining`: Finish the queue: serve waiting requests, take none.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+#### `usvc rooms live stop`
+
+Stop accepting live requests.
+
+**Usage**:
+
+```console
+$ usvc rooms live stop [OPTIONS]
+```
+
+**Options**:
+
+* `--client-id <str>`: Only this client&#x27;s lease; omit for every client.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+#### `usvc rooms live request`
+
+Ask a member of the room for live help, or renew the ask with --client-id and --generation.
+
+**Usage**:
+
+```console
+$ usvc rooms live request [OPTIONS] {room} {member}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+* `member`: The member id to ask (from `live status`).  [required]
+
+**Options**:
+
+* `--client-id <str>`: Renew this client&#x27;s request; omit to start.
+* `--generation <str>`: The request being renewed.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+#### `usvc rooms live cancel`
+
+End your own part of a live request; other requesters keep theirs.
+
+**Usage**:
+
+```console
+$ usvc rooms live cancel [OPTIONS] {room} {member}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+* `member`: The member id the request was to.  [required]
+
+**Options**:
+
+* `--client-id <str>`: The client id the request was made with.  [required]
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+#### `usvc rooms live resolve`
+
+Resolve the room&#x27;s live request to your account, for every requester.
+
+**Usage**:
+
+```console
+$ usvc rooms live resolve [OPTIONS] {room}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+
+**Options**:
+
+* `--generation <str>`: Only this request, never a newer one.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+### `usvc rooms work`
+
+The rooms waiting for your account, one at a time: next, claim, return-later, done.
+
+**Usage**:
+
+```console
+$ usvc rooms work [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `next`: Claim the room that has waited longest for...
+* `claim`: Keep holding a claimed room; fails once...
+* `return-later`: Step away without completing the room;...
+* `done`: Complete the room for your account through...
+
+#### `usvc rooms work next`
+
+Claim the room that has waited longest for your account (room_id null when none), completing --current.
+
+**Usage**:
+
+```console
+$ usvc rooms work next [OPTIONS]
+```
+
+**Options**:
+
+* `--current <str>`: The room id to complete first.
+* `--claim <str>`: Your claim on --current, from a previous next or claim.
+* `--offset <int>`: The highest message offset shown in --current.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+#### `usvc rooms work claim`
+
+Keep holding a claimed room; fails once the claim has lapsed.
+
+**Usage**:
+
+```console
+$ usvc rooms work claim [OPTIONS] {room} {token}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+* `token`: The claim token next returned.  [required]
+
+**Options**:
+
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+#### `usvc rooms work return-later`
+
+Step away without completing the room; your next `work next` skips it for a few minutes.
+
+**Usage**:
+
+```console
+$ usvc rooms work return-later [OPTIONS] {room}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+
+**Options**:
+
+* `--claim <str>`: Your claim on the room, released.
+* `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
+* `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
+* `--help`: Show this message and exit.
+
+#### `usvc rooms work done`
+
+Complete the room for your account through OFFSET; a newer mention keeps it waiting.
+
+**Usage**:
+
+```console
+$ usvc rooms work done [OPTIONS] {room} {offset}
+```
+
+**Arguments**:
+
+* `room`: Room id or handle.  [required]
+* `offset`: The highest message offset you displayed.  [required]
+
+**Options**:
+
 * `--api-key <str>`: Customer API key (svcpass_...). Defaults to $UNITYSVC_API_KEY.  [env var: UNITYSVC_API_KEY]
 * `--base-url <str>`: Backend base URL.  [env var: UNITYSVC_API_URL; default: https://api.unitysvc.com/v1]
 * `--help`: Show this message and exit.
