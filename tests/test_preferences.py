@@ -74,6 +74,19 @@ def test_set_none_clears_with_delete() -> None:
     assert captured[0].url.path.endswith("/preferences/request-log")
 
 
+def test_turn_off_puts_a_null_value() -> None:
+    """A room-* preference is turned off with ``PUT {"value": null}``, not DELETE."""
+    captured: list[httpx.Request] = []
+    with _client(captured) as client:
+        result = client.preferences.turn_off("room-email-as-guest")
+
+    assert captured[0].method == "PUT"
+    assert captured[0].url.path.endswith("/preferences/room-email-as-guest")
+    assert json.loads(captured[0].content) == {"value": None}
+    assert result.name == "room-email-as-guest"
+    assert result.value is None
+
+
 def test_clear_deletes() -> None:
     captured: list[httpx.Request] = []
     with _client(captured) as client:
@@ -152,6 +165,20 @@ async def test_async_set_and_clear() -> None:
     assert json.loads(captured[0].content) == {"value": "labs/llm-balanced"}
     assert result.value == "labs/llm-balanced"
     assert (captured[1].method, captured[1].url.path.rsplit("/", 1)[-1]) == ("DELETE", "request-log")
+
+
+@pytest.mark.asyncio
+async def test_async_turn_off_puts_a_null_value() -> None:
+    captured: list[httpx.Request] = []
+    client = AsyncClient(api_key="svcpass_test")
+    client._client.get_async_httpx_client()._transport = _capturing_transport(captured)
+    try:
+        await client.preferences.turn_off("room-notify-as-host")
+    finally:
+        await client.aclose()
+
+    assert captured[0].method == "PUT"
+    assert json.loads(captured[0].content) == {"value": None}
 
 
 @pytest.mark.asyncio

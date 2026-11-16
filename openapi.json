@@ -566,7 +566,7 @@
           "preferences"
         ],
         "summary": "Set Named Preference",
-        "description": "Set one preference on the current account. Validated on write: a\ndestination or AI must be routable for the account (a team's ``e/``,\n``b/`` and ``a/`` targets must be its shared ones).",
+        "description": "Set one preference on the current account. Validated on write: a\ndestination or AI must be routable for the account (a team's ``e/``,\n``b/`` and ``a/`` targets must be its shared ones), and a ``post``\nconverter must be a service that delivers into a room.",
         "operationId": "preferences-set_named_preference",
         "parameters": [
           {
@@ -4225,6 +4225,336 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enrollments/{enrollment_id}/instance": {
+      "get": {
+        "tags": [
+          "customer",
+          "instances"
+        ],
+        "summary": "Get Enrollment Instance",
+        "description": "The enrollment's instance.\n\nWith ``wait``, the answer is held until the current start or stop has finished or the time is up,\nso a client can wait for ready without a polling loop.",
+        "operationId": "get_enrollment_instance",
+        "parameters": [
+          {
+            "name": "enrollment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Enrollment Id"
+            }
+          },
+          {
+            "name": "wait",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 60,
+              "minimum": 0,
+              "description": "Seconds to hold the answer until the current request has finished (succeeded or failed); 0 answers at once. Ask again after a timeout.",
+              "default": 0,
+              "title": "Wait"
+            },
+            "description": "Seconds to hold the answer until the current request has finished (succeeded or failed); 0 answers at once. Ask again after a timeout."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentInstance"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The enrollment, or its instance, does not exist"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enrollments/{enrollment_id}/instance/start": {
+      "post": {
+        "tags": [
+          "customer",
+          "instances"
+        ],
+        "summary": "Start Enrollment Instance",
+        "description": "Ask for the enrollment's instance to run. Idempotent; the agent does the work.\n\nAnswers 202 with the instance: ``status`` is ``pending`` until the agent has started it and reports\nevery service ready (``succeeded``) or that it could not (``failed``, with ``reason`` and ``fault``).\nA start already requested for the same configuration keeps its progress.",
+        "operationId": "start_enrollment_instance",
+        "parameters": [
+          {
+            "name": "enrollment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Enrollment Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentInstance"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The enrollment is not active"
+          },
+          "422": {
+            "description": "The service's instance spec is missing or invalid"
+          },
+          "503": {
+            "description": "No compute cluster is configured (a platform fault)"
+          }
+        }
+      }
+    },
+    "/enrollments/{enrollment_id}/instance/stop": {
+      "post": {
+        "tags": [
+          "customer",
+          "instances"
+        ],
+        "summary": "Stop Enrollment Instance",
+        "description": "Ask for the enrollment's instance to be removed. Idempotent; the agent does the work.\n\nAnswers 202 with the instance: ``status`` is ``succeeded`` once it is gone.",
+        "operationId": "stop_enrollment_instance",
+        "parameters": [
+          {
+            "name": "enrollment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Enrollment Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentInstance"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The enrollment, or its instance, does not exist"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enrollments/{enrollment_id}/instance/credentials": {
+      "get": {
+        "tags": [
+          "customer",
+          "instances"
+        ],
+        "summary": "Get Enrollment Instance Credentials",
+        "description": "The instance's application key, for the enrollment's owner.\n\nKept apart from the state read so the state can be logged and shown freely. Never cached; never logged.",
+        "operationId": "get_enrollment_instance_credentials",
+        "parameters": [
+          {
+            "name": "enrollment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Enrollment Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-role-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Role-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentInstanceCredentials"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The enrollment, or its instance, does not exist"
           },
           "422": {
             "description": "Validation Error",
@@ -8704,7 +9034,7 @@
           "customer-services"
         ],
         "summary": "List Service Interfaces",
-        "description": "List access interfaces dispatchable by the calling customer.\n\nReturns two kinds of interfaces, unified so the SDK can present\nthem as a single ``service.interfaces()`` list:\n\n1. **Shared** interfaces (``enrollment_id IS NULL``) \u2014 usable by\n   any customer, matches the public playground behaviour.\n2. **Enrollment-bound** interfaces whose ``enrollment_id`` belongs\n   to an enrollment the caller can use: one of the customer's\n   shared enrollments (``owner_id IS NULL``) or the caller's own\n   personal one. BYOK / BYOE services create these on enrollment\n   activation so the gateway can substitute customer-supplied\n   secrets at runtime.\n\nInterfaces bound to *other* customers' enrollments, and to\nteammates' personal enrollments, are filtered out \u2014 existence is\nnot leaked (#2701), matching the gateway's owner rule. ``base_url``\nis resolved with ``settings.resolve_gateway_urls`` so SDK consumers\ncan dispatch directly without knowing gateway substitution rules.",
+        "description": "List access interfaces dispatchable by the calling customer.\n\nReturns two kinds of interfaces, unified so the SDK can present\nthem as a single ``service.interfaces()`` list:\n\n1. **Shared** interfaces (``enrollment_id IS NULL``) \u2014 usable by\n   any customer, matches the public playground behaviour. On the API\n   gateway they serve the service's open channels only.\n2. **Enrollment-bound** interfaces whose ``enrollment_id`` belongs\n   to an enrollment the caller can use: one of the customer's\n   shared enrollments (``owner_id IS NULL``) or the caller's own\n   personal one. For an API-gateway service that is the enrollment's\n   ``/e/<code>`` address, one per active enrollment: the canonical URL\n   never resolves an enrollment (#2857), so this is how the SDK's\n   ``dispatch()`` reaches it. Older per-enrollment rows linked through\n   the bridge are returned too, with their ``enrollment_id``.\n\nInterfaces bound to *other* customers' enrollments, and to\nteammates' personal enrollments, are filtered out \u2014 existence is\nnot leaked (#2701), matching the gateway's owner rule. ``base_url``\nis resolved with ``settings.resolve_gateway_urls`` so SDK consumers\ncan dispatch directly without knowing gateway substitution rules.",
         "operationId": "customer-services-list_service_interfaces",
         "parameters": [
           {
@@ -9345,336 +9675,6 @@
           }
         }
       }
-    },
-    "/enrollments/{enrollment_id}/instance": {
-      "get": {
-        "tags": [
-          "customer",
-          "instances"
-        ],
-        "summary": "Get Enrollment Instance",
-        "description": "The enrollment's instance.\n\nWith ``wait``, the answer is held until the current start or stop has finished or the time is up,\nso a client can wait for ready without a polling loop.",
-        "operationId": "get_enrollment_instance",
-        "parameters": [
-          {
-            "name": "enrollment_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Enrollment Id"
-            }
-          },
-          {
-            "name": "wait",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 60,
-              "minimum": 0,
-              "description": "Seconds to hold the answer until the current request has finished (succeeded or failed); 0 answers at once. Ask again after a timeout.",
-              "default": 0,
-              "title": "Wait"
-            },
-            "description": "Seconds to hold the answer until the current request has finished (succeeded or failed); 0 answers at once. Ask again after a timeout."
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-role-id",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Role-Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnrollmentInstance"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The enrollment, or its instance, does not exist"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/enrollments/{enrollment_id}/instance/start": {
-      "post": {
-        "tags": [
-          "customer",
-          "instances"
-        ],
-        "summary": "Start Enrollment Instance",
-        "description": "Ask for the enrollment's instance to run. Idempotent; the agent does the work.\n\nAnswers 202 with the instance: ``status`` is ``pending`` until the agent has started it and reports\nevery service ready (``succeeded``) or that it could not (``failed``, with ``reason`` and ``fault``).\nA start already requested for the same configuration keeps its progress.",
-        "operationId": "start_enrollment_instance",
-        "parameters": [
-          {
-            "name": "enrollment_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Enrollment Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-role-id",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Role-Id"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnrollmentInstance"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "The enrollment is not active"
-          },
-          "422": {
-            "description": "The service's instance spec is missing or invalid"
-          },
-          "503": {
-            "description": "No compute cluster is configured (a platform fault)"
-          }
-        }
-      }
-    },
-    "/enrollments/{enrollment_id}/instance/stop": {
-      "post": {
-        "tags": [
-          "customer",
-          "instances"
-        ],
-        "summary": "Stop Enrollment Instance",
-        "description": "Ask for the enrollment's instance to be removed. Idempotent; the agent does the work.\n\nAnswers 202 with the instance: ``status`` is ``succeeded`` once it is gone.",
-        "operationId": "stop_enrollment_instance",
-        "parameters": [
-          {
-            "name": "enrollment_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Enrollment Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-role-id",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Role-Id"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnrollmentInstance"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The enrollment, or its instance, does not exist"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/enrollments/{enrollment_id}/instance/credentials": {
-      "get": {
-        "tags": [
-          "customer",
-          "instances"
-        ],
-        "summary": "Get Enrollment Instance Credentials",
-        "description": "The instance's application key, for the enrollment's owner.\n\nKept apart from the state read so the state can be logged and shown freely. Never cached; never logged.",
-        "operationId": "get_enrollment_instance_credentials",
-        "parameters": [
-          {
-            "name": "enrollment_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Enrollment Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-role-id",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Role-Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnrollmentInstanceCredentials"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The enrollment, or its instance, does not exist"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
@@ -9799,6 +9799,19 @@
       },
       "AccessPlan": {
         "properties": {
+          "exports": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exports",
+            "description": "What the service exports for API-key grants, or null when it declares nothing (every route is then reachable with invoke, which service:* grants). When declared, permissions maps each permission to the relative METHOD /path routes it covers (core's implicit invoke on every route when the offering lists only options), options is the JSON Schema of the grant's options and options_ui_schema its display hints."
+          },
           "enrollment_mode": {
             "type": "string",
             "enum": [
@@ -10931,6 +10944,50 @@
         "title": "ChannelPlan",
         "description": "How one upstream channel of a service can be accessed (generic)."
       },
+      "ComputeComponent": {
+        "properties": {
+          "service": {
+            "type": "string",
+            "title": "Service"
+          },
+          "pod": {
+            "type": "string",
+            "title": "Pod"
+          },
+          "phase": {
+            "type": "string",
+            "title": "Phase"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "restart_count": {
+            "type": "integer",
+            "title": "Restart Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "service",
+          "pod",
+          "phase",
+          "ready"
+        ],
+        "title": "ComputeComponent"
+      },
       "CursorPage_ServiceSummary_": {
         "properties": {
           "data": {
@@ -11782,6 +11839,7 @@
           "code_example",
           "code_example_output",
           "connectivity_test",
+          "instance_spec",
           "request_template",
           "use_case",
           "troubleshooting",
@@ -11801,6 +11859,169 @@
         ],
         "title": "DocumentCategoryEnum"
       },
+      "EnrollmentInstance": {
+        "properties": {
+          "enrollment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Enrollment Id"
+          },
+          "requested_action": {
+            "type": "string",
+            "enum": [
+              "start",
+              "stop"
+            ],
+            "title": "Requested Action",
+            "description": "What was last asked of the instance"
+          },
+          "generation": {
+            "type": "integer",
+            "title": "Generation",
+            "description": "Identifies this request; a new start or stop raises it"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "in_progress",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status",
+            "description": "Progress of the request. A start is succeeded when every service is ready; a stop when the instance is gone."
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Machine reason when the request failed"
+          },
+          "fault": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "platform",
+                  "seller"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fault",
+            "description": "When the request failed, whose problem it is: the platform's (the cluster could not apply it) or the service's (a bad image or manifest, never ready). Null when it did not fail."
+          },
+          "components": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ComputeComponent"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Components",
+            "description": "Latest view of the pods, when the agent has reported them"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentInstanceEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enrollment_id",
+          "requested_action",
+          "generation",
+          "status",
+          "entries"
+        ],
+        "title": "EnrollmentInstance",
+        "description": "The instance of an enrollment: the request, how far it has got, and the pods."
+      },
+      "EnrollmentInstanceCredentials": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key"
+        ],
+        "title": "EnrollmentInstanceCredentials",
+        "description": "The instance's application key (the value of ``UNITYSVC_INSTANCE_API_KEY`` inside it)."
+      },
+      "EnrollmentInstanceEntry": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "hostname": {
+            "type": "string",
+            "title": "Hostname"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "https URL of the entry (hostname and path)"
+          },
+          "auth": {
+            "type": "string",
+            "title": "Auth",
+            "description": "Who may reach it: login, key or app"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "hostname",
+          "url",
+          "auth"
+        ],
+        "title": "EnrollmentInstanceEntry",
+        "description": "A URL the instance is reached at."
+      },
       "EnrollmentResource": {
         "properties": {
           "object": {
@@ -11815,6 +12036,31 @@
             "type": "string",
             "format": "uuid",
             "title": "Room Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "default": "owner"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": "enrollment"
+          },
+          "open": {
+            "type": "boolean",
+            "title": "Open",
+            "default": true
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "default": ""
           }
         },
         "type": "object",
@@ -11824,7 +12070,7 @@
           "room_id"
         ],
         "title": "EnrollmentResource",
-        "description": "A resource the platform provisioned for the enrollment from its approved\npolicy (#2830): for ``resource:room``, the room of that kind."
+        "description": "A resource the platform provisioned for the enrollment from its approved\npolicy (#2830): for ``resource:room``, a room of that kind. An enrollment\nmay have several: the customer's own room, the seller's room it admits\nthe customer to, a room the service's customers share (#2969)."
       },
       "GatewayKind": {
         "type": "string",
@@ -12573,6 +12819,9 @@
               },
               {
                 "type": "string"
+              },
+              {
+                "type": "null"
               }
             ],
             "title": "Value"
@@ -12583,7 +12832,7 @@
           "value"
         ],
         "title": "PreferenceUpdate",
-        "description": "``value``: ``{\"service\": ...}`` (or the service as a string), a mode\nfor ``request-log``, or ``auto`` / ``off`` / a path for a ``room-*``\npreference. Use ``DELETE`` to clear."
+        "description": "``value``: ``{\"service\": ...}`` (or the service as a string), a mode\nfor ``request-log``, or for a ``room-*`` preference a service (the\nchannel's own name, ``notify`` / ``email``, is the account's Me service)\nor null for off. Use ``DELETE`` to clear, back to the default."
       },
       "PreferenceValue": {
         "properties": {
@@ -12608,7 +12857,7 @@
           "service"
         ],
         "title": "PreferenceValue",
-        "description": "A service preference (``notification``, ``ai``, ``email``).\n\n``service`` is a service path for ``notification``, a service name\n(``labs/llm-balanced``) or ``a/<name>`` for ``ai``, and an SMTP service\nname or ``e/<code>`` for ``email``.\n``gateway`` is the door a notification destination is delivered through,\nresolved on write (read-only)."
+        "description": "A service preference (``notification``, ``ai``, ``email``, ``post``).\n\n``service`` is a service path for ``notification``, a service name\n(``labs/llm-balanced``) or ``a/<name>`` for ``ai``, and an SMTP service\nname or ``e/<code>`` for ``email``; for ``post`` it is a converter service name or ``e/<code>``.\n``gateway`` is the door a notification destination is delivered through,\nresolved on write (read-only)."
       },
       "PreferencesPublic": {
         "properties": {
@@ -16641,6 +16890,19 @@
             ],
             "title": "Description"
           },
+          "exports": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exports",
+            "description": "What the service exports for API-key grants, or null when it declares nothing (every route is then reachable with invoke, which service:* grants). When declared, permissions maps each permission to the relative METHOD /path routes it covers (core's implicit invoke on every route when the offering lists only options), options is the JSON Schema of the grant's options and options_ui_schema its display hints."
+          },
           "audience": {
             "anyOf": [
               {
@@ -17245,213 +17507,6 @@
           "type"
         ],
         "title": "ValidationError"
-      },
-      "EnrollmentInstanceCredentials": {
-        "properties": {
-          "key": {
-            "type": "string",
-            "title": "Key"
-          }
-        },
-        "type": "object",
-        "required": [
-          "key"
-        ],
-        "title": "EnrollmentInstanceCredentials",
-        "description": "The instance's application key (the value of ``UNITYSVC_INSTANCE_API_KEY`` inside it)."
-      },
-      "EnrollmentInstance": {
-        "properties": {
-          "enrollment_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Enrollment Id"
-          },
-          "requested_action": {
-            "type": "string",
-            "enum": [
-              "start",
-              "stop"
-            ],
-            "title": "Requested Action",
-            "description": "What was last asked of the instance"
-          },
-          "generation": {
-            "type": "integer",
-            "title": "Generation",
-            "description": "Identifies this request; a new start or stop raises it"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "pending",
-              "in_progress",
-              "succeeded",
-              "failed"
-            ],
-            "title": "Status",
-            "description": "Progress of the request. A start is succeeded when every service is ready; a stop when the instance is gone."
-          },
-          "reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason",
-            "description": "Machine reason when the request failed"
-          },
-          "fault": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "platform",
-                  "seller"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Fault",
-            "description": "When the request failed, whose problem it is: the platform's (the cluster could not apply it) or the service's (a bad image or manifest, never ready). Null when it did not fail."
-          },
-          "components": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/ComputeComponent"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Components",
-            "description": "Latest view of the pods, when the agent has reported them"
-          },
-          "entries": {
-            "items": {
-              "$ref": "#/components/schemas/EnrollmentInstanceEntry"
-            },
-            "type": "array",
-            "title": "Entries"
-          },
-          "started_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Started At"
-          },
-          "finished_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Finished At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "enrollment_id",
-          "requested_action",
-          "generation",
-          "status",
-          "entries"
-        ],
-        "title": "EnrollmentInstance",
-        "description": "The instance of an enrollment: the request, how far it has got, and the pods."
-      },
-      "ComputeComponent": {
-        "properties": {
-          "service": {
-            "type": "string",
-            "title": "Service"
-          },
-          "pod": {
-            "type": "string",
-            "title": "Pod"
-          },
-          "phase": {
-            "type": "string",
-            "title": "Phase"
-          },
-          "ready": {
-            "type": "boolean",
-            "title": "Ready"
-          },
-          "reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason"
-          },
-          "restart_count": {
-            "type": "integer",
-            "title": "Restart Count",
-            "default": 0
-          }
-        },
-        "type": "object",
-        "required": [
-          "service",
-          "pod",
-          "phase",
-          "ready"
-        ],
-        "title": "ComputeComponent"
-      },
-      "EnrollmentInstanceEntry": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "hostname": {
-            "type": "string",
-            "title": "Hostname"
-          },
-          "url": {
-            "type": "string",
-            "title": "Url",
-            "description": "https URL of the entry (hostname and path)"
-          },
-          "auth": {
-            "type": "string",
-            "title": "Auth",
-            "description": "Who may reach it: login, key or app"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "hostname",
-          "url",
-          "auth"
-        ],
-        "title": "EnrollmentInstanceEntry",
-        "description": "A URL the instance is reached at."
       }
     }
   },

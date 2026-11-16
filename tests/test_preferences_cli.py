@@ -49,6 +49,10 @@ class _Sink:
         self.calls.append(("clear", name))
         return _preference(name)
 
+    async def turn_off(self, name: str) -> dict[str, Any]:
+        self.calls.append(("turn_off", name))
+        return _preference(name)
+
     async def set_notification(self, service: str | None) -> dict[str, Any]:
         self.calls.append(("set_notification", service))
         return _preference("notification", service)
@@ -110,6 +114,25 @@ def test_set_with_no_value_clears(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert result.exit_code == 0, result.output
     assert sink.calls == [("set", "request-log", None)]
+
+
+def test_set_off_turns_a_room_preference_off(monkeypatch: pytest.MonkeyPatch) -> None:
+    sink = _patch_sink(monkeypatch)
+
+    result = runner.invoke(app, ["set", "room-email-as-guest", "--off"])
+
+    assert result.exit_code == 0, result.output
+    assert sink.calls == [("turn_off", "room-email-as-guest")]
+
+
+def test_set_off_rejects_a_value(monkeypatch: pytest.MonkeyPatch) -> None:
+    sink = _patch_sink(monkeypatch)
+
+    result = runner.invoke(app, ["set", "room-email-as-guest", "--off", "--value", "email"])
+
+    assert result.exit_code != 0
+    assert "mutually exclusive" in result.output
+    assert sink.calls == []
 
 
 def test_set_json_flag_parses_value(monkeypatch: pytest.MonkeyPatch) -> None:
