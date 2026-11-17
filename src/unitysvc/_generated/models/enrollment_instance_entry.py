@@ -11,7 +11,7 @@ T = TypeVar("T", bound="EnrollmentInstanceEntry")
 
 @_attrs_define
 class EnrollmentInstanceEntry:
-    """A URL the instance is reached at."""
+    """A customer-visible URL declared by the instance specification."""
 
     name: str
     hostname: str

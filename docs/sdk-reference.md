@@ -51,12 +51,16 @@ documentation with examples, see the [SDK Guide](sdk-guide.md).
 ### Enrollments
 
 After an enrollment activates, its `resources` list identifies provisioned
-rooms by `object` (the Python attribute is `object_`), `kind` and `room_id`.
+rooms and instances by `object` (the Python attribute is `object_`), `kind` and `resource_id`.
 An enrollment may have several: the customer's own room, the seller's room
 it admits the customer to, or a room the service's customers share. Each
-also carries the room's `name`, your `role` in it, its `scope`
-(`enrollment` for your own room), whether it is `open` (the Python
-attribute is `open_`) and its `url`. Read the enrollment again after the
+carries an `object` (`resource:room` or `resource:container`), a
+`resource_id` (the room's or the instance's id), its `kind`, `name`,
+whether it is `open` (the Python attribute is `open_`) and its `url`. What
+is particular to the kind is in `details`: for a room, your `role` in it and
+its `scope` (`enrollment` for your own room); for a container, the
+instance's `status`, `requested_action`, `entries` (every URL it is reached
+at) and `components` (its current health). Read the enrollment again after the
 initial create acknowledgement to discover these resources:
 
 ```python
@@ -64,8 +68,8 @@ enrollment = client.enrollments.get(enrollment_id)
 if isinstance(enrollment.resources, list):
     for resource in enrollment.resources:
         if resource.object_ == "resource:room":
-            print(resource.name, resource.role, resource.scope)
-            room = client.rooms.get(str(resource.room_id))
+            print(resource.name, resource.details["role"], resource.details["scope"])
+            room = client.rooms.get(str(resource.resource_id))
 ```
 
 ::: unitysvc.enrollments.Enrollments

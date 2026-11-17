@@ -1,4 +1,4 @@
-"""Provisioned rooms are discoverable as typed enrollment resources."""
+"""Provisioned rooms and instances are discoverable as typed enrollment resources."""
 
 from uuid import UUID
 
@@ -11,6 +11,7 @@ ENROLLMENT = "11111111-1111-4111-8111-111111111111"
 SERVICE = "22222222-2222-4222-8222-222222222222"
 ROOM = "33333333-3333-4333-8333-333333333333"
 SHARED_ROOM = "44444444-4444-4444-8444-444444444444"
+INSTANCE = "55555555-5555-4555-8555-555555555555"
 
 
 @pytest.mark.asyncio
@@ -24,16 +25,29 @@ async def test_enrollment_get_and_list_parse_provisioned_room_resources(asynchro
         "created_at": "2026-10-31T00:00:00Z",
         "updated_at": "2026-10-31T00:00:00Z",
         "resources": [
-            {"object": "resource:room", "kind": "chat", "room_id": ROOM},
+            {"object": "resource:room", "kind": "chat", "resource_id": ROOM},
             {
                 "object": "resource:room",
                 "kind": "chat",
-                "room_id": SHARED_ROOM,
+                "resource_id": SHARED_ROOM,
                 "name": "Customers of acme",
-                "role": "member",
-                "scope": "service",
+                "details": {"role": "member", "scope": "service"},
                 "open": False,
                 "url": "https://unitysvc.com/rooms/" + SHARED_ROOM,
+            },
+            {
+                "object": "resource:container",
+                "kind": "container",
+                "resource_id": INSTANCE,
+                "name": "Instance",
+                "open": True,
+                "url": "https://abc123.apps.example/",
+                "details": {
+                    "status": "succeeded",
+                    "requested_action": "start",
+                    "entries": [{"name": "web", "url": "https://abc123.apps.example/"}],
+                    "components": [{"service": "web", "ready": True}],
+                },
             },
         ],
     }
@@ -61,19 +75,25 @@ async def test_enrollment_get_and_list_parse_provisioned_room_resources(asynchro
             enrollment = client.enrollments.get(ENROLLMENT)
             listed = client.enrollments.list()
         for parsed in [enrollment, listed.data[0]]:
-            [own, shared] = parsed.resources
+            [own, shared, container] = parsed.resources
             assert own.object_ == "resource:room"
             assert own.kind == "chat"
-            assert own.room_id == UUID(ROOM)
+            assert own.resource_id == UUID(ROOM)
             # Fields the server left out stay UNSET and are not re-serialised.
             assert own.to_dict() == payload["resources"][0]
             # An enrollment may admit the customer to further rooms (unitysvc#2969):
             # the seller's, or one the service's customers share.
-            assert shared.room_id == UUID(SHARED_ROOM)
+            assert shared.resource_id == UUID(SHARED_ROOM)
             assert shared.name == "Customers of acme"
-            assert (shared.role, shared.scope, shared.open_) == ("member", "service", False)
+            assert shared.details["role"] == "member" and shared.details["scope"] == "service"
+            assert shared.open_ is False
             assert shared.url == "https://unitysvc.com/rooms/" + SHARED_ROOM
             assert shared.to_dict() == payload["resources"][1]
+            # A container resource is the same schema; its particulars are details.
+            assert container.object_ == "resource:container"
+            assert container.resource_id == UUID(INSTANCE)
+            assert container.details["status"] == "succeeded"
+            assert container.to_dict() == payload["resources"][2]
     finally:
         if asynchronous:
             await client.aclose()

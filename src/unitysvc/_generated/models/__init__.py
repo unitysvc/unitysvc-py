@@ -60,6 +60,7 @@ from .customer_group_membership_update import CustomerGroupMembershipUpdate
 from .customer_group_view import CustomerGroupView
 from .customer_group_view_details_type_0 import CustomerGroupViewDetailsType0
 from .cycle_usage_response import CycleUsageResponse
+from .details import Details
 from .document_category_enum import DocumentCategoryEnum
 from .enrollment_instance import EnrollmentInstance
 from .enrollment_instance_credentials import EnrollmentInstanceCredentials
@@ -297,6 +298,7 @@ __all__ = (
     "CustomerGroupView",
     "CustomerGroupViewDetailsType0",
     "CycleUsageResponse",
+    "Details",
     "DocumentCategoryEnum",
     "EnrollmentInstance",
     "EnrollmentInstanceCredentials",
