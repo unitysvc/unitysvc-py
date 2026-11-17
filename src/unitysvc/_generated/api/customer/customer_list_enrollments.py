@@ -15,6 +15,7 @@ def _get_kwargs(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
+    has_instance: bool | Unset = False,
     shared: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
@@ -33,6 +34,8 @@ def _get_kwargs(
     params["limit"] = limit
 
     params["include_service_details"] = include_service_details
+
+    params["has_instance"] = has_instance
 
     json_shared: bool | None | Unset
     if isinstance(shared, Unset):
@@ -89,6 +92,7 @@ def sync_detailed(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
+    has_instance: bool | Unset = False,
     shared: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
@@ -103,6 +107,8 @@ def sync_detailed(
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
         include_service_details (bool | Unset):  Default: True.
+        has_instance (bool | Unset): Only enrollments with a provisioned compute instance.
+            Default: False.
         shared (bool | None | Unset): Omit to list your personal enrollments plus the account's
             shared ones, personal first. true: shared team enrollments only. false: your personal
             enrollments only.
@@ -121,6 +127,7 @@ def sync_detailed(
         skip=skip,
         limit=limit,
         include_service_details=include_service_details,
+        has_instance=has_instance,
         shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
@@ -139,6 +146,7 @@ def sync(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
+    has_instance: bool | Unset = False,
     shared: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
@@ -153,6 +161,8 @@ def sync(
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
         include_service_details (bool | Unset):  Default: True.
+        has_instance (bool | Unset): Only enrollments with a provisioned compute instance.
+            Default: False.
         shared (bool | None | Unset): Omit to list your personal enrollments plus the account's
             shared ones, personal first. true: shared team enrollments only. false: your personal
             enrollments only.
@@ -172,6 +182,7 @@ def sync(
         skip=skip,
         limit=limit,
         include_service_details=include_service_details,
+        has_instance=has_instance,
         shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
@@ -184,6 +195,7 @@ async def asyncio_detailed(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
+    has_instance: bool | Unset = False,
     shared: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
@@ -198,6 +210,8 @@ async def asyncio_detailed(
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
         include_service_details (bool | Unset):  Default: True.
+        has_instance (bool | Unset): Only enrollments with a provisioned compute instance.
+            Default: False.
         shared (bool | None | Unset): Omit to list your personal enrollments plus the account's
             shared ones, personal first. true: shared team enrollments only. false: your personal
             enrollments only.
@@ -216,6 +230,7 @@ async def asyncio_detailed(
         skip=skip,
         limit=limit,
         include_service_details=include_service_details,
+        has_instance=has_instance,
         shared=shared,
         authorization=authorization,
         x_role_id=x_role_id,
@@ -232,6 +247,7 @@ async def asyncio(
     skip: int | Unset = 0,
     limit: int | Unset = 100,
     include_service_details: bool | Unset = True,
+    has_instance: bool | Unset = False,
     shared: bool | None | Unset = UNSET,
     authorization: None | str | Unset = UNSET,
     x_role_id: None | str | Unset = UNSET,
@@ -246,6 +262,8 @@ async def asyncio(
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 100.
         include_service_details (bool | Unset):  Default: True.
+        has_instance (bool | Unset): Only enrollments with a provisioned compute instance.
+            Default: False.
         shared (bool | None | Unset): Omit to list your personal enrollments plus the account's
             shared ones, personal first. true: shared team enrollments only. false: your personal
             enrollments only.
@@ -266,6 +284,7 @@ async def asyncio(
             skip=skip,
             limit=limit,
             include_service_details=include_service_details,
+            has_instance=has_instance,
             shared=shared,
             authorization=authorization,
             x_role_id=x_role_id,

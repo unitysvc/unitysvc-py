@@ -2861,6 +2861,18 @@
             }
           },
           {
+            "name": "has_instance",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Only enrollments with a provisioned compute instance.",
+              "default": false,
+              "title": "Has Instance"
+            },
+            "description": "Only enrollments with a provisioned compute instance."
+          },
+          {
             "name": "shared",
             "in": "query",
             "required": false,
@@ -12020,7 +12032,7 @@
           "auth"
         ],
         "title": "EnrollmentInstanceEntry",
-        "description": "A URL the instance is reached at."
+        "description": "A customer-visible URL declared by the instance specification."
       },
       "EnrollmentResource": {
         "properties": {
@@ -12028,29 +12040,19 @@
             "type": "string",
             "title": "Object"
           },
+          "resource_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Resource Id"
+          },
           "kind": {
             "type": "string",
             "title": "Kind"
-          },
-          "room_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Room Id"
           },
           "name": {
             "type": "string",
             "title": "Name",
             "default": ""
-          },
-          "role": {
-            "type": "string",
-            "title": "Role",
-            "default": "owner"
-          },
-          "scope": {
-            "type": "string",
-            "title": "Scope",
-            "default": "enrollment"
           },
           "open": {
             "type": "boolean",
@@ -12061,16 +12063,22 @@
             "type": "string",
             "title": "Url",
             "default": ""
+          },
+          "details": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Details",
+            "default": {}
           }
         },
         "type": "object",
         "required": [
           "object",
-          "kind",
-          "room_id"
+          "resource_id",
+          "kind"
         ],
         "title": "EnrollmentResource",
-        "description": "A resource the platform provisioned for the enrollment from its approved\npolicy (#2830): for ``resource:room``, a room of that kind. An enrollment\nmay have several: the customer's own room, the seller's room it admits\nthe customer to, a room the service's customers share (#2969)."
+        "description": "A resource the platform provisioned for the enrollment from its approved\npolicy (#2830). ``object`` says which: ``resource:room`` (a room of ``kind``;\nan enrollment may have several: the customer's own, the seller's it admits\nthe customer to, one the service's customers share, #2969) or\n``resource:container`` (the enrollment's compute instance). What is\nparticular to the kind is in ``details``."
       },
       "GatewayKind": {
         "type": "string",
